@@ -1,0 +1,53 @@
+name: Database Backup
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # Run daily at 02:00 UTC
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  backup:
+    name: Daily DB Backup to R2
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Install PostgreSQL tools
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+        
+      - name: Setup MinIO Client (mc) for R2 upload
+        run: |
+          wget https://dl.min.io/client/mc/release/linux-amd64/mc
+          chmod +x mc
+          sudo mv mc /usr/local/bin/mc
+          
+          # Configure R2
+          mc alias set r2 ${{ secrets.R2_ENDPOINT }} ${{ secrets.R2_ACCESS_KEY_ID }} ${{ secrets.R2_SECRET_ACCESS_KEY }} --api S3v4
+          
+      - name: Dump and Upload
+        run: |
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          FILENAME="senyx-erp-${TIMESTAMP}.dump"
+          
+          # Create compressed dump
+          PGPASSWORD="${{ secrets.DB_PASSWORD }}" pg_dump \
+            -h ${{ secrets.DB_HOST }} \
+            -p 5432 \
+            -U postgres \
+            -d senyx_erp \
+            -F c \
+            -Z 9 \
+            > $FILENAME
+            
+          # Upload to R2 bucket
+          mc cp $FILENAME r2/${{ secrets.R2_BUCKET_NAME }}/$FILENAME
+          
+          # Optional: Apply retention policy (e.g. keep last 30 days)
+          # Note: Better handled via Cloudflare R2 object lifecycle rules
+          
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          # Simple webhook alert (e.g., Slack/Discord)
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"🚨 SENYX ERP Database backup failed!"}' \
+            ${{ secrets.ALERT_WEBHOOK_URL }}

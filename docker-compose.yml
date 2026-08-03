@@ -1,0 +1,139 @@
+version: '3.9'
+
+services:
+  # ─────────────────────────────────────
+  # PostgreSQL Database (local dev)
+  # ─────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: senyx-erp-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: senyx_erp
+      POSTGRES_USER: senyx
+      POSTGRES_PASSWORD: senyx_local_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U senyx -d senyx_erp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────
+  # Next.js Application (dev mode)
+  # ─────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: senyx-erp-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Database (local PostgreSQL)
+      DATABASE_URL: postgresql://senyx:senyx_local_dev@db:5432/senyx_erp
+      
+      # Supabase Auth (still using cloud Supabase for auth in dev)
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      
+      # R2 (can use MinIO locally for dev)
+      R2_ENDPOINT: http://minio:9000
+      R2_ACCESS_KEY_ID: minioadmin
+      R2_SECRET_ACCESS_KEY: minioadmin
+      R2_BUCKET_NAME: senyx-erp-docs
+      
+      # Email (use Mailpit for local email testing)
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: noreply@localhost
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      
+      # Security
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      
+      # App
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NODE_ENV: development
+    volumes:
+      - .:/app
+      - /app/node_modules        # Preserve container node_modules
+      - /app/.next               # Preserve container build cache
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_started
+
+  # ─────────────────────────────────────
+  # MinIO (S3-compatible local storage)
+  # Replaces Cloudflare R2 for local dev
+  # ─────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: senyx-erp-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"    # API
+      - "9001:9001"    # Console UI
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+
+  # ─────────────────────────────────────
+  # MinIO Bucket Initialization
+  # ─────────────────────────────────────
+  minio-init:
+    image: minio/mc:latest
+    container_name: senyx-erp-minio-init
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      mc alias set local http://minio:9000 minioadmin minioadmin;
+      mc mb local/senyx-erp-docs --ignore-existing;
+      mc mb local/senyx-erp-backups --ignore-existing;
+      echo 'Buckets created successfully';
+      "
+
+  # ─────────────────────────────────────
+  # Mailpit (Local email testing)
+  # Catches all outgoing emails for dev
+  # ─────────────────────────────────────
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: senyx-erp-mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"    # Web UI
+      - "1025:1025"    # SMTP
+
+  # ─────────────────────────────────────
+  # pgAdmin (Optional DB admin UI)
+  # ─────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: senyx-erp-pgadmin
+    restart: unless-stopped
+    profiles: ["tools"]  # Only start with: docker compose --profile tools up
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@senyx.io
+      PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
+  minio_data:
