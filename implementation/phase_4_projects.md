@@ -467,34 +467,34 @@ Risks:
 ## 4.4 Verification Checklist — Phase 4
 
 ```
-- [ ] Projects: CRUD working with solution/product types
-- [ ] Project code auto-generated (PRJ-0001, ...)
-- [ ] Solutions require account_id (validated)
-- [ ] Deal → Project creation flow working (from won deals)
-- [ ] Project Owner assigned and visible
-- [ ] Default board columns created on new project
-- [ ] Kanban board rendering correctly
-- [ ] Drag-and-drop: cards move between columns
-- [ ] Optimistic updates: move feels instant (<1s persistence)
-- [ ] Column changes recorded in audit log (task.move)
-- [ ] Task CRUD: create, edit, priority, assignee, due date
-- [ ] Subtasks working (parent_task_id)
-- [ ] Swimlanes: filter by assignee, priority
-- [ ] Board filters: assignee, priority, search
-- [ ] Team assignments: assign/unassign employees to projects
-- [ ] Delivery milestones: create, complete
-- [ ] Payment milestones: create with percentages summing to 100%
-- [ ] Milestone completion → payment milestone status = 'due'
-- [ ] Draft invoice creation stub ready (Phase 5 integration)
-- [ ] Manual time entries working (date, hours, billable)
-- [ ] Clock in/out working (one active per employee enforced)
-- [ ] Clock widget in topbar showing active session
-- [ ] Time totals correct (per employee, per project)
-- [ ] Project risks: CRUD working
-- [ ] Project summary/dashboard data endpoint working
-- [ ] All operations audited
-- [ ] RLS policies enforcing scope
-- [ ] CI passing, deployed
+- [x] Projects: CRUD working with solution/product types
+- [x] Project code auto-generated (PRJ-0001, ...)
+- [x] Solutions require account_id (validated)
+- [x] Deal → Project creation flow working (from won deals)
+- [x] Project Owner assigned and visible
+- [x] Default board columns created on new project
+- [x] Kanban board rendering correctly
+- [x] Drag-and-drop: cards move between columns
+- [x] Optimistic updates: move feels instant (<1s persistence)
+- [x] Column changes recorded in audit log (task.move)
+- [x] Task CRUD: create, edit, priority, assignee, due date
+- [x] Subtasks working (parent_task_id)
+- [x] Swimlanes: filter by assignee, priority
+- [x] Board filters: assignee, priority, search
+- [x] Team assignments: assign/unassign employees to projects
+- [x] Delivery milestones: create, complete
+- [x] Payment milestones: create with percentages summing to 100%
+- [x] Milestone completion → payment milestone status = 'due'
+- [x] Draft invoice creation stub ready (Phase 5 integration)
+- [x] Manual time entries working (date, hours, billable)
+- [x] Clock in/out working (one active per employee enforced)
+- [x] Clock widget in topbar showing active session
+- [x] Time totals correct (per employee, per project)
+- [x] Project risks: CRUD working
+- [x] Project summary/dashboard data endpoint working
+- [x] All operations audited
+- [x] RLS policies enforcing scope
+- [x] CI passing, deployed
 ```
 
 ---
