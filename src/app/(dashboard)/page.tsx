@@ -6,6 +6,7 @@ import { BarChartWidget } from '@/components/charts/bar-chart-widget';
 import { PieChartWidget } from '@/components/charts/pie-chart-widget';
 import { Briefcase, CheckCircle, Users, DollarSign, Clock, FileText, AlertTriangle, TrendingUp, Target, CreditCard, Activity, FolderKanban } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { useCurrency } from '@/providers/currency-provider';
 
 export default function DashboardHome() {
   const { user } = useAuth();
@@ -32,7 +33,7 @@ export default function DashboardHome() {
 
   if (!data) return <div>Failed to load dashboard</div>;
 
-  const formatCurrency = (val: number) => `$${(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const { format: formatCurrency } = useCurrency();
   const formatNumber = (val: number) => (val || 0).toLocaleString();
 
   return (

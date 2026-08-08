@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 import { TimeClock } from '@/components/clock/time-clock';
 import { NotificationBell } from './notification-bell';
 import { MobileNav } from './mobile-nav';
+import { CurrencySelector } from './currency-selector';
 import { usePathname } from 'next/navigation';
 
 export function Topbar() {
@@ -25,6 +26,7 @@ export function Topbar() {
         </div>
       </div>
       <div className="flex items-center gap-5">
+        <CurrencySelector />
         <TimeClock />
         <div className="h-6 w-px bg-slate-200 mx-2"></div>
         <NotificationBell />
