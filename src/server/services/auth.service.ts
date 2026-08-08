@@ -36,7 +36,7 @@ export class AuthService {
     });
 
     if (error || !data.user) {
-      throw new UnauthorizedError('Invalid credentials');
+      throw new UnauthorizedError(error?.message || 'Invalid credentials');
     }
 
     const userId = data.user.id;
@@ -45,41 +45,44 @@ export class AuthService {
     // First-time login after email verification: provision DB records
     if (!dbUser) {
       const meta = data.user.user_metadata || {};
-      dbUser = await db.transaction(async (tx) => {
-        // Check if an Employee record already exists for this email
-        let [employee] = await tx.select().from(employees).where(eq(employees.email, data.user.email!)).limit(1);
+      try {
+        dbUser = await db.transaction(async (tx) => {
+          let [employee] = await tx.select().from(employees).where(eq(employees.email, data.user.email!)).limit(1);
 
-        if (!employee) {
-          // Create new employee if not found
-          let [designation] = await tx.select().from(designations).limit(1);
-          if (!designation) {
-            [designation] = await tx.insert(designations).values({
-              title: 'Guest',
-              description: 'Default designation for new users',
+          if (!employee) {
+            let [designation] = await tx.select().from(designations).limit(1);
+            if (!designation) {
+              [designation] = await tx.insert(designations).values({
+                title: 'Guest',
+                description: 'Default designation for new users',
+              }).returning();
+            }
+            const employeeCode = `EMP-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+            [employee] = await tx.insert(employees).values({
+              firstName: meta.firstName || meta.first_name || 'New',
+              lastName: meta.lastName || meta.last_name || 'User',
+              email: data.user.email!,
+              employeeCode,
+              designationId: designation!.id,
+              employmentType: 'full_time',
+              startDate: new Date().toISOString().split('T')[0] as string,
+              status: 'active',
             }).returning();
           }
-          const employeeCode = `EMP-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
-          [employee] = await tx.insert(employees).values({
-            firstName: meta.firstName || meta.first_name || 'New',
-            lastName: meta.lastName || meta.last_name || 'User',
-            email: data.user.email!,
-            employeeCode,
-            designationId: designation!.id,
-            employmentType: 'full_time',
-            startDate: new Date().toISOString().split('T')[0] as string,
-            status: 'active',
-          }).returning();
-        }
 
-        const [newUser] = await tx.insert(users).values({
-          id: userId,
-          employeeId: employee!.id,
-          email: data.user.email!,
-          isActive: true,
-        }).returning();
-        
-        return newUser;
-      });
+          const [newUser] = await tx.insert(users).values({
+            id: userId,
+            employeeId: employee!.id,
+            email: data.user.email!,
+            isActive: true,
+          }).returning();
+          
+          return newUser;
+        });
+      } catch (err) {
+        console.error('Failed to provision database records for new user:', err);
+        throw new AppError('Failed to setup your account profile. Please try logging in again.', 500, 'PROFILE_SETUP_FAILED');
+      }
     }
 
     if (!dbUser || !dbUser.isActive) {

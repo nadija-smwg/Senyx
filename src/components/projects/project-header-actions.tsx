@@ -18,11 +18,11 @@ export function ProjectHeaderActions({ projectId }: ProjectHeaderActionsProps) {
   const handleClockIn = async () => {
     setClockingIn(true);
     try {
-      // In a real app, you would make an API call here.
-      // e.g. await fetch(`/api/projects/${projectId}/time/clock-in`, { method: 'POST' });
-      
-      // Simulating a network request
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const res = await fetch(`/api/projects/${projectId}/clock/in`, { method: 'POST' });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error?.message || json.error || 'Failed to clock in');
+      }
       toast.success('Successfully clocked in!');
     } catch (err: any) {
       toast.error('Failed to clock in: ' + err.message);
