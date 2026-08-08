@@ -1,7 +1,7 @@
 import { db } from '../db/client';
-import { employees, employeeSkills, leaveBalances, leaveTypes } from '../db/schema/hr';
+import { employees, employeeSkills, leaveBalances, leaveTypes, departments, designations } from '../db/schema/hr';
 import { users } from '../db/schema/identity';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 import { auditLogs } from '../db/schema/platform';
 import { encrypt, decrypt } from '../lib/crypto';
 import { supabaseAdmin } from '../lib/supabase-admin';
@@ -24,8 +24,22 @@ async function auditAction(data: any) {
 }
 
 export async function listEmployees(scope: 'all' | 'own', userId: string, employeeId?: string) {
-  const allEmps = await db.select().from(employees);
+  const allEmpsData = await db.select({
+    employee: employees,
+    departmentName: departments.name,
+    designationTitle: designations.title
+  })
+  .from(employees)
+  .leftJoin(departments, eq(employees.departmentId, departments.id))
+  .leftJoin(designations, eq(employees.designationId, designations.id))
+  .orderBy(desc(employees.createdAt));
   
+  const allEmps = allEmpsData.map(row => ({
+    ...row.employee,
+    departmentName: row.departmentName,
+    designationTitle: row.designationTitle
+  }));
+
   if (scope === 'own' && employeeId) {
     const ownEmp = allEmps.find(e => e.id === employeeId);
     return ownEmp ? [ownEmp] : [];
