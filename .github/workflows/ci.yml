@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-      - run: npm ci
+      - run: npm install
       
       # 1. Type check
       - name: TypeScript validation
@@ -67,7 +67,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-      - run: npm ci
+      - run: npm install
 
       - name: Run tests
         run: npm run test:coverage
@@ -126,7 +126,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build
         run: npm run build
@@ -148,7 +148,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Audit dependencies
         run: npm audit --audit-level=high

@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { useRouter } from "next/navigation"
+import { ContextualHelp } from "@/components/ui/contextual-help"
 import { toast } from "sonner"
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
@@ -263,7 +264,10 @@ export default function NewEmployeePage() {
                     name="salary"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Annual Salary (USD)</FormLabel>
+                        <div className="flex items-center gap-2">
+                          <FormLabel>Annual Salary (USD)</FormLabel>
+                          <ContextualHelp tooltip="Enter the base annual salary in USD. Leave blank for hourly workers." href="/help/human-resources" />
+                        </div>
                         <FormControl>
                           <Input type="number" placeholder="60000" {...field} />
                         </FormControl>

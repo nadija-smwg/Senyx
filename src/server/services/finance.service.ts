@@ -286,6 +286,29 @@ export async function issueInvoice(id: string, actorUserId: string) {
       }
     }
 
+    // Notify Finance role
+    const { roles, userRoles } = await import('../db/schema/identity');
+    const financeRoleRows = await tx.select().from(roles).where(eq(roles.name, 'Finance'));
+    const financeRoleId = financeRoleRows[0]?.id;
+    if (financeRoleId) {
+      const financeRoleUsers = await tx.select().from(userRoles).where(eq(userRoles.roleId, financeRoleId));
+      const financeUserIds = financeRoleUsers.map(r => r.userId);
+      if (financeUserIds.length > 0) {
+        const { inArray } = await import('drizzle-orm');
+        const financeUsers = await tx.select().from(users).where(inArray(users.id, financeUserIds));
+        for (const fUser of financeUsers) {
+          await sendNotification(fUser.id, {
+            type: 'status_update',
+            title: 'Invoice Issued',
+            body: `Invoice ${invoice.invoiceNumber} has been issued and sent.`,
+            relatedType: 'invoice',
+            relatedId: invoice.id,
+            channel: 'in_app',
+          });
+        }
+      }
+    }
+
     return invoice;
   });
 }

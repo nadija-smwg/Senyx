@@ -68,14 +68,16 @@ export const columns: ColumnDef<Employee>[] = [
     header: "Status",
     cell: ({ row }) => {
       const status = row.getValue("status") as string
-      let variant: "default" | "secondary" | "destructive" | "outline" = "default"
+      const statusClasses: Record<string, string> = {
+        'active': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        'on_leave': 'bg-amber-100 text-amber-700 border-amber-200',
+        'suspended': 'bg-rose-100 text-rose-700 border-rose-200',
+        'terminated': 'bg-slate-100 text-slate-700 border-slate-200',
+      }
       
-      if (status === "active") variant = "default"
-      else if (status === "on_leave") variant = "secondary"
-      else if (status === "suspended") variant = "destructive"
-      else if (status === "terminated") variant = "outline"
+      const cn = statusClasses[status] || statusClasses['terminated'];
       
-      return <Badge variant={variant}>{status.replace('_', ' ').toUpperCase()}</Badge>
+      return <Badge className={`font-semibold tracking-wide ${cn}`} variant="outline">{status.replace('_', ' ').toUpperCase()}</Badge>
     },
   },
   {

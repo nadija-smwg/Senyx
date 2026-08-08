@@ -21,6 +21,16 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "SENYX ERP",
   description: "Enterprise Resource Planning for SENYX Corporation",
+  robots: {
+    index: false,
+    follow: false,
+  },
+  openGraph: {
+    title: "SENYX ERP",
+    description: "Enterprise Resource Planning for SENYX Corporation",
+    type: "website",
+    siteName: "SENYX",
+  },
 };
 
 export default function RootLayout({

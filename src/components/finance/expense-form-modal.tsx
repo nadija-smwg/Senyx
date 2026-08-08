@@ -156,12 +156,7 @@ export function ExpenseFormModal() {
             />
           </div>
 
-          <div className="space-y-2 border-t pt-4">
-            <label className="text-sm font-medium">Receipt Upload</label>
-            <div className="border-2 border-dashed rounded-md p-4 text-center text-sm text-muted-foreground bg-muted/20">
-              <p>Receipt document uploading will be available in Phase 8.</p>
-            </div>
-          </div>
+
 
           <div className="pt-4 flex justify-end gap-3">
             <button 

@@ -10,6 +10,7 @@ import {
   getPaginationRowModel,
 } from '@tanstack/react-table';
 import { format } from 'date-fns';
+import { QuoteDocumentsModal } from '@/components/sales/quote-documents-modal';
 
 export default function QuotesPage() {
   const [quotes, setQuotes] = useState([]);
@@ -57,6 +58,15 @@ export default function QuotesPage() {
       header: 'Valid Until',
       cell: ({ row }: any) => row.getValue('validUntil') ? format(new Date(row.getValue('validUntil')), 'MMM d, yyyy') : '—'
     },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }: any) => (
+        <div className="flex justify-end">
+          <QuoteDocumentsModal quoteId={row.original.id} />
+        </div>
+      )
+    }
   ];
 
   const table = useReactTable({

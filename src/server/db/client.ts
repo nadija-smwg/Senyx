@@ -8,7 +8,7 @@ import * as sales from './schema/sales';
 
 // Create postgres connection
 const connectionString = process.env.DATABASE_URL!;
-const client = postgres(connectionString);
+const client = postgres(connectionString, { prepare: false, ssl: 'require' });
 
 // Export drizzle db instance with all schemas
 export const db = drizzle(client, { schema: { ...identity, ...platform, ...hr, ...crm, ...sales } });

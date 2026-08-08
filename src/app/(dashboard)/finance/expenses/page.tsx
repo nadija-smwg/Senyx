@@ -4,6 +4,7 @@ import { projects } from '@/server/db/schema/projects';
 import { eq, isNull, desc, and, gte, lte } from 'drizzle-orm';
 import { ExpenseFormModal } from '@/components/finance/expense-form-modal';
 import { ExpenseActions } from '@/components/finance/expense-actions';
+import { ExpenseDocumentsModal } from '@/components/finance/expense-documents-modal';
 
 function getStatusBadgeClass(status: string) {
   switch (status) {
@@ -128,7 +129,10 @@ export default async function ExpensesPage({
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <ExpenseActions expenseId={exp.id} status={exp.approvalStatus || 'pending'} />
+                    <div className="flex justify-end items-center gap-2">
+                      <ExpenseDocumentsModal expenseId={exp.id} />
+                      <ExpenseActions expenseId={exp.id} status={exp.approvalStatus || 'pending'} />
+                    </div>
                   </td>
                 </tr>
               ))}

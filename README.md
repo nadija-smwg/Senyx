@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SENYX ERP
 
-## Getting Started
+Senyx ERP is a modern, enterprise-grade Resource Planning platform built to seamlessly manage Human Resources, Sales, Customer Relationships, Projects, and Financials in a unified dashboard.
 
-First, run the development server:
+## Tech Stack
+- **Framework:** Next.js 15 (App Router)
+- **Language:** TypeScript
+- **Database:** PostgreSQL (via Supabase)
+- **ORM:** Drizzle ORM
+- **Styling:** Tailwind CSS & shadcn/ui
+- **Storage:** Cloudflare R2
+- **Email:** Resend
+- **State/Data:** React Server Components (RSC) + Server Actions
 
-```bash
+## Features
+- **Dashboard:** Real-time KPIs and activity monitoring.
+- **HR & People:** Employee directory, skills matrix, leave requests, and payroll tracking.
+- **CRM & Sales:** Account management, interactive deal pipelines, and automated quotes.
+- **Projects:** Kanban boards, task management, time tracking, and milestone billing.
+- **Finance:** Invoices, expense receipts with R2 storage, payments, and subscriptions.
+- **Admin:** Role-based access control, comprehensive audit logs, and a dynamic Markdown Help Center.
+
+## Local Setup
+
+### 1. Prerequisites
+- Node.js (v20 or higher)
+- A Supabase project (for PostgreSQL)
+- Cloudflare R2 bucket (optional for local dev, needed for document uploads)
+
+### 2. Environment Variables
+Copy the example environment file and fill in your credentials:
+\`\`\`bash
+cp .env.example .env.local
+\`\`\`
+
+You will need:
+- `DATABASE_URL`: Supabase connection string
+- `JWT_SECRET`: For authentication
+- `R2_ACCESS_KEY_ID` & `R2_SECRET_ACCESS_KEY`: For Cloudflare R2 uploads
+
+### 3. Installation
+Install dependencies using npm:
+\`\`\`bash
+npm install
+\`\`\`
+
+### 4. Database Setup
+Push the Drizzle schema to your Supabase database:
+\`\`\`bash
+npx drizzle-kit push
+\`\`\`
+
+Seed the database with initial roles, admin user, and help content:
+\`\`\`bash
+npx tsx src/server/db/seed/roles.ts
+npx tsx src/server/db/seed/help-content.ts
+\`\`\`
+
+### 5. Start Development Server
+\`\`\`bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+\`\`\`
+The application will be available at `http://localhost:3000`. Default admin login is usually setup during the seed script (`admin@senyx.io` / `password123`).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Available Scripts
+- `npm run dev` - Starts the development server.
+- `npm run build` - Builds the application for production.
+- `npm run start` - Runs the production server.
+- `npm run db:push` - Syncs your Drizzle schema with the database.
+- `npm run db:studio` - Opens Drizzle Studio to view database contents locally.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deployment
+Senyx ERP is designed to be deployed effortlessly on Vercel or Netlify.
+1. Connect your GitHub repository to your Vercel/Netlify account.
+2. Add all environment variables from `.env.local` to the project settings.
+3. Deploy!
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+Proprietary software. All rights reserved by SENYX Corporation.

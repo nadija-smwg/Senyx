@@ -1,102 +1,106 @@
 'use client';
 import Link from 'next/link';
 import { useAuth } from '../../hooks/use-auth';
+import { usePathname } from 'next/navigation';
+import { LayoutDashboard, Users, Briefcase, FolderKanban, Receipt, Settings, Activity, Shield, HelpCircle } from 'lucide-react';
 
 export function Sidebar() {
   const { roles } = useAuth();
-  
+  const pathname = usePathname();
+
+  const navGroups = [
+    {
+      label: 'Core',
+      items: [
+        { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/analytics', label: 'Analytics', icon: Activity },
+        { href: '/help', label: 'Help Center', icon: HelpCircle },
+      ]
+    },
+    {
+      label: 'HR & People',
+      items: [
+        { href: '/hr/employees', label: 'Employees', icon: Users },
+      ]
+    },
+    {
+      label: 'CRM & Sales',
+      items: [
+        { href: '/crm/accounts', label: 'Accounts', icon: Briefcase },
+        { href: '/crm/contacts', label: 'Contacts', icon: Users },
+        { href: '/sales/deals', label: 'Deals', icon: Briefcase },
+      ]
+    },
+    {
+      label: 'Projects',
+      items: [
+        { href: '/projects', label: 'Projects', icon: FolderKanban },
+      ]
+    },
+    {
+      label: 'Finance',
+      items: [
+        { href: '/finance', label: 'Overview', icon: Receipt },
+        { href: '/finance/invoices', label: 'Invoices', icon: Receipt },
+        { href: '/finance/expenses', label: 'Expenses', icon: Receipt },
+        { href: '/finance/payments', label: 'Payments', icon: Receipt },
+        { href: '/finance/subscriptions', label: 'Subscriptions', icon: Receipt },
+      ]
+    },
+    {
+      label: 'System',
+      items: [
+        { href: '/settings', label: 'Settings', icon: Settings },
+        { href: '/audit', label: 'Audit Logs', icon: Shield },
+      ]
+    }
+  ];
+
   return (
-    <aside className="w-64 bg-primary text-primary-foreground h-screen flex flex-col hidden md:flex shrink-0">
-      <div className="p-4 text-2xl font-heading font-bold border-b border-primary-foreground/10">
+    <aside className="w-64 bg-slate-950 text-slate-300 h-screen flex flex-col hidden md:flex shrink-0 shadow-xl z-20">
+      <div className="p-6 text-2xl font-heading font-black tracking-tight text-white flex items-center border-b border-slate-800/50">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 mr-3 shadow-lg shadow-indigo-500/20"></div>
         SENYX
       </div>
-      <nav className="flex-1 overflow-y-auto p-4 space-y-4">
-        <div>
-          <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-primary-foreground/70">
-            Core
-          </h3>
-          <div className="space-y-1">
-            <Link href="/" className="block px-2 py-1.5 rounded hover:bg-primary-foreground/10 transition-colors">
-              Dashboard
-            </Link>
+      <nav className="flex-1 overflow-y-auto p-4 space-y-6 dark-scrollbar">
+        {navGroups.map((group) => (
+          <div key={group.label}>
+            <h3 className="mb-3 px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              {group.label}
+            </h3>
+            <div className="space-y-1">
+              {group.items.map(item => {
+                const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+                const Icon = item.icon;
+                return (
+                  <Link 
+                    key={item.href} 
+                    href={item.href} 
+                    className={`flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 group ${
+                      isActive 
+                        ? 'bg-indigo-500/10 text-indigo-400 font-medium' 
+                        : 'hover:bg-slate-900 hover:text-slate-100'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 mr-3 ${isActive ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300'} transition-colors`} />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-        </div>
-        
-        <div>
-          <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-primary-foreground/70">
-            HR & People
-          </h3>
-          <div className="space-y-1">
-            <Link href="/hr/employees" className="block px-2 py-1.5 rounded hover:bg-primary-foreground/10 transition-colors">
-              Employees
-            </Link>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-primary-foreground/70">
-            CRM & Sales
-          </h3>
-          <div className="space-y-1">
-            <Link href="/crm/accounts" className="block px-2 py-1.5 rounded hover:bg-primary-foreground/10 transition-colors">
-              Accounts
-            </Link>
-            <Link href="/crm/contacts" className="block px-2 py-1.5 rounded hover:bg-primary-foreground/10 transition-colors">
-              Contacts
-            </Link>
-            <Link href="/sales/deals" className="block px-2 py-1.5 rounded hover:bg-primary-foreground/10 transition-colors">
-              Deals
-            </Link>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-primary-foreground/70">
-            Projects
-          </h3>
-          <div className="space-y-1">
-            <Link href="/projects" className="block px-2 py-1.5 rounded hover:bg-primary-foreground/10 transition-colors">
-              Projects
-            </Link>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-primary-foreground/70">
-            Finance
-          </h3>
-          <div className="space-y-1">
-            <Link href="/finance" className="block px-2 py-1.5 rounded hover:bg-primary-foreground/10 transition-colors">
-              Overview
-            </Link>
-            <Link href="/finance/invoices" className="block px-2 py-1.5 rounded hover:bg-primary-foreground/10 transition-colors">
-              Invoices
-            </Link>
-            <Link href="/finance/expenses" className="block px-2 py-1.5 rounded hover:bg-primary-foreground/10 transition-colors">
-              Expenses
-            </Link>
-            <Link href="/finance/payments" className="block px-2 py-1.5 rounded hover:bg-primary-foreground/10 transition-colors">
-              Payments
-            </Link>
-            <Link href="/finance/subscriptions" className="block px-2 py-1.5 rounded hover:bg-primary-foreground/10 transition-colors">
-              Subscriptions
-            </Link>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-primary-foreground/70">
-            System
-          </h3>
-          <div className="space-y-1">
-            <Link href="/settings" className="block px-2 py-1.5 rounded hover:bg-primary-foreground/10 transition-colors">
-              Settings
-            </Link>
-          </div>
-        </div>
+        ))}
       </nav>
-      <div className="p-4 border-t border-primary-foreground/10">
-        {roles.length > 0 && <span className="text-sm opacity-80">{roles.join(', ')}</span>}
+      <div className="p-4 border-t border-slate-800/50 bg-slate-950/50">
+        <div className="flex items-center">
+          <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-medium text-slate-300">
+            Me
+          </div>
+          <div className="ml-3">
+            <p className="text-sm font-medium text-slate-200">Current User</p>
+            {roles.length > 0 && <span className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">{roles[0]}</span>}
+          </div>
+        </div>
       </div>
     </aside>
   );

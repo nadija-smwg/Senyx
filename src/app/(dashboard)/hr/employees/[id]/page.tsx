@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { ChevronLeft, Building, Mail, Phone, Briefcase, Calendar, CheckCircle2, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
+import { DocumentList } from "@/components/shared/document-list"
 
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -63,6 +64,7 @@ export default function EmployeeDetailPage() {
           <TabsTrigger value="skills">Skills Matrix</TabsTrigger>
           <TabsTrigger value="leave">Leave & Time Off</TabsTrigger>
           <TabsTrigger value="payroll">Payroll</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-6">
@@ -212,6 +214,15 @@ export default function EmployeeDetailPage() {
               <div className="text-center py-10 text-muted-foreground">Payroll integration coming in Phase 4.</div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="documents">
+          <DocumentList 
+            ownerType="employee" 
+            ownerId={employee.id} 
+            title="Employee Documents" 
+            description="Manage contracts, NDAs, and other HR documents." 
+          />
         </TabsContent>
       </Tabs>
     </div>
