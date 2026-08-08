@@ -22,21 +22,22 @@ function getDateCondition(column: any, dateRange?: { start?: string; end?: strin
 }
 
 export async function getDashboard(ctx: AuthContext, dateRange?: { start?: string; end?: string }) {
-  const isOwner = ctx.roles.includes('admin') || ctx.roles.includes('owner');
+  const rolesLower = ctx.roles.map(r => r.toLowerCase());
+  const isOwner = rolesLower.includes('admin') || rolesLower.includes('owner') || rolesLower.includes('system admin');
   
   if (isOwner) {
     return await getAdminDashboard(ctx, dateRange);
   }
-  if (ctx.roles.includes('Sales Lead')) {
+  if (rolesLower.includes('sales lead') || rolesLower.includes('sales manager')) {
     return await getSalesDashboard(ctx, dateRange);
   }
-  if (ctx.roles.includes('Project Owner')) {
+  if (rolesLower.includes('project owner') || rolesLower.includes('project manager')) {
     return await getProjectDashboard(ctx, dateRange);
   }
-  if (ctx.roles.includes('Finance')) {
+  if (rolesLower.includes('finance') || rolesLower.includes('accountant')) {
     return await getFinanceDashboard(ctx, dateRange);
   }
-  if (ctx.roles.includes('HR Manager')) {
+  if (rolesLower.includes('hr manager') || rolesLower.includes('hr admin')) {
     return await getHRDashboard(ctx, dateRange);
   }
   return await getEmployeeDashboard(ctx, dateRange);
