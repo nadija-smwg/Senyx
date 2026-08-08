@@ -18,7 +18,7 @@ const CURRENCIES: { value: Currency; label: string; symbol: string }[] = [
 export function CurrencySelector() {
   const { currency, setCurrency, isLoading } = useCurrency();
 
-  const current = CURRENCIES.find(c => c.value === currency) || CURRENCIES[0];
+  const current = CURRENCIES.find(c => c.value === currency) || CURRENCIES[0]!;
 
   return (
     <DropdownMenu>
