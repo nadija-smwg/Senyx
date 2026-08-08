@@ -67,6 +67,14 @@ export default function LoginPage() {
           </Button>
         </form>
       </CardContent>
+      <CardFooter className="flex justify-center">
+        <div className="text-sm text-muted-foreground">
+          Don't have an account?{' '}
+          <a href="/register" className="text-primary hover:underline font-medium">
+            Sign up
+          </a>
+        </div>
+      </CardFooter>
     </Card>
   );
 }

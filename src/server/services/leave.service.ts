@@ -1,6 +1,6 @@
 import { db } from '../db/client';
 import { leaveRequests, leaveBalances, employees } from '../db/schema/hr';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { auditLogs } from '../db/schema/platform';
 import { sendNotification } from './notification.service';
 import { users } from '../db/schema/identity';
@@ -22,13 +22,10 @@ async function auditAction(data: any) {
 }
 
 export async function listLeaveRequests(scope: 'all' | 'own', currentEmployeeId: string) {
-  const allRequests = await db.select().from(leaveRequests);
-  
   if (scope === 'own') {
-    return allRequests.filter((r: any) => r.employeeId === currentEmployeeId);
+    return await db.select().from(leaveRequests).where(eq(leaveRequests.employeeId, currentEmployeeId));
   }
-  
-  return allRequests;
+  return await db.select().from(leaveRequests);
 }
 
 export async function createLeaveRequest(input: {
@@ -108,29 +105,29 @@ export async function decideLeaveRequest(id: string, decision: 'approved' | 'rej
   if (!request) throw new Error('Request not found');
   if (request.status !== 'pending') throw new Error('Request already decided');
 
-  const [updated] = await db.update(leaveRequests).set({
-    status: decision,
-    approverId: approverEmployeeId,
-    decidedAt: new Date(),
-  }).where(eq(leaveRequests.id, id)).returning();
+  const updated = await db.transaction(async (tx) => {
+    const [updatedReq] = await tx.update(leaveRequests).set({
+      status: decision,
+      approverId: approverEmployeeId,
+      decidedAt: new Date(),
+    }).where(eq(leaveRequests.id, id)).returning();
 
-  if (decision === 'approved') {
-    const currentYear = new Date(request!.startDate).getFullYear();
-    const [balance] = await db.select().from(leaveBalances).where(
-      and(
-        eq(leaveBalances.employeeId, request!.employeeId),
-        eq(leaveBalances.leaveTypeId, request!.leaveTypeId),
-        eq(leaveBalances.year, currentYear)
-      )
-    );
-
-    if (balance) {
-      const newBalance = (parseFloat(balance.balanceDays as string) - parseFloat(request!.days)).toFixed(2);
-      await db.update(leaveBalances).set({
-        balanceDays: newBalance,
-      }).where(eq(leaveBalances.id, balance.id));
+    if (decision === 'approved') {
+      const currentYear = new Date(request.startDate).getFullYear();
+      await tx.update(leaveBalances)
+        .set({
+          balanceDays: sql`${leaveBalances.balanceDays} - ${parseFloat(request.days)}`,
+        })
+        .where(
+          and(
+            eq(leaveBalances.employeeId, request.employeeId),
+            eq(leaveBalances.leaveTypeId, request.leaveTypeId),
+            eq(leaveBalances.year, currentYear)
+          )
+        );
     }
-  }
+    return updatedReq;
+  });
 
   await auditAction({
     userId: actorUserId,

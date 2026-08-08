@@ -56,8 +56,8 @@ export default async function ExpensesPage({
   .where(and(...conditions))
   .orderBy(desc(expenses.expenseDate));
 
-  const formatCurrency = (val: string | null) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+  const formatCurrency = (val: string | null, currency: string = 'USD') => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency })
       .format(parseFloat(val || '0'));
   };
 
@@ -122,7 +122,7 @@ export default async function ExpensesPage({
                   <td className="px-4 py-3 font-medium text-primary">{exp.vendor}</td>
                   <td className="px-4 py-3">{exp.category}</td>
                   <td className="px-4 py-3 text-muted-foreground">{exp.projectName || '-'}</td>
-                  <td className="px-4 py-3 font-medium">{formatCurrency(exp.amount)}</td>
+                  <td className="px-4 py-3 font-medium">{formatCurrency(exp.amount, exp.currency)}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadgeClass(exp.approvalStatus || 'pending')}`}>
                       {exp.approvalStatus?.toUpperCase() || 'PENDING'}

@@ -75,7 +75,9 @@ export async function createEmployee(input: any, actorUserId: string) {
 
   if (error || !authUser.user) {
     console.error('Supabase auth error:', error);
-    throw new Error(`Failed to create auth user: ${error?.message || JSON.stringify(error)}`);
+    // Use AppError so the UI gets a proper message instead of generic 500
+    const { AppError } = require('../types/errors');
+    throw new AppError(error?.message || 'Failed to create auth user', 'AUTH_CREATION_FAILED', 400);
   }
 
   // 5. Initialize Leave Balances

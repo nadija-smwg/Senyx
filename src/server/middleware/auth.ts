@@ -7,6 +7,7 @@ import { cookies } from 'next/headers';
 import { db } from '../db/client';
 import { users, userRoles, roles, rolePermissions, permissions } from '../db/schema/identity';
 import { eq } from 'drizzle-orm';
+import crypto from 'crypto';
 
 export async function withAuth(request: NextRequest): Promise<AuthContext> {
   const cookieStore = await cookies();
@@ -83,7 +84,7 @@ export async function withAuth(request: NextRequest): Promise<AuthContext> {
     employeeId: dbUser.employeeId, // Assuming FK to employees isn't set up yet, will be null initially? Wait, employeeId is NOT NULL in schema. It's a string/uuid.
     roles: roleNames,
     permissions: perms,
-    sessionId: 'temp-session', // Will be replaced by actual session ID if we store it
+    sessionId: crypto.randomUUID(),
     deviceInfo,
     ip,
     apiRoute,

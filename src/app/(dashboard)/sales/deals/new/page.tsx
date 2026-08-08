@@ -156,6 +156,7 @@ export default function NewDealPage() {
                         <option value="USD">USD ($)</option>
                         <option value="EUR">EUR (€)</option>
                         <option value="GBP">GBP (£)</option>
+                        <option value="LKR">LKR (Rs)</option>
                       </select>
                     </FormControl>
                     <FormMessage />

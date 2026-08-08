@@ -116,9 +116,9 @@ export default function DealsPage() {
               <List className="w-4 h-4 mr-2" /> List
             </Button>
           </div>
-          <Link href="/sales/deals/new">
-            <Button>Create Deal</Button>
-          </Link>
+          <Button asChild>
+            <Link href="/sales/deals/new">Create Deal</Link>
+          </Button>
         </div>
       </PageHeader>
 

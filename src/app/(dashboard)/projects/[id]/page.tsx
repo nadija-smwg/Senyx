@@ -43,6 +43,10 @@ export default function ProjectOverviewPage() {
   const completedTasks = doneCol ? doneCol.count : 0;
   const completionPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: financials.currency || 'USD' }).format(val);
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -79,9 +83,9 @@ export default function ProjectOverviewPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${financials.collected.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatCurrency(financials.collected)}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Budget: ${financials.budget.toLocaleString()}
+              Budget: {formatCurrency(financials.budget)}
             </p>
           </CardContent>
         </Card>
@@ -92,7 +96,7 @@ export default function ProjectOverviewPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${financials.due.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatCurrency(financials.due)}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Pending collection
             </p>

@@ -43,8 +43,8 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
   const paymentRecords = await db.select().from(payments)
     .where(eq(payments.invoiceId, id));
 
-  const formatCurrency = (val: string | null) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+  const formatCurrency = (val: string | null, currency: string = 'USD') => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency })
       .format(parseFloat(val || '0'));
   };
 
@@ -111,8 +111,8 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
               <tr key={item.id}>
                 <td className="px-4 py-4 text-gray-900">{item.description}</td>
                 <td className="px-4 py-4 text-right text-gray-600">{item.quantity}</td>
-                <td className="px-4 py-4 text-right text-gray-600">{formatCurrency(item.unitPrice)}</td>
-                <td className="px-4 py-4 text-right text-gray-900 font-medium">{formatCurrency(item.amount)}</td>
+                <td className="px-4 py-4 text-right text-gray-600">{formatCurrency(item.unitPrice, invoice.currency || undefined)}</td>
+                <td className="px-4 py-4 text-right text-gray-900 font-medium">{formatCurrency(item.amount, invoice.currency || undefined)}</td>
               </tr>
             ))}
           </tbody>
@@ -120,17 +120,17 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
 
         <div className="flex justify-end border-t pt-8">
           <div className="w-64 space-y-3 text-sm">
-            <div className="flex justify-between text-gray-600">
+            <div className="flex justify-between text-gray-600 mb-2">
               <span>Subtotal:</span>
-              <span>{formatCurrency(invoice.subtotal)}</span>
+              <span>{formatCurrency(invoice.subtotal, invoice.currency || undefined)}</span>
             </div>
             <div className="flex justify-between text-gray-600">
               <span>Tax:</span>
-              <span>{formatCurrency(invoice.tax)}</span>
+              <span>{formatCurrency(invoice.tax, invoice.currency || undefined)}</span>
             </div>
             <div className="flex justify-between text-lg font-bold text-gray-900 border-t pt-3 mt-3">
               <span>Total:</span>
-              <span>{formatCurrency(invoice.total)}</span>
+              <span>{formatCurrency(invoice.total, invoice.currency || undefined)}</span>
             </div>
           </div>
         </div>
@@ -156,7 +156,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
                   <td className="px-4 py-3">{payment.paidAt ? new Date(payment.paidAt).toLocaleString() : '-'}</td>
                   <td className="px-4 py-3 uppercase text-xs">{payment.method?.replace('_', ' ')}</td>
                   <td className="px-4 py-3">{payment.reference || '-'}</td>
-                  <td className="px-4 py-3 text-right font-medium">{formatCurrency(payment.amount)}</td>
+                  <td className="px-4 py-3 text-right font-medium">{formatCurrency(payment.amount, payment.currency)}</td>
                 </tr>
               ))}
             </tbody>

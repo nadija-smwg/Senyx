@@ -82,8 +82,8 @@ export default function NewEmployeePage() {
       })
 
       if (!res.ok) {
-        const error = await res.json()
-        throw new Error(error.error || "Failed to create employee")
+        const errorData = await res.json()
+        throw new Error(errorData.error?.message || "Failed to create employee")
       }
 
       toast.success("Employee created successfully")

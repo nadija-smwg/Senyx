@@ -5,6 +5,7 @@ import { eq, and, desc, asc, isNull, inArray, sum, count } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 import { sendNotification } from './notification.service';
 import { users } from '../db/schema/identity';
+import { AppError } from '../types/errors';
 
 // Utility for auditing
 async function auditAction(data: any) {
@@ -54,11 +55,11 @@ export async function listProjects(scope: 'all' | 'own' | 'assigned', actorUserI
   return allProjects;
 }
 
-export async function createProject(input: any, actorUserId: string) {
+export async function createProject(input: any, actorUserId: string, currentEmployeeId: string) {
   const code = await generateProjectCode();
   
   if (input.type === 'solution' && !input.accountId) {
-    throw new Error('Solution projects require an associated account.');
+    throw new AppError('Solution projects require an associated account. Please select an account or change the project type.', 400, 'VALIDATION_ERROR');
   }
 
   return await db.transaction(async (tx) => {
@@ -68,7 +69,7 @@ export async function createProject(input: any, actorUserId: string) {
       type: input.type,
       accountId: input.accountId || null,
       dealId: input.dealId || null,
-      ownerId: input.ownerId || actorUserId,
+      ownerId: input.ownerId || currentEmployeeId,
       billingType: input.billingType || 'fixed',
       status: input.status || 'planning',
       startDate: input.startDate || null,
@@ -206,19 +207,27 @@ export async function getSummary(projectId: string) {
   const board = await getBoard(projectId);
   
   // Total time
-  const time = await db.select().from(timeEntries).where(and(eq(timeEntries.projectId, projectId), isNull(timeEntries.deletedAt)));
-  const totalHours = time.reduce((sum, t) => sum + Number(t.hours), 0);
-  const billableHours = time.filter(t => t.billable).reduce((sum, t) => sum + Number(t.hours), 0);
+  const [timeStats] = await db.select({
+    totalHours: sql<number>`COALESCE(SUM(${timeEntries.hours}), 0::numeric)`,
+    billableHours: sql<number>`COALESCE(SUM(CASE WHEN ${timeEntries.billable} = true THEN ${timeEntries.hours} ELSE 0::numeric END), 0::numeric)`,
+  }).from(timeEntries).where(and(eq(timeEntries.projectId, projectId), isNull(timeEntries.deletedAt)));
+
+  const totalHours = Number(timeStats?.totalHours || 0);
+  const billableHours = Number(timeStats?.billableHours || 0);
 
   // Payment milestones
-  const pm = await db.select().from(paymentMilestones).where(and(eq(paymentMilestones.projectId, projectId), isNull(paymentMilestones.deletedAt)));
-  const collected = pm.filter(p => p.status === 'paid').reduce((sum, p) => sum + Number(p.amount), 0);
-  const due = pm.filter(p => p.status === 'due' || p.status === 'invoiced').reduce((sum, p) => sum + Number(p.amount), 0);
+  const [pmStats] = await db.select({
+    collected: sql<number>`COALESCE(SUM(CASE WHEN ${paymentMilestones.status} = 'paid' THEN ${paymentMilestones.amount} ELSE 0::numeric END), 0::numeric)`,
+    due: sql<number>`COALESCE(SUM(CASE WHEN ${paymentMilestones.status} IN ('due', 'invoiced') THEN ${paymentMilestones.amount} ELSE 0::numeric END), 0::numeric)`,
+  }).from(paymentMilestones).where(and(eq(paymentMilestones.projectId, projectId), isNull(paymentMilestones.deletedAt)));
+
+  const collected = Number(pmStats?.collected || 0);
+  const due = Number(pmStats?.due || 0);
 
   return {
     boardStatus: board.map(c => ({ name: c.name, count: c.tasks.length })),
     timeLogged: { totalHours, billableHours },
-    financials: { collected, due, budget: Number(project.budget || 0) },
+    financials: { collected, due, budget: Number(project.budget || 0), currency: project.currency },
   };
 }
 
@@ -242,11 +251,9 @@ export async function assignMember(projectId: string, input: any, actorUserId: s
   });
 
   const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
-  const { users } = await import('../db/schema/identity');
   const [assignedUser] = await db.select().from(users).where(eq(users.employeeId, input.employeeId));
   
   if (assignedUser && project) {
-    const { sendNotification } = await import('./notification.service');
     await sendNotification(assignedUser.id, {
       type: 'assignment',
       title: 'Project Assignment',

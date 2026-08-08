@@ -11,6 +11,7 @@ import {
 } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { QuoteDocumentsModal } from '@/components/sales/quote-documents-modal';
+import { toast } from 'sonner';
 
 export default function QuotesPage() {
   const [quotes, setQuotes] = useState([]);
@@ -82,7 +83,7 @@ export default function QuotesPage() {
         title="Quotes" 
         description="Manage price quotes sent to prospects."
       >
-        <Button>Create Quote</Button>
+        <Button onClick={() => toast('Quote creation not implemented yet')}>Create Quote</Button>
       </PageHeader>
 
       <div className="border rounded-md bg-card overflow-hidden">

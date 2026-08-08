@@ -21,19 +21,26 @@ export function encrypt(plaintext: string | number | null | undefined): string |
   
   const authTag = cipher.getAuthTag().toString('base64');
   
-  // Format: iv:authTag:encryptedData (all base64)
-  return `${iv.toString('base64')}:${authTag}:${encrypted}`;
+  // Format: v1:iv:authTag:encryptedData (all base64)
+  return `v1:${iv.toString('base64')}:${authTag}:${encrypted}`;
 }
 
 export function decrypt(ciphertext: string | null | undefined): string | null {
   if (!ciphertext) return null;
   
   const parts = ciphertext.split(':');
-  if (parts.length !== 3) {
+  
+  let ivBase64, authTagBase64, encryptedBase64;
+  
+  if (parts.length === 3) {
+    // Legacy format without version prefix
+    [ivBase64, authTagBase64, encryptedBase64] = parts;
+  } else if (parts.length === 4 && parts[0] === 'v1') {
+    // Versioned format
+    [, ivBase64, authTagBase64, encryptedBase64] = parts;
+  } else {
     throw new Error('Invalid encrypted string format');
   }
-  
-  const [ivBase64, authTagBase64, encryptedBase64] = parts;
   
   if (!ivBase64 || !authTagBase64 || !encryptedBase64) {
     throw new Error('Missing parts in encrypted string');

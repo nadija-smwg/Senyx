@@ -23,8 +23,8 @@ export default async function PaymentsPage() {
   .where(isNull(payments.deletedAt))
   .orderBy(desc(payments.paidAt));
 
-  const formatCurrency = (val: string | null) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+  const formatCurrency = (val: string | null, currency: string = 'USD') => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency })
       .format(parseFloat(val || '0'));
   };
 
@@ -68,9 +68,9 @@ export default async function PaymentsPage() {
                   <td className="px-4 py-3 text-muted-foreground">{pay.reference || '-'}</td>
                   <td className="px-4 py-3 font-bold">
                     {pay.invoiceId ? (
-                      <span className="text-green-600">+{formatCurrency(pay.amount)}</span>
+                      <span className="text-green-600">+{formatCurrency(pay.amount, pay.currency)}</span>
                     ) : (
-                      <span className="text-red-600">-{formatCurrency(pay.amount)}</span>
+                      <span className="text-red-600">-{formatCurrency(pay.amount, pay.currency)}</span>
                     )}
                   </td>
                 </tr>

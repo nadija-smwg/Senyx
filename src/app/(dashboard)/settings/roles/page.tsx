@@ -7,6 +7,7 @@ import { Button } from '../../../../components/ui/button';
 import { Spinner } from '../../../../components/ui/spinner';
 import { fetchClient } from '../../../../lib/api-client';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 interface Role {
   id: string;
@@ -28,7 +29,7 @@ export default function RolesListPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Roles & Permissions" description="View and manage system roles.">
-        <Button>Create Role</Button>
+        <Button onClick={() => toast('Role creation not implemented yet')}>Create Role</Button>
       </PageHeader>
       
       {isLoading ? (

@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/layout/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { CreateContactDialog } from '@/components/crm/create-contact-dialog';
 import { InteractionTimeline } from '@/components/crm/interaction-timeline';
 import { ActivityList } from '@/components/crm/activity-list';
 import { Building2, Globe, Users, Briefcase } from 'lucide-react';
@@ -16,6 +17,15 @@ export default function AccountDetailPage() {
   const [interactions, setInteractions] = useState([]);
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isCreateContactOpen, setIsCreateContactOpen] = useState(false);
+
+  const refreshAccount = () => {
+    if (!id) return;
+    fetch(`/api/accounts/${id}`)
+      .then(res => res.json())
+      .then(data => setAccount(data.data))
+      .catch(console.error);
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -102,7 +112,7 @@ export default function AccountDetailPage() {
               <h3 className="font-semibold flex items-center">
                 <Users className="w-4 h-4 mr-2" /> Contacts
               </h3>
-              <Button size="sm" variant="outline">Add Contact</Button>
+              <Button size="sm" variant="outline" onClick={() => setIsCreateContactOpen(true)}>Add Contact</Button>
             </div>
             {account.contacts && account.contacts.length > 0 ? (
               <ul className="divide-y divide-border">
@@ -129,6 +139,13 @@ export default function AccountDetailPage() {
           <ActivityList activities={activities} />
         </TabsContent>
       </Tabs>
+
+      <CreateContactDialog 
+        open={isCreateContactOpen} 
+        onOpenChange={setIsCreateContactOpen} 
+        onSuccess={refreshAccount}
+        defaultAccountId={id}
+      />
     </div>
   );
 }

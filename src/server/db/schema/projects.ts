@@ -24,7 +24,7 @@ export const projects = pgTable('projects', {
   budget: numeric('budget', { precision: 14, scale: 2 }),
   currency: varchar('currency', { length: 3 }).notNull(),
 }, (table) => [
-  check('project_type_check', sql`${table.type} IN ('solution', 'product')`),
+  check('project_type_check', sql`${table.type} IN ('solution', 'product', 'internal')`),
   check('project_billing_check', sql`${table.billingType} IN ('fixed', 'time_materials', 'retainer')`),
   check('project_status_check', sql`${table.status} IN ('planning', 'active', 'on_hold', 'completed', 'cancelled')`),
   check('project_dates_check', sql`${table.endDate} >= ${table.startDate}`),

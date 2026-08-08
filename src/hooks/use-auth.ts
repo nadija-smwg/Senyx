@@ -49,17 +49,28 @@ export function useAuth() {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
-    // In a full implementation, you might save the token or wait for cookie.
-    // Re-fetch 'me' or just set state.
     router.push('/');
     return data;
   };
 
-  const logout = async () => {
-    await fetchClient('/api/auth/logout', { method: 'POST' });
-    setAuthState({ user: null, roles: [], permissions: [], isLoading: false });
-    router.push('/login');
+  const register = async (input: any) => {
+    const data = await fetchClient<{ success: boolean }>('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+    return data;
   };
 
-  return { ...authState, login, logout };
+  const logout = async () => {
+    try {
+      await fetchClient('/api/auth/logout', { method: 'POST' });
+    } catch (e) {
+      console.warn('Logout API error:', e);
+    } finally {
+      setAuthState({ user: null, roles: [], permissions: [], isLoading: false });
+      router.push('/login');
+    }
+  };
+
+  return { ...authState, login, logout, register };
 }

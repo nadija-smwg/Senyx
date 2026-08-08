@@ -70,9 +70,9 @@ export default async function InvoicesPage({
     }
   });
 
-  const formatCurrency = (val: string | number | null) => {
+  const formatCurrency = (val: string | number | null, currency: string = 'USD') => {
     const num = typeof val === 'string' ? parseFloat(val || '0') : (val || 0);
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(num);
   };
 
   const accountList = await db.select({ id: accounts.id, name: accounts.name }).from(accounts).orderBy(accounts.name);
@@ -147,7 +147,7 @@ export default async function InvoicesPage({
                   </td>
                   <td className="px-4 py-3">{inv.accountName || 'Unknown'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{inv.projectName || '-'}</td>
-                  <td className="px-4 py-3 font-bold">{formatCurrency(inv.total)}</td>
+                  <td className="px-4 py-3 font-bold">{formatCurrency(inv.total, inv.currency)}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadgeClass(inv.status)}`}>
                       {inv.status?.toUpperCase() || 'DRAFT'}

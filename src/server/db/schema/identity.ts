@@ -1,18 +1,20 @@
-import { pgTable, uuid, text, boolean, timestamp, varchar, integer, inet, check, unique, primaryKey, index, AnyPgColumn } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, boolean, timestamp, varchar, integer, inet, check, uniqueIndex, primaryKey, index, AnyPgColumn } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { baseColumns } from './base';
 import { employees } from './hr';
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
-  employeeId: uuid('employee_id').notNull().unique().references(() => employees.id), // FK to employees
-  email: text('email').notNull().unique(), // Using text for citext equivalent in ORM without custom types
+  employeeId: uuid('employee_id').notNull().references(() => employees.id), // FK to employees
+  email: text('email').notNull(), // Using text for citext equivalent in ORM without custom types
   isActive: boolean('is_active').default(true).notNull(),
   twoFactorEnabled: boolean('two_factor_enabled').default(false).notNull(),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
   ...baseColumns,
 }, (table) => [
   index('users_employee_id_idx').on(table.employeeId),
+  uniqueIndex('users_employee_id_unique').on(table.employeeId).where(sql`deleted_at IS NULL`),
+  uniqueIndex('users_email_unique').on(table.email).where(sql`deleted_at IS NULL`),
 ]);
 
 export const roles = pgTable('roles', {
@@ -33,7 +35,7 @@ export const permissions = pgTable('permissions', {
 }, (table) => [
   check('action_check', sql`${table.action} IN ('view', 'create', 'edit', 'delete', 'export', 'approve')`),
   check('scope_check', sql`${table.scope} IN ('all', 'own', 'assigned')`),
-  unique('module_action_scope_idx').on(table.module, table.action, table.scope),
+  uniqueIndex('module_action_scope_idx').on(table.module, table.action, table.scope),
 ]);
 
 export const rolePermissions = pgTable('role_permissions', {

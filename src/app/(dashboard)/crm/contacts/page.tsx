@@ -1,5 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { CreateContactDialog } from '@/components/crm/create-contact-dialog';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,19 +17,26 @@ export default function ContactsPage() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState('');
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  useEffect(() => {
+  const fetchContacts = () => {
+    setLoading(true);
     fetch('/api/contacts')
       .then(res => res.json())
       .then(d => {
         if (d.data) setData(d.data);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchContacts();
   }, []);
 
   const columns = [
     {
-      accessorKey: 'fullName',
+      id: 'fullName',
+      accessorFn: (row: any) => `${row.firstName} ${row.lastName || ''}`.trim(),
       header: 'Name',
       cell: ({ row }: any) => {
         const primary = row.original.isPrimary;
@@ -71,8 +80,14 @@ export default function ContactsPage() {
         title="Contacts" 
         description="Manage the people linked to your client accounts."
       >
-        <Button>Add Contact</Button>
+        <Button onClick={() => setIsCreateOpen(true)}>Add Contact</Button>
       </PageHeader>
+
+      <CreateContactDialog 
+        open={isCreateOpen} 
+        onOpenChange={setIsCreateOpen} 
+        onSuccess={fetchContacts}
+      />
 
       <div className="flex items-center space-x-2">
         <Input 

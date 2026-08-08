@@ -39,8 +39,8 @@ export default async function SubscriptionsPage() {
   });
   const totalARR = totalMRR * 12;
 
-  const formatCurrency = (val: number | string | null) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+  const formatCurrency = (val: number | string | null, currency: string = 'USD') => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency })
       .format(typeof val === 'string' ? parseFloat(val || '0') : (val || 0));
   };
 
@@ -85,9 +85,9 @@ export default async function SubscriptionsPage() {
                     <div>{sub.productName}</div>
                     <div className="text-xs text-muted-foreground">{sub.plan}</div>
                   </td>
-                  <td className="px-4 py-3 font-medium">{formatCurrency(sub.amount)}</td>
+                  <td className="px-4 py-3 font-medium">{formatCurrency(sub.amount, sub.currency)}</td>
                   <td className="px-4 py-3 capitalize">{sub.interval}</td>
-                  <td className="px-4 py-3 font-bold text-green-600">+{formatCurrency(sub.mrr)}</td>
+                  <td className="px-4 py-3 font-bold text-green-600">+{formatCurrency(sub.mrr, sub.currency)}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadgeClass(sub.status || 'active')}`}>
                       {sub.status?.toUpperCase() || 'ACTIVE'}

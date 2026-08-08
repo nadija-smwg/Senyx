@@ -130,6 +130,7 @@ export function ExpenseFormModal() {
                 <option value="USD">USD</option>
                 <option value="EUR">EUR</option>
                 <option value="GBP">GBP</option>
+                <option value="LKR">LKR</option>
               </select>
             </div>
           </div>

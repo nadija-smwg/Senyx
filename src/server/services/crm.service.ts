@@ -110,16 +110,14 @@ export async function deleteAccount(id: string, actorUserId: string) {
 // ----------------------------------------------------------------------------
 
 export async function listContacts(accountId?: string) {
-  let query = db.select().from(contacts).where(isNull(contacts.deletedAt));
-  
-  // if accountId is passed, filter
-  // Drizzle doesn't easily allow dynamic where chains without building conditions array
-  // So we'll just filter in memory for now if it's passed, or ideally do it in SQL:
-  const allContacts = await query.orderBy(desc(contacts.createdAt));
+  const conditions = [isNull(contacts.deletedAt)];
   if (accountId) {
-    return allContacts.filter(c => c.accountId === accountId);
+    conditions.push(eq(contacts.accountId, accountId));
   }
-  return allContacts;
+  
+  return await db.select().from(contacts)
+    .where(and(...conditions))
+    .orderBy(desc(contacts.createdAt));
 }
 
 export async function createContact(input: any, actorUserId: string) {
@@ -185,12 +183,16 @@ export async function createInteraction(input: any, actorUserId: string) {
 }
 
 export async function listInteractions(accountId?: string, contactId?: string) {
-  const all = await db.select().from(interactions).where(isNull(interactions.deletedAt)).orderBy(desc(interactions.occurredAt));
-  return all.filter(i => {
-    if (accountId && i.accountId !== accountId) return false;
-    if (contactId && i.contactId !== contactId) return false;
-    return true;
-  });
+  const conditions = [isNull(interactions.deletedAt)];
+  if (accountId) {
+    conditions.push(eq(interactions.accountId, accountId));
+  }
+  if (contactId) {
+    conditions.push(eq(interactions.contactId, contactId));
+  }
+  return await db.select().from(interactions)
+    .where(and(...conditions))
+    .orderBy(desc(interactions.occurredAt));
 }
 
 export async function createActivity(input: any, actorUserId: string) {
@@ -220,12 +222,16 @@ export async function createActivity(input: any, actorUserId: string) {
 }
 
 export async function listActivities(assigneeId?: string, status?: string) {
-  const all = await db.select().from(activities).where(isNull(activities.deletedAt)).orderBy(desc(activities.createdAt));
-  return all.filter(a => {
-    if (assigneeId && a.assigneeId !== assigneeId) return false;
-    if (status && a.status !== status) return false;
-    return true;
-  });
+  const conditions = [isNull(activities.deletedAt)];
+  if (assigneeId) {
+    conditions.push(eq(activities.assigneeId, assigneeId));
+  }
+  if (status) {
+    conditions.push(eq(activities.status, status));
+  }
+  return await db.select().from(activities)
+    .where(and(...conditions))
+    .orderBy(desc(activities.createdAt));
 }
 
 export async function updateActivity(id: string, input: any, actorUserId: string) {

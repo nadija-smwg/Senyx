@@ -4,6 +4,7 @@ import { eq, and, desc, isNull } from 'drizzle-orm';
 import { auditLogs } from '../db/schema/platform';
 import { sendNotification } from './notification.service';
 import { users } from '../db/schema/identity';
+import { accounts } from '../db/schema/crm';
 
 // Utility for auditing
 async function auditAction(data: any) {
@@ -58,8 +59,9 @@ export async function listDeals(scope: 'all' | 'own', currentEmployeeId: string)
     // find latest history for this deal
     const dealHistories = histories.filter(h => h.dealId === deal.id).sort((a, b) => b.changedAt.getTime() - a.changedAt.getTime());
     const lastStageChange = dealHistories[0]?.changedAt ?? deal.createdAt;
+    const lastStageChangeDate = lastStageChange ? new Date(lastStageChange as any) : null;
     
-    const daysInStage = lastStageChange ? Math.floor((now.getTime() - lastStageChange.getTime()) / (1000 * 3600 * 24)) : 0;
+    const daysInStage = lastStageChangeDate ? Math.floor((now.getTime() - lastStageChangeDate.getTime()) / (1000 * 3600 * 24)) : 0;
     
     const lastActivity = deal.lastActivityAt || deal.createdAt;
     // ensure lastActivity is a Date
@@ -127,7 +129,6 @@ export async function getDeal(id: string) {
   // (In a real large-scale Drizzle setup, we would use query.deals.findFirst({ with: { account: true, history: true } }))
   
   // 1. Fetch Account
-  const { accounts } = await import('../db/schema/crm');
   const [account] = await db.select().from(accounts).where(eq(accounts.id, deal.accountId));
 
   // 2. Fetch History
@@ -136,7 +137,8 @@ export async function getDeal(id: string) {
   // 3. Compute Health
   const now = new Date();
   const lastStageChange = history[0]?.changedAt ?? deal.createdAt;
-  const daysInStage = Math.floor((now.getTime() - lastStageChange.getTime()) / (1000 * 3600 * 24));
+  const lastStageChangeDate = lastStageChange ? new Date(lastStageChange as any) : null;
+  const daysInStage = lastStageChangeDate ? Math.floor((now.getTime() - lastStageChangeDate.getTime()) / (1000 * 3600 * 24)) : 0;
   
   const lastActivity = deal.lastActivityAt || deal.createdAt;
   const lastActivityDate = lastActivity instanceof Date ? lastActivity : new Date(lastActivity as any);
@@ -274,11 +276,11 @@ export async function closeDeal(id: string, status: 'won' | 'lost', reason: stri
 // ----------------------------------------------------------------------------
 
 export async function listQuotes(dealId?: string) {
-  const all = await db.select().from(quotes).where(isNull(quotes.deletedAt));
+  const conditions = [isNull(quotes.deletedAt)];
   if (dealId) {
-    return all.filter(q => q.dealId === dealId);
+    conditions.push(eq(quotes.dealId, dealId));
   }
-  return all;
+  return await db.select().from(quotes).where(and(...conditions));
 }
 
 export async function createQuote(input: any, actorUserId: string) {

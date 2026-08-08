@@ -42,8 +42,8 @@ export default function LeavePage() {
         body: JSON.stringify({ decision })
       })
       if (!res.ok) {
-        const error = await res.json()
-        throw new Error(error.error || "Failed to submit decision")
+        const errorData = await res.json()
+        throw new Error(errorData.error?.message || "Failed to submit decision")
       }
       toast.success(`Leave request ${decision}`)
       fetchLeave()

@@ -3,7 +3,7 @@ import { invoices, invoiceLineItems, payments } from '../db/schema/finance';
 import { paymentMilestones, projects } from '../db/schema/projects';
 import { accounts } from '../db/schema/crm';
 import { auditLogs, settings } from '../db/schema/platform';
-import { eq, and, desc, isNull, sql, gte, lte } from 'drizzle-orm';
+import { eq, and, desc, isNull, sql, gte, lte, inArray } from 'drizzle-orm';
 import { generateInvoiceNumber } from '../utils/invoice-utils';
 import { sendNotification } from './notification.service';
 import { users } from '../db/schema/identity';
@@ -101,16 +101,28 @@ export async function createInvoice(input: any, actorUserId: string) {
   return await db.transaction(async (tx) => {
     const invoiceNumber = await generateInvoiceNumber();
 
+    let subtotal = Number(input.subtotal);
+    let total = Number(input.total);
+    let tax = Number(input.tax || 0);
+
+    if (isNaN(subtotal) && input.lineItems) {
+      subtotal = input.lineItems.reduce((acc: number, item: any) => acc + Number(item.amount || (item.quantity * item.unitPrice)), 0);
+    }
+    
+    if (isNaN(total)) {
+      total = subtotal + tax;
+    }
+
     const [invoice] = await tx.insert(invoices).values({
       invoiceNumber,
       accountId: input.accountId,
       projectId: input.projectId || null,
       dealId: input.dealId || null,
       dueDate: input.dueDate || null,
-      subtotal: input.subtotal,
-      tax: input.tax || '0',
-      total: input.total,
-      currency: input.currency,
+      subtotal: subtotal.toString(),
+      tax: tax.toString(),
+      total: total.toString(),
+      currency: input.currency || 'USD',
       status: 'draft',
       createdBy: actorUserId,
     } as any).returning();
@@ -325,10 +337,23 @@ export async function getAccountsReceivable() {
   if (rows.length === 0) return { current: [], '1-30_days': [], '31-60_days': [], '90+_days': [] };
 
   const invoiceIds = rows.map(r => r.id);
-  const allPayments = await db.select().from(payments).where(sql`${payments.invoiceId} = ANY(${invoiceIds})`);
   
-  // Also fetch milestones for collection status
-  const allMilestones = await db.select().from(paymentMilestones).where(sql`${paymentMilestones.id} IN (SELECT payment_milestone_id FROM invoices WHERE id = ANY(${invoiceIds}) AND payment_milestone_id IS NOT NULL)`);
+  // Get aggregated payments per invoice
+  const paymentAggregates = await db.select({
+    invoiceId: payments.invoiceId,
+    totalPaid: sql<number>`SUM(${payments.amount} * COALESCE(NULLIF(${payments.exchangeRate}::text, ''), '1')::numeric)`
+  }).from(payments)
+    .where(inArray(payments.invoiceId, invoiceIds))
+    .groupBy(payments.invoiceId);
+    
+  const paidMap = new Map(paymentAggregates.map(a => [a.invoiceId, Number(a.totalPaid || 0)]));
+  
+  const milestoneIds = rows.map(r => r.paymentMilestoneId).filter(Boolean) as string[];
+  const allMilestones = milestoneIds.length > 0 
+    ? await db.select().from(paymentMilestones).where(inArray(paymentMilestones.id, milestoneIds))
+    : [];
+    
+  const milestoneMap = new Map(allMilestones.map(m => [m.id, m]));
 
   const report = {
     current: [] as any[],
@@ -340,13 +365,12 @@ export async function getAccountsReceivable() {
   const today = new Date();
 
   rows.forEach(inv => {
-    const invPayments = allPayments.filter(p => p.invoiceId === inv.id);
-    const paymentTotal = invPayments.reduce((sum, p) => sum + Number(p.amount) * (Number(p.exchangeRate) || 1), 0);
+    const paymentTotal = paidMap.get(inv.id) || 0;
     const outstandingAmount = Math.max(0, Number(inv.total) - paymentTotal);
     
     if (outstandingAmount === 0) return; // Fully paid, shouldn't be here if status is accurate, but just in case
     
-    const milestone = inv.paymentMilestoneId ? allMilestones.find(m => m.id === inv.paymentMilestoneId) : null;
+    const milestone = inv.paymentMilestoneId ? milestoneMap.get(inv.paymentMilestoneId) : null;
 
     const data = {
       ...inv,

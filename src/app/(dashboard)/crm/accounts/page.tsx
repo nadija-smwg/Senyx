@@ -76,9 +76,9 @@ export default function AccountsPage() {
         title="Accounts" 
         description="Manage your CRM client accounts and prospects."
       >
-        <Link href="/crm/accounts/new">
-          <Button>Add Account</Button>
-        </Link>
+        <Button asChild>
+          <Link href="/crm/accounts/new">Add Account</Link>
+        </Button>
       </PageHeader>
 
       <div className="flex items-center space-x-2">

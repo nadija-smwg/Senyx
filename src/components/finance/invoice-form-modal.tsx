@@ -185,6 +185,7 @@ export function InvoiceFormModal() {
                   <option value="USD">USD ($)</option>
                   <option value="EUR">EUR (€)</option>
                   <option value="GBP">GBP (£)</option>
+                  <option value="LKR">LKR (Rs)</option>
                 </select>
               </div>
             </div>
@@ -231,7 +232,7 @@ export function InvoiceFormModal() {
                       />
                     </div>
                     <div className="w-32 p-2 text-right font-medium text-sm bg-muted/50 rounded-md">
-                      ${(item.quantity * item.unitPrice).toFixed(2)}
+                      {new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(item.quantity * item.unitPrice)}
                     </div>
                     <button 
                       type="button" 
@@ -257,7 +258,7 @@ export function InvoiceFormModal() {
             <div className="border-t pt-4 space-y-3 w-1/2 ml-auto">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal:</span>
-                <span className="font-medium">${subtotal.toFixed(2)}</span>
+                <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm items-center">
                 <span className="text-muted-foreground">Tax Rate (%):</span>
@@ -272,11 +273,11 @@ export function InvoiceFormModal() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Tax:</span>
-                <span className="font-medium">${tax.toFixed(2)}</span>
+                <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(tax)}</span>
               </div>
               <div className="flex justify-between text-lg font-bold border-t pt-2">
                 <span>Total:</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(total)}</span>
               </div>
             </div>
 

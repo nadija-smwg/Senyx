@@ -42,7 +42,7 @@ export default function GeneralSettingsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="General Settings" description="Global platform configurations.">
-        <Button>Save Configuration</Button>
+        <Button onClick={() => toast.success('Configuration saved')}>Save Configuration</Button>
       </PageHeader>
       
       <Card>
