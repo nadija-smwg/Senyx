@@ -10,6 +10,7 @@ import { useCurrency } from '@/providers/currency-provider';
 
 export default function DashboardHome() {
   const { user } = useAuth();
+  const { format: formatCurrency } = useCurrency();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +34,6 @@ export default function DashboardHome() {
 
   if (!data) return <div>Failed to load dashboard</div>;
 
-  const { format: formatCurrency } = useCurrency();
   const formatNumber = (val: number) => (val || 0).toLocaleString();
 
   return (
