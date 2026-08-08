@@ -45,9 +45,11 @@ jobs:
           # Note: Better handled via Cloudflare R2 object lifecycle rules
           
       - name: Notify on Failure
-        if: failure()
+        if: failure() && env.WEBHOOK_URL != ''
+        env:
+          WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
         run: |
           # Simple webhook alert (e.g., Slack/Discord)
           curl -X POST -H 'Content-type: application/json' \
             --data '{"text":"🚨 SENYX ERP Database backup failed!"}' \
-            ${{ secrets.ALERT_WEBHOOK_URL }}
+            "$WEBHOOK_URL"
