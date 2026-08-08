@@ -12,7 +12,7 @@ Senyx ERP is a modern, enterprise-grade Resource Planning platform built to seam
 - **Email:** Resend
 - **State/Data:** React Server Components (RSC) + Server Actions
 
-## Features
+## Add Features
 - **Dashboard:** Real-time KPIs and activity monitoring.
 - **HR & People:** Employee directory, skills matrix, leave requests, and payroll tracking.
 - **CRM & Sales:** Account management, interactive deal pipelines, and automated quotes.
@@ -74,6 +74,8 @@ Senyx ERP is designed to be deployed effortlessly on Vercel or Netlify.
 1. Connect your GitHub repository to your Vercel/Netlify account.
 2. Add all environment variables from `.env.local` to the project settings.
 3. Deploy!
+
+
 
 ## License
 Proprietary software. All rights reserved by SENYX Corporation.
