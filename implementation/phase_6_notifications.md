@@ -1,4 +1,4 @@
-# Phase 6 — Notifications & Reminders
+r# Phase 6 — Notifications & Reminders
 
 **Duration:** 1–2 weeks  
 **Dependencies:** Phase 1–5 (all modules generating events)  
