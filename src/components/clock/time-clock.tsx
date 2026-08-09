@@ -27,7 +27,7 @@ export function TimeClock() {
 
   React.useEffect(() => {
     if (open && projects.length === 0) {
-      fetch('/api/projects')
+      fetch('/api/projects?scope=all')
         .then(res => res.json())
         .then(json => setProjects(json.data || []));
     }
@@ -83,9 +83,9 @@ export function TimeClock() {
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Select Project</label>
-            <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+            <Select value={selectedProjectId} onValueChange={setSelectedProjectId} disabled={projects.length === 0}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a project" />
+                <SelectValue placeholder={projects.length === 0 ? "No projects available" : "Select a project"} />
               </SelectTrigger>
               <SelectContent>
                 {projects.map((p) => (
