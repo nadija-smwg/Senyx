@@ -9,6 +9,7 @@ const fetcher = (url: string) => fetch(url).then(r => r.json()).then(d => d.data
 export function useClock() {
   const { data: activeSession, mutate: mutateActiveSession, isValidating: loading } = useSWR('/api/clock/active', fetcher);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const fetchActiveSession = async () => {
     await mutateActiveSession();
@@ -37,6 +38,8 @@ export function useClock() {
   }, [activeSession]);
 
   const clockIn = async (projectId: string, taskId?: string) => {
+    if (isProcessing) return;
+    setIsProcessing(true);
     try {
       const res = await fetch('/api/clock/in', {
         method: 'POST',
@@ -49,10 +52,14 @@ export function useClock() {
       await fetchActiveSession();
     } catch (err: any) {
       toast.error(err.message);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const clockOut = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
     try {
       const res = await fetch('/api/clock/out', {
         method: 'POST',
@@ -68,6 +75,8 @@ export function useClock() {
       await mutateActiveSession();
     } catch (err: any) {
       toast.error(err.message);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -75,6 +84,7 @@ export function useClock() {
     activeSession,
     elapsedSeconds,
     loading,
+    isProcessing,
     clockIn,
     clockOut,
   };

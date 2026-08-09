@@ -2,6 +2,7 @@ import { db } from '../db/client';
 import { timeEntries, clockSessions } from '../db/schema/projects';
 import { auditLogs } from '../db/schema/platform';
 import { eq, and, desc, isNull, sql } from 'drizzle-orm';
+import { BusinessRuleError } from '../types/errors';
 
 // Utility for auditing
 async function auditAction(data: any) {
@@ -27,10 +28,10 @@ export async function listTimeEntries(projectId: string) {
 
 export async function logTime(projectId: string, input: any, employeeId: string, actorUserId: string) {
   if (new Date(input.workDate) > new Date()) {
-    throw new Error('Cannot log time in the future');
+    throw new BusinessRuleError('Cannot log time in the future');
   }
   if (input.hours <= 0 || input.hours > 24) {
-    throw new Error('Hours must be between 0 and 24');
+    throw new BusinessRuleError('Hours must be between 0 and 24');
   }
 
   const [entry] = await db.insert(timeEntries).values({
@@ -45,7 +46,7 @@ export async function logTime(projectId: string, input: any, employeeId: string,
     createdBy: actorUserId,
   }).returning();
 
-  if (!entry) throw new Error('Failed to log time');
+  if (!entry) throw new BusinessRuleError('Failed to log time');
 
   await auditAction({
     userId: actorUserId,
@@ -66,7 +67,7 @@ export async function getActiveClock(employeeId: string) {
 export async function clockIn(projectId: string, taskId: string | undefined, employeeId: string, actorUserId: string) {
   const activeClock = await getActiveClock(employeeId);
   if (activeClock) {
-    throw new Error('You already have an active clock session running.');
+    throw new BusinessRuleError('You already have an active clock session running.');
   }
 
   const [clock] = await db.insert(clockSessions).values({
@@ -77,7 +78,7 @@ export async function clockIn(projectId: string, taskId: string | undefined, emp
     createdBy: actorUserId,
   }).returning();
 
-  if (!clock) throw new Error('Failed to clock in');
+  if (!clock) throw new BusinessRuleError('Failed to clock in');
 
   await auditAction({
     userId: actorUserId,
@@ -93,7 +94,7 @@ export async function clockIn(projectId: string, taskId: string | undefined, emp
 export async function clockOut(employeeId: string, actorUserId: string) {
   const activeClock = await getActiveClock(employeeId);
   if (!activeClock) {
-    throw new Error('No active clock session found.');
+    throw new BusinessRuleError('No active clock session found.');
   }
 
   const clockOutTime = new Date();
@@ -110,7 +111,7 @@ export async function clockOut(employeeId: string, actorUserId: string) {
       updatedBy: actorUserId,
     }).where(eq(clockSessions.id, activeClock.id)).returning();
 
-    if (!clock) throw new Error('Failed to update clock session');
+    if (!clock) throw new BusinessRuleError('Failed to update clock session');
 
     // Create time entry automatically if duration > 60 seconds
     let entry = null;

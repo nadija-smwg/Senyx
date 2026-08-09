@@ -10,7 +10,7 @@ interface ProjectHeaderActionsProps {
 }
 
 export function ProjectHeaderActions({ projectId }: ProjectHeaderActionsProps) {
-  const { clockIn, activeSession, loading } = useClock();
+  const { clockIn, activeSession, loading, isProcessing } = useClock();
 
   const handleEdit = () => {
     toast('Edit project functionality is coming in a future update.');
@@ -23,8 +23,8 @@ export function ProjectHeaderActions({ projectId }: ProjectHeaderActionsProps) {
   return (
     <div className="flex space-x-2">
       <Button variant="outline" onClick={handleEdit}>Edit Project</Button>
-      <Button onClick={handleClockIn} disabled={loading}>
-        {loading ? 'Processing...' : (activeSession?.projectId === projectId ? 'Clocked In' : 'Clock In')}
+      <Button onClick={handleClockIn} disabled={loading || isProcessing}>
+        {loading || isProcessing ? 'Processing...' : (activeSession?.projectId === projectId ? 'Clocked In' : 'Clock In')}
       </Button>
     </div>
   );

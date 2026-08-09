@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select';
 
 export function TimeClock() {
-  const { activeSession, elapsedSeconds, loading, clockIn, clockOut } = useClock();
+  const { activeSession, elapsedSeconds, loading, isProcessing, clockIn, clockOut } = useClock();
   const [open, setOpen] = React.useState(false);
   const [projects, setProjects] = React.useState<any[]>([]);
   const [selectedProjectId, setSelectedProjectId] = React.useState('');
@@ -58,7 +58,8 @@ export function TimeClock() {
         <Button 
           variant="ghost" 
           size="sm" 
-          className="h-6 w-6 p-0 hover:bg-primary hover:text-primary-foreground rounded-full"
+          disabled={isProcessing}
+          className="h-6 w-6 p-0 hover:bg-primary hover:text-primary-foreground rounded-full disabled:opacity-50"
           onClick={() => clockOut()}
         >
           <Square className="h-3 w-3 fill-current" />
@@ -95,7 +96,7 @@ export function TimeClock() {
           </div>
           <Button 
             className="w-full" 
-            disabled={!selectedProjectId}
+            disabled={!selectedProjectId || isProcessing}
             onClick={() => {
               clockIn(selectedProjectId);
               setOpen(false);
