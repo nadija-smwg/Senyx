@@ -116,8 +116,13 @@ export function PaymentFormModal({
               value={targetId}
               onChange={e => setTargetId(e.target.value)}
               className="w-full p-2 rounded-md border bg-background text-sm"
+              disabled={(type === 'invoice' && invoices.length === 0) || (type === 'expense' && expenses.length === 0)}
             >
-              <option value="" disabled>Select a record...</option>
+              {type === 'invoice' && invoices.length === 0 && <option value="" disabled>No invoices available...</option>}
+              {type === 'expense' && expenses.length === 0 && <option value="" disabled>No expenses available...</option>}
+              {(type === 'invoice' && invoices.length > 0) || (type === 'expense' && expenses.length > 0) ? (
+                <option value="" disabled>Select a record...</option>
+              ) : null}
               {type === 'invoice' && invoices.map(inv => (
                 <option key={inv.id} value={inv.id}>
                   Invoice {inv.invoiceNumber} (${inv.total})
@@ -194,7 +199,7 @@ export function PaymentFormModal({
             </button>
             <button 
               type="submit" 
-              disabled={loading}
+              disabled={loading || !targetId}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
               {loading ? 'Processing...' : 'Record Payment'}
