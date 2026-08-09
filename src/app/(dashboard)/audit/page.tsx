@@ -21,8 +21,11 @@ export default function AuditLogsPage() {
     async function fetchData() {
       try {
         setLoading(true)
-        // In a real implementation we would post the filterGroup to /api/audit-logs
-        const response = await fetch("/api/audit-logs")
+        const response = await fetch("/api/audit-logs", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filterGroup })
+        })
         if (!response.ok) throw new Error("Failed to fetch audit logs")
         const result = await response.json()
         setData(result.data || [])
@@ -34,7 +37,7 @@ export default function AuditLogsPage() {
     }
 
     fetchData()
-  }, [])
+  }, [filterGroup])
 
   const renderSubComponent = ({ row }: { row: any }) => {
     const before = row.original.before;
