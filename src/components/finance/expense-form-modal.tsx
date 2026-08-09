@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import useSWR from 'swr';
+
+const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 export function ExpenseFormModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,6 +18,9 @@ export function ExpenseFormModal() {
   const [currency, setCurrency] = useState('USD');
   const [expenseDate, setExpenseDate] = useState('');
   const [projectId, setProjectId] = useState('');
+
+  const { data: projectsData, isLoading: loadingProjects } = useSWR('/api/projects?scope=all', fetcher);
+  const projects = projectsData?.data || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,13 +154,19 @@ export function ExpenseFormModal() {
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Project (Optional)</label>
-            <input 
-              type="text" 
+            <select 
               value={projectId}
               onChange={e => setProjectId(e.target.value)}
-              placeholder="Project UUID for attribution"
               className="w-full p-2 rounded-md border bg-background text-sm"
-            />
+              disabled={loadingProjects}
+            >
+              <option value="">No Project</option>
+              {projects.map((p: any) => (
+                <option key={p.id} value={p.id}>
+                  {p.code} — {p.name}
+                </option>
+              ))}
+            </select>
           </div>
 
 

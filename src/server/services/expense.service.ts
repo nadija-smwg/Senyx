@@ -110,14 +110,14 @@ export async function createExpense(input: any, actorUserId: string) {
   return expense;
 }
 
-export async function approveExpense(id: string, decision: 'approved' | 'rejected', actorUserId: string) {
+export async function approveExpense(id: string, decision: 'approved' | 'rejected', actorUserId: string, approverEmployeeId: string) {
   const [existing] = await db.select().from(expenses).where(and(eq(expenses.id, id), isNull(expenses.deletedAt)));
   if (!existing) throw new Error('Expense not found');
   if (existing.approvalStatus !== 'pending') throw new Error(`Cannot change decision for expense currently in ${existing.approvalStatus} status`);
 
   const [expense] = await db.update(expenses).set({
     approvalStatus: decision,
-    approverId: actorUserId,
+    approverId: approverEmployeeId,
     updatedAt: new Date(),
     updatedBy: actorUserId,
   }).where(eq(expenses.id, id)).returning();

@@ -12,7 +12,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (decision !== 'approved' && decision !== 'rejected') {
       return NextResponse.json({ error: 'Invalid decision' }, { status: 400 });
     }
-    const expense = await approveExpense(id, decision, ctx.userId);
+    const expense = await approveExpense(id, decision, ctx.userId, ctx.employeeId as string);
     return NextResponse.json({ data: expense });
   } catch (error) {
     return handleError(error);
