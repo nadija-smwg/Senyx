@@ -27,7 +27,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const ctx = await withAuth(req);
     const body = await req.json();
     const validatedData = schema.parse(body);
-    const data = await logTime((await params).id, validatedData, ctx.userId);
+    const data = await logTime((await params).id, validatedData, ctx.employeeId || '', ctx.userId);
     return NextResponse.json({ data }, { status: 201 });
   } catch (error) {
     return handleError(error);

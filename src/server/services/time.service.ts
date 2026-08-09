@@ -25,7 +25,7 @@ export async function listTimeEntries(projectId: string) {
   return await db.select().from(timeEntries).where(and(eq(timeEntries.projectId, projectId), isNull(timeEntries.deletedAt))).orderBy(desc(timeEntries.workDate));
 }
 
-export async function logTime(projectId: string, input: any, actorUserId: string) {
+export async function logTime(projectId: string, input: any, employeeId: string, actorUserId: string) {
   if (new Date(input.workDate) > new Date()) {
     throw new Error('Cannot log time in the future');
   }
@@ -36,7 +36,7 @@ export async function logTime(projectId: string, input: any, actorUserId: string
   const [entry] = await db.insert(timeEntries).values({
     projectId,
     taskId: input.taskId || null,
-    employeeId: actorUserId,
+    employeeId: employeeId,
     workDate: input.workDate,
     hours: input.hours,
     description: input.description,
@@ -118,7 +118,7 @@ export async function clockOut(employeeId: string, actorUserId: string) {
       const [newEntry] = await tx.insert(timeEntries).values({
         projectId: activeClock.projectId!,
         taskId: activeClock.taskId ?? null,
-        employeeId: actorUserId,
+        employeeId: employeeId,
         workDate: clockOutTime.toISOString().split('T')[0],
         hours: String(hours),
         description: 'Auto-logged via Clock',
