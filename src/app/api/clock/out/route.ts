@@ -6,7 +6,7 @@ import { clockOut } from '@/server/services/time.service';
 export async function POST(req: NextRequest) {
   try {
     const ctx = await withAuth(req);
-    const data = await clockOut(ctx.userId);
+    const data = await clockOut(ctx.employeeId || '', ctx.userId);
     return NextResponse.json({ data });
   } catch (error) {
     return handleError(error);

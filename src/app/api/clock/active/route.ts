@@ -6,7 +6,7 @@ import { getActiveClock } from '@/server/services/time.service';
 export async function GET(req: NextRequest) {
   try {
     const ctx = await withAuth(req);
-    const data = await getActiveClock(ctx.userId);
+    const data = await getActiveClock(ctx.employeeId || '');
     return NextResponse.json({ data });
   } catch (error) {
     return handleError(error);

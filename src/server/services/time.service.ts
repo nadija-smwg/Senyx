@@ -63,8 +63,8 @@ export async function getActiveClock(employeeId: string) {
   return clock || null;
 }
 
-export async function clockIn(projectId: string, taskId: string | undefined, actorUserId: string) {
-  const activeClock = await getActiveClock(actorUserId);
+export async function clockIn(projectId: string, taskId: string | undefined, employeeId: string, actorUserId: string) {
+  const activeClock = await getActiveClock(employeeId);
   if (activeClock) {
     throw new Error('You already have an active clock session running.');
   }
@@ -72,7 +72,7 @@ export async function clockIn(projectId: string, taskId: string | undefined, act
   const [clock] = await db.insert(clockSessions).values({
     projectId,
     taskId: taskId || null,
-    employeeId: actorUserId,
+    employeeId,
     isActive: true,
     createdBy: actorUserId,
   }).returning();
@@ -90,8 +90,8 @@ export async function clockIn(projectId: string, taskId: string | undefined, act
   return clock;
 }
 
-export async function clockOut(actorUserId: string) {
-  const activeClock = await getActiveClock(actorUserId);
+export async function clockOut(employeeId: string, actorUserId: string) {
+  const activeClock = await getActiveClock(employeeId);
   if (!activeClock) {
     throw new Error('No active clock session found.');
   }

@@ -16,7 +16,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     try { body = await req.json(); } catch (e) {}
     
     const { taskId } = schema.parse(body);
-    const data = await clockIn((await params).id, taskId, ctx.userId);
+    const data = await clockIn((await params).id, taskId, ctx.employeeId || '', ctx.userId);
     return NextResponse.json({ data });
   } catch (error) {
     return handleError(error);

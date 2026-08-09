@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { projectId, taskId } = schema.parse(body);
     
-    const data = await clockIn(projectId, taskId, ctx.userId);
+    const data = await clockIn(projectId, taskId, ctx.employeeId || '', ctx.userId);
     return NextResponse.json({ data });
   } catch (error) {
     return handleError(error);
