@@ -35,15 +35,17 @@ export async function generateProjectCode() {
   return `PRJ-${String(num + 1).padStart(4, '0')}`;
 }
 
-export async function listProjects(scope: 'all' | 'own' | 'assigned', actorUserId: string) {
+export async function listProjects(scope: 'all' | 'own' | 'assigned', currentEmployeeId: string | null) {
   let query = db.select().from(projects).where(isNull(projects.deletedAt));
 
   if (scope === 'own') {
-    query = db.select().from(projects).where(and(isNull(projects.deletedAt), eq(projects.ownerId, actorUserId)));
+    if (!currentEmployeeId) return [];
+    query = db.select().from(projects).where(and(isNull(projects.deletedAt), eq(projects.ownerId, currentEmployeeId)));
   } else if (scope === 'assigned') {
+    if (!currentEmployeeId) return [];
     // Requires join or subquery
     // using subquery for simplicity
-    const sq = db.select({ projectId: projectAssignments.projectId }).from(projectAssignments).where(eq(projectAssignments.employeeId, actorUserId));
+    const sq = db.select({ projectId: projectAssignments.projectId }).from(projectAssignments).where(eq(projectAssignments.employeeId, currentEmployeeId));
     query = db.select().from(projects).where(and(isNull(projects.deletedAt), inArray(projects.id, sq)));
   }
 

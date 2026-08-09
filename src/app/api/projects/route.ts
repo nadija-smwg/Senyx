@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   try {
     const ctx = await withAuth(req);
     const scope = (req.nextUrl.searchParams.get('scope') as 'all' | 'own' | 'assigned') || 'assigned';
-    const data = await listProjects(scope, ctx.userId);
+    const data = await listProjects(scope, ctx.employeeId || null);
     return NextResponse.json({ data });
   } catch (error) {
     return handleError(error);
