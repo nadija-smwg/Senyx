@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Button } from '../../../components/ui/button';
+import { Logo } from '../../../components/ui/logo';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -26,9 +27,10 @@ export default function LoginPage() {
   };
 
   return (
-    <Card>
-      <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-3xl font-heading font-bold tracking-tight">SENYX</CardTitle>
+    <Card className="backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-white/20 shadow-xl border shadow-slate-200/50 dark:shadow-none">
+      <CardHeader className="space-y-1 text-center flex flex-col items-center">
+        <Logo className="justify-center mb-4 scale-110" />
+        <CardTitle className="text-2xl font-heading font-bold tracking-tight">Welcome Back</CardTitle>
         <CardDescription>
           Enter your email below to log into your account
         </CardDescription>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Menu, X, LayoutDashboard, Activity, HelpCircle, Users, Briefcase, FolderKanban, Receipt, Settings, Shield } from 'lucide-react';
 import Link from 'next/link';
+import { Logo } from '../ui/logo';
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -18,7 +19,7 @@ export function MobileNav() {
   return (
     <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col text-slate-300 animate-in slide-in-from-left">
       <div className="flex items-center justify-between p-6 border-b border-slate-800">
-        <div className="text-xl font-black text-white">SENYX ERP</div>
+        <Logo className="scale-90 origin-left" />
         <button className="p-2 bg-slate-800 rounded-md" onClick={() => setOpen(false)}>
           <X className="w-5 h-5 text-white" />
         </button>

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useAuth } from '../../hooks/use-auth';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Users, Briefcase, FolderKanban, Receipt, Settings, Activity, Shield, HelpCircle } from 'lucide-react';
+import { Logo } from '../ui/logo';
 
 export function Sidebar() {
   const { roles } = useAuth();
@@ -57,10 +58,9 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-slate-950 text-slate-300 h-screen flex flex-col hidden md:flex shrink-0 shadow-xl z-20">
-      <div className="p-6 text-2xl font-heading font-black tracking-tight text-white flex items-center border-b border-slate-800/50">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 mr-3 shadow-lg shadow-indigo-500/20"></div>
-        SENYX
+    <aside className="w-64 bg-slate-950 text-slate-300 h-screen flex flex-col hidden md:flex shrink-0 shadow-xl z-20 border-r border-slate-800/50">
+      <div className="p-5 flex items-center border-b border-slate-800/50 h-[72px]">
+        <Logo className="scale-90 origin-left" />
       </div>
       <nav className="flex-1 overflow-y-auto p-4 space-y-6 dark-scrollbar">
         {navGroups.map((group) => (
@@ -78,11 +78,11 @@ export function Sidebar() {
                     href={item.href} 
                     className={`flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 group ${
                       isActive 
-                        ? 'bg-indigo-500/10 text-indigo-400 font-medium' 
+                        ? 'bg-primary/10 text-primary font-medium' 
                         : 'hover:bg-slate-900 hover:text-slate-100'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 mr-3 ${isActive ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300'} transition-colors`} />
+                    <Icon className={`w-4 h-4 mr-3 ${isActive ? 'text-primary' : 'text-slate-500 group-hover:text-slate-300'} transition-colors`} />
                     {item.label}
                   </Link>
                 );

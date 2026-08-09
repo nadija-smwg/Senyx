@@ -14,13 +14,23 @@ export default function AnalyticsDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
+  const getBackendModule = (tab: string) => {
+    switch (tab) {
+      case 'Sales': return 'deals';
+      case 'Finance': return 'invoices';
+      case 'HR': return 'employees';
+      case 'Activity': return 'tasks';
+      default: return 'projects';
+    }
+  };
+
   const fetchAnalytics = async (module: string, group: FilterGroup) => {
     setLoading(true);
     try {
       const res = await fetch('/api/analytics/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ module: module.toLowerCase(), filters: group })
+        body: JSON.stringify({ module: getBackendModule(module), filters: group })
       });
       const json = await res.json();
       setData(json.data);
@@ -32,7 +42,9 @@ export default function AnalyticsDashboard() {
   };
 
   useEffect(() => {
-    fetchAnalytics(activeTab, filterGroup);
+    const emptyGroup: FilterGroup = { logic: 'AND', rules: [] };
+    setFilterGroup(emptyGroup);
+    fetchAnalytics(activeTab, emptyGroup);
   }, [activeTab]);
 
   const handleApplyFilter = (group: FilterGroup) => {
@@ -41,8 +53,24 @@ export default function AnalyticsDashboard() {
   };
 
   const getFieldsForModule = () => {
-    if (activeTab === 'Sales') return [{ label: 'Stage', value: 'stage', type: 'select' as const }, { label: 'Amount', value: 'amount', type: 'text' as const }];
-    if (activeTab === 'Finance') return [{ label: 'Status', value: 'status', type: 'select' as const }, { label: 'Date', value: 'date', type: 'date' as const }];
+    if (activeTab === 'Sales') return [
+      { label: 'Stage', value: 'stage', type: 'select' as const, options: [{label: 'Lead', value: 'lead'}, {label: 'Qualified', value: 'qualified'}, {label: 'Proposal', value: 'proposal'}, {label: 'Negotiation', value: 'negotiation'}] }, 
+      { label: 'Status', value: 'status', type: 'select' as const, options: [{label: 'Open', value: 'open'}, {label: 'Won', value: 'won'}, {label: 'Lost', value: 'lost'}] },
+      { label: 'Amount', value: 'amount', type: 'text' as const }
+    ];
+    if (activeTab === 'Finance') return [
+      { label: 'Status', value: 'status', type: 'select' as const, options: [{label: 'Draft', value: 'draft'}, {label: 'Sent', value: 'sent'}, {label: 'Paid', value: 'paid'}, {label: 'Overdue', value: 'overdue'}] }, 
+      { label: 'Issue Date', value: 'issueDate', type: 'date' as const }
+    ];
+    if (activeTab === 'Projects') return [
+      { label: 'Status', value: 'status', type: 'select' as const, options: [{label: 'Planning', value: 'planning'}, {label: 'Active', value: 'active'}, {label: 'On Hold', value: 'on hold'}, {label: 'Completed', value: 'completed'}] }
+    ];
+    if (activeTab === 'HR') return [
+      { label: 'Status', value: 'status', type: 'select' as const, options: [{label: 'Active', value: 'active'}, {label: 'On Leave', value: 'on_leave'}, {label: 'Terminated', value: 'terminated'}] }
+    ];
+    if (activeTab === 'Activity') return [
+      { label: 'Status', value: 'status', type: 'select' as const, options: [{label: 'Todo', value: 'todo'}, {label: 'In Progress', value: 'in_progress'}, {label: 'Review', value: 'review'}, {label: 'Completed', value: 'completed'}] }
+    ];
     return [{ label: 'Keyword', value: 'keyword', type: 'text' as const }];
   };
 

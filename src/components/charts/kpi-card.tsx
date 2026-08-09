@@ -18,16 +18,16 @@ export function KPICard({ title, value, trend, icon, subtitle, onClick, classNam
   return (
     <div 
       onClick={onClick}
-      className={`bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col relative overflow-hidden group ${onClick ? 'cursor-pointer hover:shadow-md transition-all hover:-translate-y-1' : ''} ${className}`}
+      className={`bg-white/90 backdrop-blur-lg rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/80 p-6 flex flex-col relative overflow-hidden group ${onClick ? 'cursor-pointer hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300' : 'hover:shadow-[0_12px_30px_rgb(0,0,0,0.06)] transition-all duration-300'} ${className}`}
     >
-      <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl -mr-10 -mt-10 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+      <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-gradient-to-br from-primary/20 to-[var(--color-brand-purple)]/20 rounded-full blur-2xl opacity-40 group-hover:opacity-100 transition-opacity duration-500"></div>
       <div className="flex justify-between items-start mb-4 relative z-10">
-        <h3 className="text-slate-500 font-semibold text-sm tracking-wide uppercase">{title}</h3>
-        {icon && <div className="text-indigo-500 bg-indigo-50 p-2 rounded-lg">{icon}</div>}
+        <h3 className="text-slate-500 font-semibold text-xs tracking-wide uppercase">{title}</h3>
+        {icon && <div className="text-primary bg-primary/10 p-2.5 rounded-xl shadow-sm ring-1 ring-primary/20 group-hover:scale-110 transition-transform duration-300">{icon}</div>}
       </div>
       
       <div className="flex items-baseline space-x-2 relative z-10">
-        <span className="text-3xl font-heading font-black text-slate-900 tracking-tight">{value}</span>
+        <span className="text-3xl font-bold text-slate-800 tracking-tight">{value}</span>
       </div>
 
       <div className="mt-4 flex items-center text-sm relative z-10">

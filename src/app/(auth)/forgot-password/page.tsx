@@ -5,6 +5,7 @@ import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Button } from '../../../components/ui/button';
 import { fetchClient } from '../../../lib/api-client';
+import { Logo } from '../../../components/ui/logo';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -25,8 +26,9 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <Card>
-      <CardHeader className="space-y-1 text-center">
+    <Card className="backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-white/20 shadow-xl border shadow-slate-200/50 dark:shadow-none">
+      <CardHeader className="space-y-1 text-center flex flex-col items-center">
+        <Logo className="justify-center mb-4 scale-110" />
         <CardTitle className="text-2xl font-heading font-bold">Reset Password</CardTitle>
         <CardDescription>
           Enter your email to receive a password reset link

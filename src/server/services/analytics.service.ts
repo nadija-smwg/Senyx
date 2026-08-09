@@ -333,10 +333,12 @@ function buildDrizzleConditions(schemaObj: any, filters: any): any[] {
 
 export async function executeQuery(ctx: AuthContext, queryInput: any) {
   const { module, dateRange, groupBy, filters } = queryInput;
+  const rolesLower = ctx.roles.map(r => r.toLowerCase());
+
   switch(module) {
     case 'deals': {
       let conditions: any[] = [];
-      const hasAccess = ctx.roles.includes('admin') || ctx.roles.includes('owner') || ctx.roles.includes('Sales Lead');
+      const hasAccess = rolesLower.includes('admin') || rolesLower.includes('owner') || rolesLower.includes('sales lead');
       if (!hasAccess) conditions.push(eq(deals.ownerId, ctx.employeeId || ''));
       if (dateRange) {
         const dCond = getDateCondition(deals.createdAt, dateRange);
@@ -344,14 +346,20 @@ export async function executeQuery(ctx: AuthContext, queryInput: any) {
       }
       if (filters) conditions.push(...buildDrizzleConditions(deals, filters));
 
-      const query = db.select({ stage: deals.stage, count: count(deals.id), value: sum(deals.amount) }).from(deals);
-      if (conditions.length > 0) query.where(and(...conditions));
-      if (groupBy?.includes('stage')) query.groupBy(deals.stage);
-      return await query;
+      if (groupBy?.includes('stage')) {
+        const query = db.select({ stage: deals.stage, count: count(deals.id), value: sum(deals.amount) }).from(deals);
+        if (conditions.length > 0) query.where(and(...conditions));
+        query.groupBy(deals.stage);
+        return await query;
+      } else {
+        const query = db.select().from(deals);
+        if (conditions.length > 0) query.where(and(...conditions));
+        return await query;
+      }
     }
     case 'projects': {
       let conditions: any[] = [];
-      const hasAccess = ctx.roles.includes('admin') || ctx.roles.includes('owner') || ctx.roles.includes('Project Owner');
+      const hasAccess = rolesLower.includes('admin') || rolesLower.includes('owner') || rolesLower.includes('project owner');
       if (!hasAccess) conditions.push(eq(projects.ownerId, ctx.employeeId || ''));
       if (dateRange) {
         const dCond = getDateCondition(projects.createdAt, dateRange);
@@ -359,10 +367,16 @@ export async function executeQuery(ctx: AuthContext, queryInput: any) {
       }
       if (filters) conditions.push(...buildDrizzleConditions(projects, filters));
 
-      const query = db.select({ status: projects.status, count: count(projects.id) }).from(projects);
-      if (conditions.length > 0) query.where(and(...conditions));
-      if (groupBy?.includes('status')) query.groupBy(projects.status);
-      return await query;
+      if (groupBy?.includes('status')) {
+        const query = db.select({ status: projects.status, count: count(projects.id) }).from(projects);
+        if (conditions.length > 0) query.where(and(...conditions));
+        query.groupBy(projects.status);
+        return await query;
+      } else {
+        const query = db.select().from(projects);
+        if (conditions.length > 0) query.where(and(...conditions));
+        return await query;
+      }
     }
     case 'invoices': {
       let conditions: any[] = [];
@@ -372,10 +386,16 @@ export async function executeQuery(ctx: AuthContext, queryInput: any) {
       }
       if (filters) conditions.push(...buildDrizzleConditions(invoices, filters));
 
-      const query = db.select({ status: invoices.status, total: sum(invoices.total), count: count(invoices.id) }).from(invoices);
-      if (conditions.length > 0) query.where(and(...conditions));
-      if (groupBy?.includes('status')) query.groupBy(invoices.status);
-      return await query;
+      if (groupBy?.includes('status')) {
+        const query = db.select({ status: invoices.status, total: sum(invoices.total), count: count(invoices.id) }).from(invoices);
+        if (conditions.length > 0) query.where(and(...conditions));
+        query.groupBy(invoices.status);
+        return await query;
+      } else {
+        const query = db.select().from(invoices);
+        if (conditions.length > 0) query.where(and(...conditions));
+        return await query;
+      }
     }
     case 'employees': {
       let conditions: any[] = [];
@@ -385,14 +405,20 @@ export async function executeQuery(ctx: AuthContext, queryInput: any) {
       }
       if (filters) conditions.push(...buildDrizzleConditions(employees, filters));
 
-      const query = db.select({ status: employees.status, count: count(employees.id) }).from(employees);
-      if (conditions.length > 0) query.where(and(...conditions));
-      if (groupBy?.includes('status')) query.groupBy(employees.status);
-      return await query;
+      if (groupBy?.includes('status')) {
+        const query = db.select({ status: employees.status, count: count(employees.id) }).from(employees);
+        if (conditions.length > 0) query.where(and(...conditions));
+        query.groupBy(employees.status);
+        return await query;
+      } else {
+        const query = db.select().from(employees);
+        if (conditions.length > 0) query.where(and(...conditions));
+        return await query;
+      }
     }
     case 'tasks': {
       let conditions: any[] = [];
-      const hasAccess = ctx.roles.includes('admin') || ctx.roles.includes('owner') || ctx.roles.includes('Project Owner');
+      const hasAccess = rolesLower.includes('admin') || rolesLower.includes('owner') || rolesLower.includes('project owner');
       if (!hasAccess) conditions.push(eq(tasks.assigneeId, ctx.employeeId || ''));
       if (dateRange) {
         const dCond = getDateCondition(tasks.dueDate, dateRange);
@@ -400,10 +426,16 @@ export async function executeQuery(ctx: AuthContext, queryInput: any) {
       }
       if (filters) conditions.push(...buildDrizzleConditions(tasks, filters));
 
-      const query = db.select({ status: tasks.status, count: count(tasks.id) }).from(tasks);
-      if (conditions.length > 0) query.where(and(...conditions));
-      if (groupBy?.includes('status')) query.groupBy(tasks.status);
-      return await query;
+      if (groupBy?.includes('status')) {
+        const query = db.select({ status: tasks.status, count: count(tasks.id) }).from(tasks);
+        if (conditions.length > 0) query.where(and(...conditions));
+        query.groupBy(tasks.status);
+        return await query;
+      } else {
+        const query = db.select().from(tasks);
+        if (conditions.length > 0) query.where(and(...conditions));
+        return await query;
+      }
     }
     default:
       throw new Error(`Module ${module} is not supported in executeQuery`);
