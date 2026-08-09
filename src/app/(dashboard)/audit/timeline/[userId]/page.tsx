@@ -82,8 +82,7 @@ export default function UserTimelinePage(props: { params: Promise<{ userId: stri
           <div className="relative border-l-2 border-slate-100 ml-4 space-y-8">
             {logs.map((log) => (
               <div key={log.id} className="relative pl-8">
-                {/* Timeline Dot */}
-                <div className={`absolute -left-[11px] top-1 w-5 h-5 rounded-full border-4 border-white ${log.status === 'success' ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
+                <div className={`absolute -left-[11px] top-1 w-5 h-5 rounded-full border-4 border-white ${log.result === 'success' ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
                 
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2">
