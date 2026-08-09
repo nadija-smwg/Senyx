@@ -2,41 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import useSWR from 'swr';
+
+const fetcher = (url: string) => fetch(url).then(r => r.json()).then(d => d.data);
 
 export function useClock() {
-  const [activeSession, setActiveSession] = useState<any | null>(null);
+  const { data: activeSession, mutate: mutateActiveSession, isValidating: loading } = useSWR('/api/clock/active', fetcher);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [loading, setLoading] = useState(true);
 
   const fetchActiveSession = async () => {
-    try {
-      const res = await fetch('/api/clock/active');
-      if (!res.ok) {
-        setActiveSession(null);
-        setElapsedSeconds(0);
-        return;
-      }
-      const json = await res.json();
-      if (json.data) {
-        setActiveSession(json.data);
-        // FIX: use clockInAt (the actual DB column name via Drizzle camelCase)
-        const start = new Date(json.data.clockInAt).getTime();
-        const now = Date.now();
-        setElapsedSeconds(Math.floor((now - start) / 1000));
-      } else {
-        setActiveSession(null);
-        setElapsedSeconds(0);
-      }
-    } catch (err) {
-      console.error('Failed to fetch active clock', err);
-    } finally {
-      setLoading(false);
-    }
+    await mutateActiveSession();
   };
 
   useEffect(() => {
-    fetchActiveSession();
-  }, []);
+    if (activeSession) {
+      const start = new Date(activeSession.clockInAt).getTime();
+      const now = Date.now();
+      setElapsedSeconds(Math.floor((now - start) / 1000));
+    } else {
+      setElapsedSeconds(0);
+    }
+  }, [activeSession]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -51,7 +37,6 @@ export function useClock() {
   }, [activeSession]);
 
   const clockIn = async (projectId: string, taskId?: string) => {
-    setLoading(true);
     try {
       const res = await fetch('/api/clock/in', {
         method: 'POST',
@@ -64,12 +49,10 @@ export function useClock() {
       await fetchActiveSession();
     } catch (err: any) {
       toast.error(err.message);
-      setLoading(false);
     }
   };
 
   const clockOut = async () => {
-    setLoading(true);
     try {
       const res = await fetch('/api/clock/out', {
         method: 'POST',
@@ -82,12 +65,9 @@ export function useClock() {
       const hours = (durationSec / 3600).toFixed(2);
       toast.success(`Clocked out — ${hours}h logged`);
       
-      setActiveSession(null);
-      setElapsedSeconds(0);
+      await mutateActiveSession();
     } catch (err: any) {
       toast.error(err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
