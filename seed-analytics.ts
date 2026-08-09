@@ -22,7 +22,6 @@ async function seed() {
     const newAcc = await db.insert(accounts).values({
       name: "Acme Corp (Test)",
       industry: "Technology",
-      type: "customer",
       status: "active",
       createdBy: employee[0].id,
       updatedBy: employee[0].id
