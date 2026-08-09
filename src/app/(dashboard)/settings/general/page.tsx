@@ -10,15 +10,24 @@ import { toast } from 'sonner';
 
 export default function GeneralSettingsPage() {
   const [schedules, setSchedules] = useState<any[]>([]);
+  const [companyName, setCompanyName] = useState('');
+  const [currency, setCurrency] = useState('');
   const [loading, setLoading] = useState(true);
+  const [savingSettings, setSavingSettings] = useState(false);
 
   useEffect(() => {
-    fetch('/api/reminder-schedules')
-      .then(res => res.json())
-      .then(data => {
-        if (data.data) setSchedules(data.data);
-      })
-      .finally(() => setLoading(false));
+    Promise.all([
+      fetch('/api/reminder-schedules').then(res => res.json()),
+      fetch('/api/settings').then(res => res.json())
+    ]).then(([schedData, settingsData]) => {
+      if (schedData.data) setSchedules(schedData.data);
+      if (settingsData.data) {
+        const cName = settingsData.data.find((s: any) => s.key === 'companyName')?.value;
+        const cCurr = settingsData.data.find((s: any) => s.key === 'currency')?.value;
+        if (cName) setCompanyName(JSON.parse(cName));
+        if (cCurr) setCurrency(JSON.parse(cCurr));
+      }
+    }).finally(() => setLoading(false));
   }, []);
 
   const updateSchedule = async (id: string, payload: any) => {
@@ -39,29 +48,65 @@ export default function GeneralSettingsPage() {
     }
   };
 
+  const saveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSettings(true);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyName, currency })
+      });
+      if (res.ok) {
+        toast.success('Configuration saved');
+      } else {
+        toast.error('Failed to save configuration');
+      }
+    } catch (e) {
+      toast.error('Failed to save configuration');
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <PageHeader title="General Settings" description="Global platform configurations.">
-        <Button onClick={() => toast.success('Configuration saved')}>Save Configuration</Button>
-      </PageHeader>
+      <PageHeader title="General Settings" description="Global platform configurations." />
       
       <Card>
-        <CardHeader>
-          <CardTitle>Company Details</CardTitle>
-          <CardDescription>Basic information used across the platform and invoices.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="companyName">Company Name</Label>
-              <Input id="companyName" defaultValue="SENYX Corporation" />
+        <form onSubmit={saveSettings}>
+          <CardHeader>
+            <CardTitle>Company Details</CardTitle>
+            <CardDescription>Basic information used across the platform and invoices.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="companyName">Company Name</Label>
+                <Input 
+                  id="companyName" 
+                  value={companyName} 
+                  onChange={e => setCompanyName(e.target.value)} 
+                  placeholder="Company Name" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="currency">Default Currency</Label>
+                <Input 
+                  id="currency" 
+                  value={currency} 
+                  onChange={e => setCurrency(e.target.value)} 
+                  placeholder="USD" 
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="currency">Default Currency</Label>
-              <Input id="currency" defaultValue="USD" />
+            <div className="flex justify-end pt-2">
+              <Button type="submit" disabled={savingSettings || loading}>
+                {savingSettings ? 'Saving...' : 'Save Details'}
+              </Button>
             </div>
-          </div>
-        </CardContent>
+          </CardContent>
+        </form>
       </Card>
 
       <Card>

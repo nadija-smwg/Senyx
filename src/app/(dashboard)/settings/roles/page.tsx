@@ -8,6 +8,7 @@ import { Spinner } from '../../../../components/ui/spinner';
 import { fetchClient } from '../../../../lib/api-client';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { RoleFormModal } from '../../../../components/settings/role-form-modal';
 
 interface Role {
   id: string;
@@ -20,16 +21,21 @@ export default function RolesListPage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchRoles = () => {
+    setIsLoading(true);
     fetchClient<{ data: Role[] }>('/api/roles')
       .then(res => setRoles(res.data))
       .finally(() => setIsLoading(false));
+  };
+
+  useEffect(() => {
+    fetchRoles();
   }, []);
 
   return (
     <div className="space-y-6">
       <PageHeader title="Roles & Permissions" description="View and manage system roles.">
-        <Button onClick={() => toast('Role creation not implemented yet')}>Create Role</Button>
+        <RoleFormModal onSuccess={fetchRoles} />
       </PageHeader>
       
       {isLoading ? (
