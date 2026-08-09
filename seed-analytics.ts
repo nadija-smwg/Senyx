@@ -23,8 +23,8 @@ async function seed() {
       name: "Acme Corp (Test)",
       industry: "Technology",
       status: "active",
-      createdBy: employee[0].id,
-      updatedBy: employee[0].id
+      createdBy: employee[0]!.id,
+      updatedBy: employee[0]!.id
     }).returning();
     account = newAcc;
   }
@@ -33,39 +33,39 @@ async function seed() {
   await db.insert(deals).values([
     {
       name: "Enterprise Software License",
-      accountId: account[0].id,
-      ownerId: employee[0].id,
+      accountId: account[0]!.id,
+      ownerId: employee[0]!.id,
       amount: "150000.00",
       currency: "USD",
       stage: "proposal",
       probability: "75",
       status: "open",
-      createdBy: employee[0].id,
-      updatedBy: employee[0].id,
+      createdBy: employee[0]!.id,
+      updatedBy: employee[0]!.id,
     },
     {
       name: "Consulting Services",
-      accountId: account[0].id,
-      ownerId: employee[0].id,
+      accountId: account[0]!.id,
+      ownerId: employee[0]!.id,
       amount: "25000.00",
       currency: "USD",
       stage: "qualified",
       probability: "40",
       status: "open",
-      createdBy: employee[0].id,
-      updatedBy: employee[0].id,
+      createdBy: employee[0]!.id,
+      updatedBy: employee[0]!.id,
     },
     {
       name: "Cloud Migration Project",
-      accountId: account[0].id,
-      ownerId: employee[0].id,
+      accountId: account[0]!.id,
+      ownerId: employee[0]!.id,
       amount: "80000.00",
       currency: "USD",
       stage: "won",
       probability: "100",
       status: "won",
-      createdBy: employee[0].id,
-      updatedBy: employee[0].id,
+      createdBy: employee[0]!.id,
+      updatedBy: employee[0]!.id,
     }
   ]);
 
@@ -76,14 +76,14 @@ async function seed() {
     {
       code: "PRJ-001",
       name: "Cloud Migration Implementation",
-      accountId: account[0].id,
-      ownerId: employee[0].id,
+      accountId: account[0]!.id,
+      ownerId: employee[0]!.id,
       budget: "60000.00",
       currency: "USD",
       status: "active",
       startDate: "2026-08-01",
-      createdBy: employee[0].id,
-      updatedBy: employee[0].id,
+      createdBy: employee[0]!.id,
+      updatedBy: employee[0]!.id,
     }
   ]);
 
@@ -93,17 +93,17 @@ async function seed() {
   await db.insert(invoices).values([
     {
       invoiceNumber: "INV-1001",
-      accountId: account[0].id,
+      accountId: account[0]!.id,
       projectId: null,
       subtotal: "25000.00",
-      taxTotal: "0",
+      tax: "0",
       total: "25000.00",
       currency: "USD",
       status: "sent",
       issueDate: "2026-08-05",
       dueDate: "2026-09-05",
-      createdBy: employee[0].id,
-      updatedBy: employee[0].id,
+      createdBy: employee[0]!.id,
+      updatedBy: employee[0]!.id,
     }
   ]);
 
