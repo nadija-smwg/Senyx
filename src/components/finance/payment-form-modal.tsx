@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export function PaymentFormModal({ 
@@ -22,6 +22,16 @@ export function PaymentFormModal({
   const [method, setMethod] = useState('bank_transfer');
   const [reference, setReference] = useState('');
   const [paidAt, setPaidAt] = useState('');
+  
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetch('/api/invoices').then(res => res.json()).then(data => setInvoices(data.data || []));
+      fetch('/api/expenses').then(res => res.json()).then(data => setExpenses(data.data || []));
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +45,7 @@ export function PaymentFormModal({
         currency: 'USD',
         method,
         reference,
-        paidAt: paidAt || null
+        paidAt: paidAt ? new Date(paidAt).toISOString() : null
       };
 
       const res = await fetch('/api/payments', {
@@ -99,16 +109,26 @@ export function PaymentFormModal({
 
           <div className="space-y-2">
             <label className="text-sm font-medium">
-              {type === 'invoice' ? 'Invoice ID (UUID)' : 'Expense ID (UUID)'}
+              {type === 'invoice' ? 'Select Invoice' : 'Select Expense'}
             </label>
-            <input 
+            <select 
               required
-              type="text" 
               value={targetId}
               onChange={e => setTargetId(e.target.value)}
-              placeholder="e.g. 123e4567-e89b-12d3..."
               className="w-full p-2 rounded-md border bg-background text-sm"
-            />
+            >
+              <option value="" disabled>Select a record...</option>
+              {type === 'invoice' && invoices.map(inv => (
+                <option key={inv.id} value={inv.id}>
+                  Invoice {inv.invoiceNumber} (${inv.total})
+                </option>
+              ))}
+              {type === 'expense' && expenses.map(exp => (
+                <option key={exp.id} value={exp.id}>
+                  {exp.vendor} (${exp.amount})
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
