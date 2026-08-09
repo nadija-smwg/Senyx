@@ -5,6 +5,7 @@ import { FilterBuilder, FilterGroup } from '@/components/data/filter-builder';
 import { SavedFilters } from '@/components/data/saved-filters';
 import { BarChartWidget } from '@/components/charts/bar-chart-widget';
 import { LineChartWidget } from '@/components/charts/line-chart-widget';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const TABS = ['Sales', 'Projects', 'Finance', 'HR', 'Activity'];
 
@@ -74,6 +75,73 @@ export default function AnalyticsDashboard() {
     return [{ label: 'Keyword', value: 'keyword', type: 'text' as const }];
   };
 
+  const renderDataGrid = () => {
+    if (!data || data.length === 0) return <p className="text-gray-500 text-sm">No records found.</p>;
+    
+    let columns: {key: string, label: string}[] = [];
+    if (activeTab === 'Sales') {
+      columns = [
+        {key: 'name', label: 'Deal Name'},
+        {key: 'amount', label: 'Amount'},
+        {key: 'currency', label: 'Currency'},
+        {key: 'stage', label: 'Stage'},
+        {key: 'status', label: 'Status'}
+      ];
+    } else if (activeTab === 'Finance') {
+      columns = [
+        {key: 'invoiceNumber', label: 'Invoice #'},
+        {key: 'subtotal', label: 'Subtotal'},
+        {key: 'total', label: 'Total'},
+        {key: 'status', label: 'Status'},
+        {key: 'issueDate', label: 'Issue Date'}
+      ];
+    } else if (activeTab === 'HR') {
+       columns = [
+        {key: 'firstName', label: 'First Name'},
+        {key: 'lastName', label: 'Last Name'},
+        {key: 'email', label: 'Email'},
+        {key: 'status', label: 'Status'}
+      ];
+    } else if (activeTab === 'Projects') {
+       columns = [
+        {key: 'code', label: 'Code'},
+        {key: 'name', label: 'Project Name'},
+        {key: 'status', label: 'Status'},
+        {key: 'budget', label: 'Budget'}
+      ];
+    } else if (activeTab === 'Activity') {
+       columns = [
+        {key: 'title', label: 'Title'},
+        {key: 'priority', label: 'Priority'},
+        {key: 'status', label: 'Status'}
+      ];
+    } else {
+      const keys = Object.keys(data[0]).filter(k => typeof data[0][k] !== 'object').slice(0, 5);
+      columns = keys.map(k => ({key: k, label: k}));
+    }
+
+    return (
+      <div className="rounded-md border border-gray-100 overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {columns.map(c => <TableHead key={c.key}>{c.label}</TableHead>)}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((row: any, i: number) => (
+              <TableRow key={row.id || i}>
+                {columns.map(c => (
+                  <TableCell key={c.key}>{row[c.key]?.toString() || '-'}</TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  }
+
   return (
     <div className="p-8 max-w-7xl mx-auto min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -114,23 +182,18 @@ export default function AnalyticsDashboard() {
           {/* Dynamic Content based on activeTab */}
           {activeTab === 'Sales' && data && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-               {/* We just show a placeholder chart with the returned data length for MVP since executeQuery returns raw data right now */}
-               <div className="bg-white p-6 rounded-xl border border-gray-100 col-span-full">
-                 <h3 className="font-medium text-gray-700 mb-2">Raw Data Query Results</h3>
-                 <p className="text-gray-500 text-sm mb-4">Returned {data?.length || 0} records for {activeTab}</p>
-                 <pre className="bg-gray-50 p-4 rounded-lg text-xs overflow-auto max-h-96">
-                   {JSON.stringify(data, null, 2)}
-                 </pre>
+               <div className="bg-white p-6 rounded-xl border border-gray-100 col-span-full shadow-sm">
+                 <h3 className="font-semibold text-gray-900 mb-2">Query Results</h3>
+                 <p className="text-gray-500 text-sm mb-6">Returned {data?.length || 0} records for {activeTab}</p>
+                 {renderDataGrid()}
                </div>
             </div>
           )}
           {activeTab !== 'Sales' && (
-            <div className="bg-white p-6 rounded-xl border border-gray-100">
-              <h3 className="font-medium text-gray-700 mb-2">Raw Data Query Results</h3>
-              <p className="text-gray-500 text-sm mb-4">Returned {data?.length || 0} records for {activeTab}</p>
-              <pre className="bg-gray-50 p-4 rounded-lg text-xs overflow-auto max-h-96">
-                {JSON.stringify(data, null, 2)}
-              </pre>
+            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+              <h3 className="font-semibold text-gray-900 mb-2">Query Results</h3>
+              <p className="text-gray-500 text-sm mb-6">Returned {data?.length || 0} records for {activeTab}</p>
+              {renderDataGrid()}
             </div>
           )}
         </div>
