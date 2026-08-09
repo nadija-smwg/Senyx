@@ -11,19 +11,24 @@ import {
 } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { QuoteDocumentsModal } from '@/components/sales/quote-documents-modal';
-import { toast } from 'sonner';
+import { CreateQuoteModal } from '@/components/sales/create-quote-modal';
 
 export default function QuotesPage() {
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchQuotes = () => {
+    setLoading(true);
     fetch('/api/quotes')
       .then(res => res.json())
       .then(d => {
         if (d.data) setQuotes(d.data);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchQuotes();
   }, []);
 
   const columns = [
@@ -83,7 +88,7 @@ export default function QuotesPage() {
         title="Quotes" 
         description="Manage price quotes sent to prospects."
       >
-        <Button onClick={() => toast('Quote creation not implemented yet')}>Create Quote</Button>
+        <CreateQuoteModal onSuccess={fetchQuotes} />
       </PageHeader>
 
       <div className="border rounded-md bg-card overflow-hidden">

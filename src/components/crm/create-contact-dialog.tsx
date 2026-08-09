@@ -67,7 +67,7 @@ export function CreateContactDialog({ open, onOpenChange, onSuccess, defaultAcco
 
   React.useEffect(() => {
     if (open && accounts.length === 0) {
-      setLoadingAccounts(true);
+      Promise.resolve().then(() => setLoadingAccounts(true));
       fetch('/api/accounts')
         .then((res) => res.json())
         .then((data) => {

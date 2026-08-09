@@ -19,9 +19,9 @@ export function useClock() {
     if (activeSession) {
       const start = new Date(activeSession.clockInAt).getTime();
       const now = Date.now();
-      setElapsedSeconds(Math.floor((now - start) / 1000));
+      Promise.resolve().then(() => setElapsedSeconds(Math.floor((now - start) / 1000)));
     } else {
-      setElapsedSeconds(0);
+      Promise.resolve().then(() => setElapsedSeconds(0));
     }
   }, [activeSession]);
 

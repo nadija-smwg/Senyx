@@ -17,12 +17,12 @@ export async function GET(req: NextRequest) {
     const page = parseInt(req.nextUrl.searchParams.get('page') || '1');
     const limit = parseInt(req.nextUrl.searchParams.get('limit') || '50');
     const user = req.nextUrl.searchParams.get('user');
-    const module = req.nextUrl.searchParams.get('module');
+    const moduleName = req.nextUrl.searchParams.get('module');
     const action = req.nextUrl.searchParams.get('action');
 
     let conditions = [];
     if (user) conditions.push(eq(auditLogs.actorId, user));
-    if (module) conditions.push(eq(auditLogs.entityType, module));
+    if (moduleName) conditions.push(eq(auditLogs.entityType, moduleName));
     if (action) conditions.push(eq(auditLogs.action, action));
 
     const data = await db.select()

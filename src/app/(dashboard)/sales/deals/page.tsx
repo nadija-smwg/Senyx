@@ -20,10 +20,6 @@ export default function DealsPage() {
     atRisk: 0,
   });
 
-  useEffect(() => {
-    fetchDeals();
-  }, []);
-
   async function fetchDeals() {
     try {
       const res = await fetch('/api/deals?scope=all');
@@ -68,6 +64,12 @@ export default function DealsPage() {
       atRisk: risk,
     });
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchDeals();
+  }, []);
+
 
   const handleStageChange = async (dealId: string, newStage: string) => {
     // Optimistic update

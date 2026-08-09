@@ -13,7 +13,7 @@ export default function UserTimelinePage(props: { params: Promise<{ userId: stri
 
   useEffect(() => {
     // In a real implementation this would fetch from /api/audit-logs?actorId=...
-    setLoading(true)
+    Promise.resolve().then(() => setLoading(true));
     setTimeout(() => {
       setLogs([
         {

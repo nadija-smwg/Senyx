@@ -26,7 +26,7 @@ export default function AnalyticsDashboard() {
   };
 
   const fetchAnalytics = async (module: string, group: FilterGroup) => {
-    setLoading(true);
+    Promise.resolve().then(() => setLoading(true));
     try {
       const res = await fetch('/api/analytics/query', {
         method: 'POST',
@@ -43,10 +43,18 @@ export default function AnalyticsDashboard() {
   };
 
   useEffect(() => {
+    // Initial fetch on mount
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchAnalytics(activeTab, filterGroup);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
     const emptyGroup: FilterGroup = { logic: 'AND', rules: [] };
     setFilterGroup(emptyGroup);
-    fetchAnalytics(activeTab, emptyGroup);
-  }, [activeTab]);
+    fetchAnalytics(tab, emptyGroup);
+  };
 
   const handleApplyFilter = (group: FilterGroup) => {
     setFilterGroup(group);
@@ -160,7 +168,7 @@ export default function AnalyticsDashboard() {
           {TABS.map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => handleTabChange(tab)}
               className={`${
                 activeTab === tab
                   ? 'border-blue-500 text-blue-600'

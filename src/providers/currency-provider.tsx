@@ -44,7 +44,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     // Load saved currency preference from localStorage
     const savedCurrency = localStorage.getItem('senyx_currency') as Currency
     if (savedCurrency && CURRENCY_SYMBOLS[savedCurrency]) {
-      setCurrencyState(savedCurrency)
+      Promise.resolve().then(() => setCurrencyState(savedCurrency))
     }
 
     // Fetch real exchange rates

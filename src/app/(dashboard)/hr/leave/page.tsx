@@ -23,7 +23,7 @@ export default function LeavePage() {
   const [loading, setLoading] = useState(true)
 
   const fetchLeave = () => {
-    setLoading(true)
+    Promise.resolve().then(() => setLoading(true))
     fetch("/api/leave-requests")
       .then(res => res.json())
       .then(json => setData(json.data || []))

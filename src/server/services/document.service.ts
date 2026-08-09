@@ -73,8 +73,21 @@ export async function getDownloadUrl(ctx: AuthContext, documentId: string) {
     throw new Error('Document not found');
   }
 
-  // TODO: Add complex role-based access checks based on `doc.ownerType` and `doc.ownerId`.
-  // Currently allows downloading if authenticated (which ctx implies).
+  const roles = ctx.roles.map(r => r.toLowerCase());
+  const isAdmin = roles.includes('admin') || roles.includes('owner') || roles.includes('system admin');
+  
+  if (!isAdmin) {
+    // Basic verification: user must have permissions on the module matching ownerType, or have uploaded it
+    const moduleName = doc.ownerType.toLowerCase();
+    const hasViewPerm = ctx.permissions.some(p => p.module === moduleName && p.action === 'view');
+    const hasManagePerm = ctx.permissions.some(p => p.module === moduleName && p.action === 'manage');
+    const hasEditPerm = ctx.permissions.some(p => p.module === moduleName && p.action === 'edit');
+    const isUploader = doc.uploadedBy === ctx.userId;
+    
+    if (!hasViewPerm && !hasManagePerm && !hasEditPerm && !isUploader) {
+      throw new Error('Unauthorized to view this document');
+    }
+  }
   
   const url = await getR2Url(doc.storageKey);
   return { url, fileName: doc.fileName };

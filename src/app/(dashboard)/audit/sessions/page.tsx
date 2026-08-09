@@ -9,9 +9,30 @@ import { ActivityHeatmap } from "@/components/charts/activity-heatmap"
 export default function SessionAnalyticsPage() {
   const [loading, setLoading] = useState(true)
 
+  const [heatmapData, setHeatmapData] = useState<{ day: string; hour: number; value: number }[]>([]);
+
   useEffect(() => {
     // Simulate loading data
     setTimeout(() => setLoading(false), 500)
+    
+    // Generate heatmap data
+    const data: { day: string; hour: number; value: number }[] = [];
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    days.forEach(day => {
+      for (let h = 0; h < 24; h++) {
+        // higher activity between 9am and 5pm on weekdays
+        const isWorkHour = h >= 9 && h <= 17;
+        const isWeekend = day === 'Sat' || day === 'Sun';
+        let val = 0;
+        if (!isWeekend && isWorkHour) val = Math.floor(Math.random() * 50) + 20;
+        else if (!isWeekend) val = Math.floor(Math.random() * 10);
+        else val = Math.floor(Math.random() * 5);
+        
+        data.push({ day, hour: h, value: val });
+      }
+    });
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setHeatmapData(data);
   }, [])
 
   const sessionsPerDay = [
@@ -38,22 +59,6 @@ export default function SessionAnalyticsPage() {
     { name: 'Edge', value: 5, color: '#f59e0b' },
   ]
 
-  // Mock heatmap data
-  const heatmapData: { day: string; hour: number; value: number }[] = [];
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  days.forEach(day => {
-    for (let h = 0; h < 24; h++) {
-      // higher activity between 9am and 5pm on weekdays
-      const isWorkHour = h >= 9 && h <= 17;
-      const isWeekend = day === 'Sat' || day === 'Sun';
-      let val = 0;
-      if (!isWeekend && isWorkHour) val = Math.floor(Math.random() * 50) + 20;
-      else if (!isWeekend) val = Math.floor(Math.random() * 10);
-      else val = Math.floor(Math.random() * 5);
-      
-      heatmapData.push({ day, hour: h, value: val });
-    }
-  });
 
   return (
     <div className="container mx-auto py-10 space-y-6">

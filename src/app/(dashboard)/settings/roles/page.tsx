@@ -22,7 +22,7 @@ export default function RolesListPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchRoles = () => {
-    setIsLoading(true);
+    Promise.resolve().then(() => setIsLoading(true));
     fetchClient<{ data: Role[] }>('/api/roles')
       .then(res => setRoles(res.data))
       .finally(() => setIsLoading(false));

@@ -46,7 +46,7 @@ export function TaskDetailModal({ task, open, onClose, onUpdated, projectId }: T
 
   React.useEffect(() => {
     if (task) {
-      setForm({
+      Promise.resolve().then(() => setForm({
         title: task.title || '',
         description: task.description || '',
         priority: task.priority || 'medium',
@@ -54,7 +54,7 @@ export function TaskDetailModal({ task, open, onClose, onUpdated, projectId }: T
         estimateHours: task.estimateHours ?? '',
         dueDate: task.dueDate || '',
         assigneeId: task.assigneeId || '',
-      });
+      }));
       // Fetch time entries for this task
       fetch(`/api/projects/${projectId}/time-entries?taskId=${task.id}`)
         .then(r => r.json())

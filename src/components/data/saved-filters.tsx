@@ -27,14 +27,15 @@ export function SavedFilters({ currentGroup, onLoad }: SavedFiltersProps) {
     const stored = localStorage.getItem('senyx_saved_filters');
     if (stored) {
       try {
-        setSavedFilters(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        Promise.resolve().then(() => setSavedFilters(parsed));
       } catch (e) {}
     } else {
       // Load some defaults
       const defaults: SavedFilter[] = [
         { id: '1', name: 'Open High Value Deals', type: 'shared', group: { logic: 'AND', rules: [{ field: 'status', operator: 'equals', value: 'open' }, { field: 'amount', operator: 'after', value: '10000' }] } }
       ];
-      setSavedFilters(defaults);
+      Promise.resolve().then(() => setSavedFilters(defaults));
       localStorage.setItem('senyx_saved_filters', JSON.stringify(defaults));
     }
   }, []);

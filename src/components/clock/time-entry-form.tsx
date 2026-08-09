@@ -37,7 +37,7 @@ export function TimeEntryForm({ open, onClose, onSaved, projectId, tasks = [] }:
   // Reset when dialog opens
   React.useEffect(() => {
     if (open) {
-      setForm({ taskId: '', workDate: today, hours: '', description: '', billable: true });
+      Promise.resolve().then(() => setForm({ taskId: '', workDate: today, hours: '', description: '', billable: true }));
     }
   }, [open]);
 

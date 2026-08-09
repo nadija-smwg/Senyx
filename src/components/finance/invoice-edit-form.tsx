@@ -31,7 +31,11 @@ export function InvoiceEditForm({
   const [accountId, setAccountId] = useState(initialData.accountId || '');
   const [projectId, setProjectId] = useState(initialData.projectId || '');
   const [dueDate, setDueDate] = useState(initialData.dueDate ? initialData.dueDate.split('T')[0] : '');
-  const [taxRate, setTaxRate] = useState(0); // We'll compute it if tax > 0, but for simplicity let's do this:
+  const [taxRate, setTaxRate] = useState(() => {
+    const st = parseFloat(initialData.subtotal || '0');
+    const t = parseFloat(initialData.tax || '0');
+    return (st > 0 && t > 0) ? Math.round((t / st) * 100) : 0;
+  });
 
   const [lineItems, setLineItems] = useState<LineItem[]>(
     initialLineItems.length > 0 
@@ -44,14 +48,7 @@ export function InvoiceEditForm({
       : [{ id: '1', description: '', quantity: 1, unitPrice: 0 }]
   );
 
-  useEffect(() => {
-    // If there is tax, try to back-calculate the rate approximately for the UI.
-    const st = parseFloat(initialData.subtotal || '0');
-    const t = parseFloat(initialData.tax || '0');
-    if (st > 0 && t > 0) {
-      setTaxRate(Math.round((t / st) * 100));
-    }
-  }, [initialData]);
+
 
   const [accountsList, setAccountsList] = useState<{id: string, name: string}[]>([]);
   const [projectsList, setProjectsList] = useState<{id: string, name: string, accountId: string}[]>([]);
