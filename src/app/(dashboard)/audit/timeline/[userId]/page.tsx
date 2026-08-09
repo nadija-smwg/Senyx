@@ -21,41 +21,45 @@ export default function UserTimelinePage(props: { params: Promise<{ userId: stri
           action: 'Created Deal',
           entityType: 'deals',
           entityId: 'deal-123',
-          timestamp: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
           actorId: params.userId,
-          metadata: {},
-          route: 'POST /api/deals',
+          apiRoute: 'POST /api/deals',
           ipAddress: '192.168.1.1',
-          userAgent: 'Mac OS Chrome',
-          status: 'success',
-          diff: { after: { name: 'Acme Corp Deal', value: 50000 } }
+          device: 'Desktop',
+          os: 'Mac OS',
+          browser: 'Chrome',
+          result: 'success',
+          after: { name: 'Acme Corp Deal', value: 50000 }
         },
         {
           id: '2',
           action: 'Updated Profile',
           entityType: 'users',
           entityId: params.userId,
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
+          createdAt: new Date(Date.now() - 3600000).toISOString(),
           actorId: params.userId,
-          metadata: {},
-          route: 'PUT /api/users/me',
+          apiRoute: 'PUT /api/users/me',
           ipAddress: '192.168.1.1',
-          userAgent: 'Mac OS Chrome',
-          status: 'success',
-          diff: { before: { phone: '123' }, after: { phone: '456' } }
+          device: 'Desktop',
+          os: 'Mac OS',
+          browser: 'Chrome',
+          result: 'success',
+          before: { phone: '123' }, 
+          after: { phone: '456' }
         },
         {
           id: '3',
           action: 'Failed Login',
           entityType: 'auth',
           entityId: params.userId,
-          timestamp: new Date(Date.now() - 86400000).toISOString(),
+          createdAt: new Date(Date.now() - 86400000).toISOString(),
           actorId: params.userId,
-          metadata: {},
-          route: 'POST /api/auth/login',
+          apiRoute: 'POST /api/auth/login',
           ipAddress: '10.0.0.1',
-          userAgent: 'Unknown Mobile',
-          status: 'failure'
+          device: 'Mobile',
+          os: 'Unknown',
+          browser: 'Unknown',
+          result: 'failure'
         }
       ])
       setLoading(false)
@@ -91,40 +95,40 @@ export default function UserTimelinePage(props: { params: Promise<{ userId: stri
                   </div>
                   <div className="flex items-center text-xs text-slate-400 mt-1 sm:mt-0">
                     <Clock className="w-3 h-3 mr-1" />
-                    {format(new Date(log.timestamp), "MMM d, yyyy h:mm a")}
+                    {format(new Date(log.createdAt), "MMM d, yyyy h:mm a")}
                   </div>
                 </div>
 
                 {/* Status & Meta */}
                 <div className="flex items-center gap-4 text-xs text-slate-500 mb-3">
                   <span className="flex items-center">
-                    {log.status === 'success' ? (
+                    {log.result === 'success' ? (
                       <><CheckCircle2 className="w-3 h-3 text-emerald-500 mr-1" /> Success</>
                     ) : (
                       <><XCircle className="w-3 h-3 text-rose-500 mr-1" /> Failed</>
                     )}
                   </span>
                   <span className="font-mono bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
-                    {log.route}
+                    {log.apiRoute}
                   </span>
                 </div>
 
                 {/* Diff View */}
-                {log.diff && (
+                {(log.before || log.after) && (
                   <div className="mt-4 flex flex-col md:flex-row gap-3">
-                    {log.diff.before && (
+                    {log.before && (
                       <div className="flex-1 bg-rose-50/50 p-3 rounded-xl border border-rose-100/50">
                         <h4 className="text-[10px] font-bold text-rose-600 mb-1.5 uppercase tracking-wider">Before</h4>
                         <pre className="text-[10px] font-mono text-slate-700 whitespace-pre-wrap">
-                          {JSON.stringify(log.diff.before, null, 2)}
+                          {JSON.stringify(log.before, null, 2)}
                         </pre>
                       </div>
                     )}
-                    {log.diff.after && (
+                    {log.after && (
                       <div className="flex-1 bg-emerald-50/50 p-3 rounded-xl border border-emerald-100/50">
                         <h4 className="text-[10px] font-bold text-emerald-600 mb-1.5 uppercase tracking-wider">After</h4>
                         <pre className="text-[10px] font-mono text-slate-700 whitespace-pre-wrap">
-                          {JSON.stringify(log.diff.after, null, 2)}
+                          {JSON.stringify(log.after, null, 2)}
                         </pre>
                       </div>
                     )}

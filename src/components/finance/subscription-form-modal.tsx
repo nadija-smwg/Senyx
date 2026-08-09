@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export function SubscriptionFormModal() {
@@ -16,6 +16,17 @@ export function SubscriptionFormModal() {
   const [currency, setCurrency] = useState('USD');
   const [interval, setInterval] = useState('monthly');
   const [startedAt, setStartedAt] = useState('');
+  const [accountsList, setAccountsList] = useState<any[]>([]);
+
+  // Fetch accounts when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetch('/api/accounts')
+        .then(res => res.json())
+        .then(data => setAccountsList(data.data || []))
+        .catch(err => console.error(err));
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +40,7 @@ export function SubscriptionFormModal() {
         amount,
         currency,
         interval,
-        startedAt,
+        startedAt: new Date(startedAt).toISOString(),
       };
 
       const res = await fetch('/api/subscriptions', {
@@ -80,15 +91,18 @@ export function SubscriptionFormModal() {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Client Account ID</label>
-            <input 
+            <label className="text-sm font-medium">Client Account</label>
+            <select 
               required
-              type="text" 
               value={accountId}
               onChange={e => setAccountId(e.target.value)}
-              placeholder="e.g. 123e4567-e89b-12d3..."
               className="w-full p-2 rounded-md border bg-background text-sm"
-            />
+            >
+              <option value="" disabled>Select an account...</option>
+              {accountsList.map(acc => (
+                <option key={acc.id} value={acc.id}>{acc.name}</option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
