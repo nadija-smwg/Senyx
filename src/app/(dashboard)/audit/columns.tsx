@@ -13,17 +13,16 @@ export type AuditLog = {
   action: string
   entityType: string
   entityId: string
-  timestamp: string
+  createdAt: string
   actorId: string
-  metadata: any
-  route: string
+  apiRoute: string
   ipAddress: string
-  userAgent: string
-  status: 'success' | 'failure'
-  diff?: {
-    before?: any
-    after?: any
-  }
+  device: string
+  os: string
+  browser: string
+  result: 'success' | 'failure'
+  before?: any
+  after?: any
 }
 
 export const columns: ColumnDef<AuditLog>[] = [
@@ -42,7 +41,7 @@ export const columns: ColumnDef<AuditLog>[] = [
     },
   },
   {
-    accessorKey: "timestamp",
+    accessorKey: "createdAt",
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} className="px-0 font-semibold">
@@ -51,7 +50,7 @@ export const columns: ColumnDef<AuditLog>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => <div className="text-sm text-slate-600">{format(new Date(row.getValue("timestamp")), "MMM d, yyyy HH:mm:ss")}</div>,
+    cell: ({ row }) => <div className="text-sm text-slate-600">{format(new Date(row.getValue("createdAt")), "MMM d, yyyy HH:mm:ss")}</div>,
   },
   {
     accessorKey: "actorId",
@@ -92,23 +91,21 @@ export const columns: ColumnDef<AuditLog>[] = [
     },
   },
   {
-    accessorKey: "route",
+    accessorKey: "apiRoute",
     header: "API Route",
     cell: ({ row }) => {
-      const route = row.getValue("route") as string
+      const route = row.getValue("apiRoute") as string
       return route ? <div className="font-mono text-xs text-slate-500 truncate max-w-[150px]">{route}</div> : <span className="text-slate-400 text-xs">System</span>
     },
   },
   {
-    accessorKey: "userAgent",
+    id: "device",
     header: "Device",
     cell: ({ row }) => {
-      const userAgent = row.getValue("userAgent") as string
-      let deviceType = "Unknown"
-      if (userAgent?.includes("Mobile")) deviceType = "Mobile"
-      else if (userAgent?.includes("Mac OS")) deviceType = "Mac"
-      else if (userAgent?.includes("Windows")) deviceType = "Windows"
-      else if (userAgent?.includes("Linux")) deviceType = "Linux"
+      const device = row.original.device;
+      const os = row.original.os;
+      const browser = row.original.browser;
+      const deviceType = device || (os ? `${os} (${browser || 'Unknown'})` : browser) || 'Unknown'
 
       return (
         <div className="flex items-center gap-1.5 text-xs text-slate-600">
@@ -119,13 +116,13 @@ export const columns: ColumnDef<AuditLog>[] = [
     },
   },
   {
-    accessorKey: "status",
+    accessorKey: "result",
     header: "Status",
     cell: ({ row }) => {
-      const status = row.getValue("status") as string
+      const status = row.getValue("result") as string
       return (
         <Badge variant="outline" className={status === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-rose-50 text-rose-600 border-rose-200'}>
-          {status.toUpperCase()}
+          {status?.toUpperCase() || 'UNKNOWN'}
         </Badge>
       )
     },

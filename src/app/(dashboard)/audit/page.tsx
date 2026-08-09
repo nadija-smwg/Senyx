@@ -37,8 +37,9 @@ export default function AuditLogsPage() {
   }, [])
 
   const renderSubComponent = ({ row }: { row: any }) => {
-    const diff = row.original.diff;
-    if (!diff || (!diff.before && !diff.after)) return (
+    const before = row.original.before;
+    const after = row.original.after;
+    if (!before && !after) return (
       <div className="p-4 text-sm text-slate-500 bg-slate-50 border-t border-slate-100 italic">No diff available.</div>
     );
     
@@ -47,13 +48,13 @@ export default function AuditLogsPage() {
         <div className="flex-1 bg-white p-3 rounded-xl border border-rose-100 shadow-sm">
           <h4 className="text-xs font-bold text-rose-600 mb-2 uppercase tracking-wider">Before</h4>
           <pre className="text-xs font-mono text-slate-700 whitespace-pre-wrap overflow-x-auto max-h-60 scrollbar-hide">
-            {diff.before ? JSON.stringify(diff.before, null, 2) : 'null'}
+            {before ? JSON.stringify(before, null, 2) : 'null'}
           </pre>
         </div>
         <div className="flex-1 bg-white p-3 rounded-xl border border-emerald-100 shadow-sm">
           <h4 className="text-xs font-bold text-emerald-600 mb-2 uppercase tracking-wider">After</h4>
           <pre className="text-xs font-mono text-slate-700 whitespace-pre-wrap overflow-x-auto max-h-60 scrollbar-hide">
-            {diff.after ? JSON.stringify(diff.after, null, 2) : 'null'}
+            {after ? JSON.stringify(after, null, 2) : 'null'}
           </pre>
         </div>
       </div>
