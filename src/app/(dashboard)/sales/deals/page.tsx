@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { DealForm } from '@/components/sales/deal-form';
+import { CurrencyDisplay } from '@/components/ui/currency-display';
 
 export default function DealsPage() {
   const [deals, setDeals] = useState<any[]>([]);
@@ -142,7 +143,7 @@ export default function DealsPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(metrics.totalValue)}</div>
+            <div className="text-2xl font-bold"><CurrencyDisplay amount={metrics.totalValue} /></div>
             <p className="text-xs text-muted-foreground mt-1">Open deals value</p>
           </CardContent>
         </Card>
@@ -152,7 +153,7 @@ export default function DealsPage() {
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(metrics.weightedValue)}</div>
+            <div className="text-2xl font-bold"><CurrencyDisplay amount={metrics.weightedValue} /></div>
             <p className="text-xs text-muted-foreground mt-1">Expected revenue</p>
           </CardContent>
         </Card>

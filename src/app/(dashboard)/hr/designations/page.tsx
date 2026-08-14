@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { PageHeader } from "@/components/layout/page-header"
 import { DataTable } from "@/components/data/data-table"
 import { ColumnDef } from "@tanstack/react-table"
 
@@ -23,11 +24,8 @@ export default function DesignationsPage() {
   }, [])
 
   return (
-    <div className="container mx-auto py-10 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Designations</h1>
-        <p className="text-muted-foreground">Manage job titles and levels.</p>
-      </div>
+    <div className="container mx-auto py-6 space-y-6">
+      <PageHeader title="Designations" description="Manage job titles and levels." />
       <DataTable columns={columns} data={data} searchKey="title" isLoading={loading} />
     </div>
   )

@@ -2,6 +2,8 @@ import { db } from '@/server/db/client';
 import { invoices, expenses, subscriptions } from '@/server/db/schema/finance';
 import { projects, paymentMilestones } from '@/server/db/schema/projects';
 import { eq, inArray, and, isNull, sum, count } from 'drizzle-orm';
+import { PageHeader } from '@/components/layout/page-header';
+import { CurrencyDisplay } from '@/components/ui/currency-display';
 
 // Mock function for now, in a real app these would be proper DB queries
 async function getFinanceDashboardStats() {
@@ -123,47 +125,44 @@ async function getFinanceDashboardStats() {
 export default async function FinanceDashboard() {
   const stats = await getFinanceDashboardStats();
 
-  const formatCurrency = (val: number) => 
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
-
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-heading font-bold text-primary">Finance Overview</h1>
+      <PageHeader title="Finance Overview" description="Monitor company financial metrics and receivables." />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="bg-card text-card-foreground p-6 rounded-lg shadow-sm border">
           <h3 className="text-sm font-medium text-muted-foreground">Total Revenue</h3>
-          <div className="text-3xl font-bold mt-2 text-green-600">{formatCurrency(stats.revenue)}</div>
+          <div className="text-3xl font-bold mt-2 text-green-600"><CurrencyDisplay amount={stats.revenue} /></div>
           <p className="text-xs text-muted-foreground mt-1">From Paid Invoices</p>
         </div>
         
         <div className="bg-card text-card-foreground p-6 rounded-lg shadow-sm border">
           <h3 className="text-sm font-medium text-muted-foreground">Total Expenses</h3>
-          <div className="text-3xl font-bold mt-2 text-red-600">{formatCurrency(stats.totalExpenses)}</div>
+          <div className="text-3xl font-bold mt-2 text-red-600"><CurrencyDisplay amount={stats.totalExpenses} /></div>
           <p className="text-xs text-muted-foreground mt-1">Approved Expenses</p>
         </div>
 
         <div className="bg-card text-card-foreground p-6 rounded-lg shadow-sm border">
           <h3 className="text-sm font-medium text-muted-foreground">Net Profit</h3>
-          <div className="text-3xl font-bold mt-2 text-blue-600">{formatCurrency(stats.netProfit)}</div>
+          <div className="text-3xl font-bold mt-2 text-blue-600"><CurrencyDisplay amount={stats.netProfit} /></div>
           <p className="text-xs text-muted-foreground mt-1">Revenue - Expenses</p>
         </div>
 
         <div className="bg-card text-card-foreground p-6 rounded-lg shadow-sm border">
           <h3 className="text-sm font-medium text-muted-foreground">Outstanding Receivables</h3>
-          <div className="text-3xl font-bold mt-2">{formatCurrency(stats.outstanding)}</div>
+          <div className="text-3xl font-bold mt-2"><CurrencyDisplay amount={stats.outstanding} /></div>
           <p className="text-xs text-muted-foreground mt-1">Awaiting Payment</p>
         </div>
 
         <div className="bg-card text-card-foreground p-6 rounded-lg shadow-sm border">
           <h3 className="text-sm font-medium text-muted-foreground">Overdue Invoices</h3>
-          <div className="text-3xl font-bold mt-2 text-orange-600">{formatCurrency(stats.overdueTotal)}</div>
+          <div className="text-3xl font-bold mt-2 text-orange-600"><CurrencyDisplay amount={stats.overdueTotal} /></div>
           <p className="text-xs text-muted-foreground mt-1">{stats.overdueCount} Invoices</p>
         </div>
 
         <div className="bg-card text-card-foreground p-6 rounded-lg shadow-sm border">
           <h3 className="text-sm font-medium text-muted-foreground">Total MRR</h3>
-          <div className="text-3xl font-bold mt-2 text-purple-600">{formatCurrency(stats.mrr)}</div>
+          <div className="text-3xl font-bold mt-2 text-purple-600"><CurrencyDisplay amount={stats.mrr} /></div>
           <p className="text-xs text-muted-foreground mt-1">Active Subscriptions</p>
         </div>
       </div>
@@ -184,11 +183,11 @@ export default async function FinanceDashboard() {
               </thead>
               <tbody>
                 <tr className="border-b last:border-0 hover:bg-muted/50">
-                  <td className="px-4 py-3 font-medium">{formatCurrency(stats.aging.current)}</td>
-                  <td className="px-4 py-3">{formatCurrency(stats.aging.days30)}</td>
-                  <td className="px-4 py-3">{formatCurrency(stats.aging.days60)}</td>
-                  <td className="px-4 py-3 text-orange-600">{formatCurrency(stats.aging.days90)}</td>
-                  <td className="px-4 py-3 font-bold text-destructive">{formatCurrency(stats.aging.days90Plus)}</td>
+                  <td className="px-4 py-3 font-medium"><CurrencyDisplay amount={stats.aging.current} /></td>
+                  <td className="px-4 py-3"><CurrencyDisplay amount={stats.aging.days30} /></td>
+                  <td className="px-4 py-3"><CurrencyDisplay amount={stats.aging.days60} /></td>
+                  <td className="px-4 py-3 text-orange-600"><CurrencyDisplay amount={stats.aging.days90} /></td>
+                  <td className="px-4 py-3 font-bold text-destructive"><CurrencyDisplay amount={stats.aging.days90Plus} /></td>
                 </tr>
               </tbody>
             </table>
@@ -203,14 +202,14 @@ export default async function FinanceDashboard() {
                 <div key={idx} className="bg-muted/50 rounded-md p-3">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-medium text-sm text-primary">{proj.name}</span>
-                    <span className="font-bold text-sm">{formatCurrency(proj.outstanding)}</span>
+                    <span className="font-bold text-sm"><CurrencyDisplay amount={proj.outstanding} /></span>
                   </div>
                   {proj.milestones.length > 0 && (
                     <div className="space-y-1 mt-2 border-t pt-2">
                       {proj.milestones.map((ms, msIdx) => (
                         <div key={msIdx} className="flex justify-between items-center text-xs">
                           <span className="text-muted-foreground">{ms.name}</span>
-                          <span className="font-medium text-muted-foreground">{formatCurrency(ms.outstanding)}</span>
+                          <span className="font-medium text-muted-foreground"><CurrencyDisplay amount={ms.outstanding} /></span>
                         </div>
                       ))}
                     </div>

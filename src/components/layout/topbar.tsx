@@ -1,6 +1,6 @@
 'use client';
+import Link from 'next/link';
 import { useAuth } from '../../hooks/use-auth';
-import { Button } from '../ui/button';
 import { TimeClock } from '@/components/clock/time-clock';
 import { NotificationBell } from './notification-bell';
 import { MobileNav } from './mobile-nav';
@@ -110,8 +110,12 @@ export function Topbar() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer">Profile Settings</DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">Preferences</DropdownMenuItem>
+            <DropdownMenuItem asChild className="cursor-pointer">
+              <Link href="/settings/profile">Profile Settings</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild className="cursor-pointer">
+              <Link href="/settings/general">Preferences</Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => logout()} className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer">
               Log out

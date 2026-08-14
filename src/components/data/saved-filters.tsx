@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Bookmark, Save, Trash2 } from 'lucide-react';
 import { FilterGroup } from './filter-builder';
+import { toast } from 'sonner';
 
 interface SavedFilter {
   id: string;
@@ -29,7 +30,9 @@ export function SavedFilters({ currentGroup, onLoad }: SavedFiltersProps) {
       try {
         const parsed = JSON.parse(stored);
         Promise.resolve().then(() => setSavedFilters(parsed));
-      } catch (e) {}
+      } catch (e) {
+        toast.error('Failed to load saved views');
+      }
     } else {
       // Load some defaults
       const defaults: SavedFilter[] = [
