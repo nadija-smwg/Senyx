@@ -1,3 +1,4 @@
+'use client';
 import { useCurrency } from '@/providers/currency-provider';
 import { cn } from '@/lib/utils';
 import { Badge } from './badge';
