@@ -76,9 +76,11 @@ export function Topbar() {
 
       {/* Right */}
       <div className="flex items-center gap-3">
-        <CurrencySelector />
-        <TimeClock />
-        <div className="h-5 w-px bg-gray-200 mx-1" />
+        <div className="hidden sm:flex items-center gap-3">
+          <CurrencySelector />
+          <TimeClock />
+          <div className="h-5 w-px bg-gray-200 mx-1" />
+        </div>
         <NotificationBell />
 
         <DropdownMenu>
