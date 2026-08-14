@@ -121,8 +121,8 @@ export const columns: ColumnDef<AuditLog>[] = [
     cell: ({ row }) => {
       const status = row.getValue("result") as string
       return (
-        <Badge variant="outline" className={status === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-rose-50 text-rose-600 border-rose-200'}>
-          {status?.toUpperCase() || 'UNKNOWN'}
+        <Badge variant={status === 'success' ? 'positive' : 'negative'} className="font-semibold tracking-wide uppercase">
+          {status || 'UNKNOWN'}
         </Badge>
       )
     },

@@ -41,6 +41,7 @@ export const columns: ColumnDef<Project>[] = [
   {
     accessorKey: 'code',
     header: 'Code',
+    cell: ({ row }) => <span className="font-mono text-slate-600">{row.getValue('code')}</span>,
   },
   {
     accessorKey: 'name',
@@ -70,13 +71,13 @@ export const columns: ColumnDef<Project>[] = [
     header: 'Status',
     cell: ({ row }) => {
       const status = row.getValue('status') as string;
-      let variant: 'default' | 'secondary' | 'destructive' | 'outline' = 'outline';
-      if (status === 'active') variant = 'default';
-      else if (status === 'planning') variant = 'secondary';
-      else if (status === 'on_hold') variant = 'destructive';
+      let variant: 'positive' | 'warning' | 'negative' | 'default' = 'default';
+      if (status === 'active') variant = 'positive';
+      else if (status === 'planning') variant = 'warning';
+      else if (status === 'on_hold') variant = 'negative';
       
       return (
-        <Badge variant={variant} className="capitalize">
+        <Badge variant={variant} className="font-semibold tracking-wide uppercase">
           {status.replace('_', ' ')}
         </Badge>
       );

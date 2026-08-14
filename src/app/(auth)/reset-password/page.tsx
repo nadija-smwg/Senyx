@@ -33,7 +33,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <Card>
+    <Card className="rounded-2xl backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-white/20 shadow-2xl border shadow-slate-200/50 dark:shadow-none">
       <CardHeader className="space-y-1 text-center">
         <CardTitle className="text-2xl font-heading font-bold">Set New Password</CardTitle>
         <CardDescription>

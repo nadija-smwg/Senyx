@@ -4,7 +4,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/layout/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { CreateContactDialog } from '@/components/crm/create-contact-dialog';
+import { ContactForm } from '@/components/crm/contact-form';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { InteractionTimeline } from '@/components/crm/interaction-timeline';
 import { ActivityList } from '@/components/crm/activity-list';
 import { Building2, Globe, Users, Briefcase } from 'lucide-react';
@@ -17,7 +18,6 @@ export default function AccountDetailPage() {
   const [interactions, setInteractions] = useState([]);
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isCreateContactOpen, setIsCreateContactOpen] = useState(false);
 
   const refreshAccount = () => {
     if (!id) return;
@@ -112,7 +112,17 @@ export default function AccountDetailPage() {
               <h3 className="font-semibold flex items-center">
                 <Users className="w-4 h-4 mr-2" /> Contacts
               </h3>
-              <Button size="sm" variant="outline" onClick={() => setIsCreateContactOpen(true)}>Add Contact</Button>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button size="sm" variant="outline">Add Contact</Button>
+                </SheetTrigger>
+                <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
+                  <SheetHeader className="mb-6">
+                    <SheetTitle className="text-2xl font-bold font-heading">Add Contact</SheetTitle>
+                  </SheetHeader>
+                  <ContactForm onSuccess={refreshAccount} defaultAccountId={id} />
+                </SheetContent>
+              </Sheet>
             </div>
             {account.contacts && account.contacts.length > 0 ? (
               <ul className="divide-y divide-border">
@@ -140,12 +150,6 @@ export default function AccountDetailPage() {
         </TabsContent>
       </Tabs>
 
-      <CreateContactDialog 
-        open={isCreateContactOpen} 
-        onOpenChange={setIsCreateContactOpen} 
-        onSuccess={refreshAccount}
-        defaultAccountId={id}
-      />
     </div>
   );
 }

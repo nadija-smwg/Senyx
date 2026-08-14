@@ -12,6 +12,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetFooter,
+} from "@/components/ui/sheet"
 import Link from "next/link"
 
 export type Employee = {
@@ -29,6 +38,7 @@ export const columns: ColumnDef<Employee>[] = [
   {
     accessorKey: "employeeCode",
     header: "Code",
+    cell: ({ row }) => <span className="font-mono text-slate-600">{row.getValue("employeeCode")}</span>,
   },
   {
     accessorKey: "firstName",
@@ -68,45 +78,99 @@ export const columns: ColumnDef<Employee>[] = [
     header: "Status",
     cell: ({ row }) => {
       const status = row.getValue("status") as string
-      const statusClasses: Record<string, string> = {
-        'active': 'bg-emerald-100 text-emerald-700 border-emerald-200',
-        'on_leave': 'bg-amber-100 text-amber-700 border-amber-200',
-        'suspended': 'bg-rose-100 text-rose-700 border-rose-200',
-        'terminated': 'bg-slate-100 text-slate-700 border-slate-200',
+      const variantMap: Record<string, "positive" | "warning" | "negative" | "default"> = {
+        'active': 'positive',
+        'on_leave': 'warning',
+        'suspended': 'negative',
+        'terminated': 'default',
       }
       
-      const cn = statusClasses[status] || statusClasses['terminated'];
+      const variant = variantMap[status] || 'default';
       
-      return <Badge className={`font-semibold tracking-wide ${cn}`} variant="outline">{status.replace('_', ' ').toUpperCase()}</Badge>
+      return <Badge variant={variant} className="font-semibold tracking-wide uppercase">{status.replace('_', ' ')}</Badge>
     },
   },
   {
     id: "actions",
-    cell: ({ row }) => {
-      const employee = row.original
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(employee.employeeCode)}
-            >
-              Copy Employee Code
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href={`/hr/employees/${employee.id}`}>View Details</Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
+    cell: ({ row }) => <EmployeeActions employee={row.original} />
   },
 ]
+
+import { useState } from "react"
+import { EmployeeForm } from "@/components/hr/employee-form"
+
+function EmployeeActions({ employee }: { employee: Employee }) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Open menu</span>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(employee.employeeCode)}>
+          Copy Employee Code
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <Sheet open={isOpen} onOpenChange={(open) => { setIsOpen(open); if(!open) setIsEditing(false); }}>
+          <SheetTrigger asChild>
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>View Details</DropdownMenuItem>
+          </SheetTrigger>
+          <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
+            {isEditing ? (
+              <>
+                <SheetHeader className="mb-6">
+                  <SheetTitle className="text-2xl font-bold font-heading">Edit Employee</SheetTitle>
+                  <SheetDescription>Update information for {employee.firstName} {employee.lastName}</SheetDescription>
+                </SheetHeader>
+                <EmployeeForm 
+                  initialData={{
+                    id: employee.id,
+                    firstName: employee.firstName,
+                    lastName: employee.lastName,
+                    email: employee.email,
+                    employmentType: "full_time", // Requires full fetch ideally, but for now we fallback
+                    startDate: new Date().toISOString().split('T')[0],
+                    designationId: "", // Fallback
+                  } as any} 
+                  onCancel={() => setIsEditing(false)}
+                  onSuccess={() => { setIsEditing(false); setIsOpen(false); }}
+                />
+              </>
+            ) : (
+              <>
+                <SheetHeader>
+                  <SheetTitle className="text-2xl font-bold font-heading">{employee.firstName} {employee.lastName}</SheetTitle>
+                  <SheetDescription>Employee details and records</SheetDescription>
+                </SheetHeader>
+                <div className="py-6 space-y-6">
+                  <div className="space-y-1">
+                    <p className="text-sm text-slate-500 font-medium">Employee ID</p>
+                    <p className="font-mono text-sm">{employee.employeeCode}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-slate-500 font-medium">Email Address</p>
+                    <p className="font-medium">{employee.email}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-slate-500 font-medium">Department</p>
+                    <p className="font-medium">{employee.departmentName || "N/A"}</p>
+                  </div>
+                </div>
+                <SheetFooter className="absolute bottom-0 w-full left-0 p-6 border-t border-slate-100 bg-slate-50/50">
+                  <Button variant="outline" asChild className="w-full"><Link href={`/hr/employees/${employee.id}`}>Full Profile</Link></Button>
+                  <Button className="w-full" onClick={() => setIsEditing(true)}>Edit Employee</Button>
+                </SheetFooter>
+              </>
+            )}
+          </SheetContent>
+        </Sheet>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}

@@ -8,6 +8,8 @@ import { DealTable } from '@/components/sales/deal-table';
 import { LayoutDashboard, List, DollarSign, Target, TrendingUp, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { DealForm } from '@/components/sales/deal-form';
 
 export default function DealsPage() {
   const [deals, setDeals] = useState<any[]>([]);
@@ -118,9 +120,17 @@ export default function DealsPage() {
               <List className="w-4 h-4 mr-2" /> List
             </Button>
           </div>
-          <Button asChild>
-            <Link href="/sales/deals/new">Create Deal</Link>
-          </Button>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button>Create Deal</Button>
+            </SheetTrigger>
+            <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
+              <SheetHeader className="mb-6">
+                <SheetTitle className="text-2xl font-bold font-heading">Create Deal</SheetTitle>
+              </SheetHeader>
+              <DealForm onSuccess={() => fetchDeals()} />
+            </SheetContent>
+          </Sheet>
         </div>
       </PageHeader>
 

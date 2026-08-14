@@ -71,20 +71,37 @@ export function DataTable<TData, TValue>({
   return (
     <div className="w-full">
       {searchKey && (
-        <div className="flex items-center p-4 md:p-6 border-b border-slate-100 bg-slate-50/30">
-          <Input
-            placeholder={searchPlaceholder}
-            value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn(searchKey)?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm bg-white border-slate-200 shadow-sm rounded-xl h-10 transition-shadow focus-visible:shadow-md"
-          />
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-slate-100 bg-slate-50/30">
+          <div className="flex items-center gap-3 w-full max-w-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 absolute ml-3"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <Input
+              placeholder={searchPlaceholder}
+              value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
+              onChange={(event) =>
+                table.getColumn(searchKey)?.setFilterValue(event.target.value)
+              }
+              className="pl-10 w-full bg-white border-slate-200 shadow-sm rounded-xl h-10 transition-shadow focus-visible:shadow-md"
+            />
+          </div>
+          <div className="hidden md:flex items-center gap-3">
+            <Button variant="outline" className="h-10 text-slate-600 rounded-xl bg-white shadow-sm font-medium">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+              Export
+            </Button>
+            <Button variant="outline" className="h-10 text-slate-600 rounded-xl bg-white shadow-sm font-medium">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              Filter
+            </Button>
+            <Button variant="outline" className="h-10 text-slate-600 rounded-xl bg-white shadow-sm font-medium">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+              Date Range
+            </Button>
+          </div>
         </div>
       )}
       <div className="w-full">
         {/* Desktop Table View */}
-        <div className="hidden md:block overflow-auto">
+        <div className="hidden md:block overflow-auto max-h-[calc(100vh-250px)]">
           <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -134,8 +151,11 @@ export function DataTable<TData, TValue>({
             ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
+                <TableCell colSpan={columns.length} className="h-48 text-center bg-slate-50/30">
+                  <div className="flex flex-col items-center justify-center text-slate-500 space-y-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <p className="text-sm font-medium">No records found matching your criteria.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
@@ -174,7 +194,10 @@ export function DataTable<TData, TValue>({
               </div>
             ))
           ) : (
-            <div className="p-8 text-center text-muted-foreground border rounded-xl bg-card">No results.</div>
+            <div className="p-12 flex flex-col items-center justify-center text-slate-500 border rounded-xl bg-slate-50/50 space-y-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <span className="text-sm font-medium">No records found.</span>
+            </div>
           )}
         </div>
       </div>

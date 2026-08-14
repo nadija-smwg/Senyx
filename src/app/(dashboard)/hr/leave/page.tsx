@@ -63,11 +63,11 @@ export default function LeavePage() {
       header: "Status",
       cell: ({ row }) => {
         const status = row.original.status
-        let variant: "default" | "secondary" | "destructive" | "outline" = "outline"
-        if (status === "approved") variant = "default"
-        else if (status === "rejected") variant = "destructive"
-        else if (status === "pending") variant = "secondary"
-        return <Badge variant={variant}>{status.toUpperCase()}</Badge>
+        let variant: "positive" | "negative" | "warning" | "default" = "default"
+        if (status === "approved") variant = "positive"
+        else if (status === "rejected") variant = "negative"
+        else if (status === "pending") variant = "warning"
+        return <Badge variant={variant} className="font-semibold tracking-wide uppercase">{status.toUpperCase()}</Badge>
       }
     },
     {

@@ -1,9 +1,10 @@
 'use client';
 import { useState } from 'react';
-import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { DealForm } from '@/components/sales/deal-form';
 import {
   useReactTable,
   getCoreRowModel,
@@ -11,6 +12,14 @@ import {
   getPaginationRowModel,
   getFilteredRowModel,
 } from '@tanstack/react-table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { format } from 'date-fns';
 
 export function DealTable({ deals }: { deals: any[] }) {
@@ -20,11 +29,34 @@ export function DealTable({ deals }: { deals: any[] }) {
     {
       accessorKey: 'name',
       header: 'Deal Name',
-      cell: ({ row }: any) => (
-        <Link href={`/sales/deals/${row.original.id}`} className="font-medium text-primary hover:underline">
-          {row.getValue('name')}
-        </Link>
-      )
+      cell: ({ row }: any) => {
+        const deal = row.original;
+        return (
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="font-medium text-primary hover:underline bg-transparent border-none cursor-pointer text-left">
+                {row.getValue('name')}
+              </button>
+            </SheetTrigger>
+            <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
+              <SheetHeader className="mb-6">
+                <SheetTitle className="text-2xl font-bold font-heading">Edit Deal</SheetTitle>
+              </SheetHeader>
+              <DealForm 
+                initialData={{
+                  id: deal.id,
+                  name: deal.name,
+                  accountId: deal.accountId,
+                  amount: deal.amount,
+                  currency: deal.currency,
+                  expectedCloseDate: deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toISOString().split('T')[0] : '',
+                  source: deal.source || '',
+                }} 
+              />
+            </SheetContent>
+          </Sheet>
+        );
+      }
     },
     {
       accessorKey: 'stage',
@@ -51,7 +83,7 @@ export function DealTable({ deals }: { deals: any[] }) {
       header: 'Health',
       cell: ({ row }: any) => {
         const risk = row.original.health?.riskFlag;
-        return risk ? <Badge variant="destructive">At Risk</Badge> : <Badge variant="secondary">Healthy</Badge>;
+        return risk ? <Badge variant="negative" className="font-semibold tracking-wide uppercase">At Risk</Badge> : <Badge variant="positive" className="font-semibold tracking-wide uppercase">Healthy</Badge>;
       }
     }
   ];
@@ -79,35 +111,35 @@ export function DealTable({ deals }: { deals: any[] }) {
         />
       </div>
 
-      <div className="border rounded-md bg-card overflow-hidden">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-muted text-muted-foreground uppercase text-xs">
+      <div className="border rounded-md bg-card overflow-auto max-h-[calc(100vh-250px)]">
+        <Table>
+          <TableHeader>
             {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id}>
+              <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
-                  <th key={header.id} className="px-4 py-3 font-medium">
+                  <TableHead key={header.id}>
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-          </thead>
-          <tbody className="divide-y divide-border">
+          </TableHeader>
+          <TableBody>
             {table.getRowModel().rows.length === 0 ? (
-              <tr><td colSpan={columns.length} className="px-4 py-8 text-center text-muted-foreground">No deals found.</td></tr>
+              <TableRow><TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">No deals found.</TableCell></TableRow>
             ) : (
               table.getRowModel().rows.map(row => (
-                <tr key={row.id} className="hover:bg-muted/50 transition-colors">
+                <TableRow key={row.id}>
                   {row.getVisibleCells().map(cell => (
-                    <td key={cell.id} className="px-4 py-3">
+                    <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       
       <div className="flex items-center justify-end space-x-2 py-4">

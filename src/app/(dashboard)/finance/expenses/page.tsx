@@ -2,7 +2,9 @@ import { db } from '@/server/db/client';
 import { expenses } from '@/server/db/schema/finance';
 import { projects } from '@/server/db/schema/projects';
 import { eq, isNull, desc, and, gte, lte } from 'drizzle-orm';
-import { ExpenseFormModal } from '@/components/finance/expense-form-modal';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { ExpenseForm } from '@/components/finance/expense-form';
+import { Button } from '@/components/ui/button';
 import { ExpenseActions } from '@/components/finance/expense-actions';
 import { ExpenseDocumentsModal } from '@/components/finance/expense-documents-modal';
 
@@ -65,7 +67,19 @@ export default async function ExpensesPage({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-heading font-bold text-primary">Expenses</h1>
-        <ExpenseFormModal />
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button>Log Expense</Button>
+          </SheetTrigger>
+          <SheetContent className="w-full sm:max-w-[480px] overflow-hidden flex flex-col p-0">
+            <SheetHeader className="px-6 py-6 border-b shrink-0">
+              <SheetTitle className="text-2xl font-bold font-heading">Log New Expense</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-6 relative h-full">
+              <ExpenseForm />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
       <div className="bg-card text-card-foreground p-6 rounded-lg shadow-sm border">

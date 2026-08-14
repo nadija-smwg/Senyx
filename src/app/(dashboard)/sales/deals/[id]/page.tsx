@@ -55,8 +55,8 @@ export default function DealDetailPage() {
       toast.success(`Deal marked as Closed ${status.toUpperCase()}!`);
       
       if (status === 'won') {
-        // Optional: redirect to project creation flow
-        router.push(`/projects/new?fromDeal=${id}`);
+        // Optional: redirect to projects page
+        router.push(`/projects`);
       } else {
         router.refresh(); // just reload UI
       }

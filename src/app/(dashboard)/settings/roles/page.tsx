@@ -8,7 +8,8 @@ import { Spinner } from '../../../../components/ui/spinner';
 import { fetchClient } from '../../../../lib/api-client';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { RoleFormModal } from '../../../../components/settings/role-form-modal';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../../../../components/ui/sheet';
+import { RoleForm } from '../../../../components/settings/role-form';
 
 interface Role {
   id: string;
@@ -35,7 +36,19 @@ export default function RolesListPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Roles & Permissions" description="View and manage system roles.">
-        <RoleFormModal onSuccess={fetchRoles} />
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button>Create Role</Button>
+          </SheetTrigger>
+          <SheetContent className="w-full sm:max-w-[480px] overflow-hidden flex flex-col p-0">
+            <SheetHeader className="px-6 py-6 border-b shrink-0">
+              <SheetTitle className="text-2xl font-bold font-heading">Create New Role</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-6 relative h-full">
+              <RoleForm onSuccess={fetchRoles} />
+            </div>
+          </SheetContent>
+        </Sheet>
       </PageHeader>
       
       {isLoading ? (

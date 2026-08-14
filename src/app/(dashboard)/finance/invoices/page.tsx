@@ -4,7 +4,10 @@ import { accounts } from '@/server/db/schema/crm';
 import { projects } from '@/server/db/schema/projects';
 import { eq, isNull, desc, and, gte, lte } from 'drizzle-orm';
 import Link from 'next/link';
-import { InvoiceFormModal } from '@/components/finance/invoice-form-modal';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { InvoiceForm } from '@/components/finance/invoice-form';
+import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/layout/page-header';
 
 function getStatusBadgeClass(status: string) {
   switch (status) {
@@ -79,10 +82,28 @@ export default async function InvoicesPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-heading font-bold text-primary">Invoices</h1>
-        <InvoiceFormModal />
-      </div>
+      <PageHeader 
+        pretitle="Finance"
+        title="Invoices"
+        description="Manage your incoming and outgoing invoices, track payments, and stay on top of your financials."
+        actions={
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button className="gap-2 shadow-lg shadow-[#1A6DB6]/20 bg-gradient-to-r from-[#1A6DB6] to-[#22BFE8] hover:from-[#155a96] hover:to-[#1ca2c5] border-0 text-white font-semibold transition-all hover:scale-105">
+                Create Invoice
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="w-full sm:max-w-[700px] overflow-hidden flex flex-col p-0">
+              <SheetHeader className="px-6 py-6 border-b shrink-0">
+                <SheetTitle className="text-2xl font-bold font-heading">Create New Invoice</SheetTitle>
+              </SheetHeader>
+              <div className="flex-1 overflow-y-auto px-6 relative h-full">
+                <InvoiceForm />
+              </div>
+            </SheetContent>
+          </Sheet>
+        }
+      />
 
       {/* Totals Summary */}
       <div className="flex gap-6 mb-2">

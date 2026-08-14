@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { CreateContactDialog } from '@/components/crm/create-contact-dialog';
+import { ContactForm } from '@/components/crm/contact-form';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +18,6 @@ export default function ContactsPage() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState('');
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const fetchContacts = () => {
     setLoading(true);
@@ -39,12 +39,34 @@ export default function ContactsPage() {
       accessorFn: (row: any) => `${row.firstName} ${row.lastName || ''}`.trim(),
       header: 'Name',
       cell: ({ row }: any) => {
-        const primary = row.original.isPrimary;
+        const contact = row.original;
         return (
-          <div className="font-medium text-primary">
-            {row.original.firstName} {row.original.lastName}
-            {primary && <span className="ml-2 text-[10px] uppercase bg-primary/10 text-primary px-1.5 py-0.5 rounded">Primary</span>}
-          </div>
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="font-medium text-primary hover:underline bg-transparent border-none cursor-pointer text-left flex items-center">
+                {contact.firstName} {contact.lastName}
+                {contact.isPrimary && <span className="ml-2 text-[10px] uppercase bg-primary/10 text-primary px-1.5 py-0.5 rounded">Primary</span>}
+              </button>
+            </SheetTrigger>
+            <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
+              <SheetHeader className="mb-6">
+                <SheetTitle className="text-2xl font-bold font-heading">Edit Contact</SheetTitle>
+              </SheetHeader>
+              <ContactForm 
+                initialData={{
+                  id: contact.id,
+                  accountId: contact.accountId,
+                  firstName: contact.firstName,
+                  lastName: contact.lastName || '',
+                  email: contact.email || '',
+                  phone: contact.phone || '',
+                  title: contact.title || '',
+                  isPrimary: contact.isPrimary,
+                }}
+                onSuccess={fetchContacts} 
+              />
+            </SheetContent>
+          </Sheet>
         );
       }
     },
@@ -80,14 +102,18 @@ export default function ContactsPage() {
         title="Contacts" 
         description="Manage the people linked to your client accounts."
       >
-        <Button onClick={() => setIsCreateOpen(true)}>Add Contact</Button>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button>Add Contact</Button>
+          </SheetTrigger>
+          <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
+            <SheetHeader className="mb-6">
+              <SheetTitle className="text-2xl font-bold font-heading">Add Contact</SheetTitle>
+            </SheetHeader>
+            <ContactForm onSuccess={fetchContacts} />
+          </SheetContent>
+        </Sheet>
       </PageHeader>
-
-      <CreateContactDialog 
-        open={isCreateOpen} 
-        onOpenChange={setIsCreateOpen} 
-        onSuccess={fetchContacts}
-      />
 
       <div className="flex items-center space-x-2">
         <Input 

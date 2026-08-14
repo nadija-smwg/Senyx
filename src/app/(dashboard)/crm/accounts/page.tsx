@@ -11,6 +11,17 @@ import {
   getPaginationRowModel,
   getFilteredRowModel,
 } from '@tanstack/react-table';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { AccountForm } from '@/components/crm/account-form';
 
 export default function AccountsPage() {
   const [data, setData] = useState([]);
@@ -30,11 +41,34 @@ export default function AccountsPage() {
     {
       accessorKey: 'name',
       header: 'Account Name',
-      cell: ({ row }: any) => (
-        <Link href={`/crm/accounts/${row.original.id}`} className="font-medium text-primary hover:underline">
-          {row.getValue('name')}
-        </Link>
-      )
+      cell: ({ row }: any) => {
+        const acc = row.original;
+        return (
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="font-medium text-primary hover:underline text-left bg-transparent border-none cursor-pointer">
+                {row.getValue('name')}
+              </button>
+            </SheetTrigger>
+            <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
+              <SheetHeader className="mb-6">
+                <SheetTitle className="text-2xl font-bold font-heading">Edit Account</SheetTitle>
+              </SheetHeader>
+              <AccountForm 
+                initialData={{
+                  id: acc.id,
+                  name: acc.name,
+                  industry: acc.industry || '',
+                  size: acc.size || '',
+                  website: acc.website || '',
+                  status: acc.status || 'prospect',
+                }}
+                onSuccess={() => window.location.reload()}
+              />
+            </SheetContent>
+          </Sheet>
+        );
+      }
     },
     {
       accessorKey: 'industry',
@@ -45,14 +79,13 @@ export default function AccountsPage() {
       header: 'Status',
       cell: ({ row }: any) => {
         const val = row.getValue('status');
+        let variant: 'positive' | 'warning' | 'negative' | 'default' = 'default';
+        if (val === 'active') variant = 'positive';
+        else if (val === 'prospect') variant = 'warning';
         return (
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
-            val === 'active' ? 'bg-emerald-100 text-emerald-800' :
-            val === 'prospect' ? 'bg-blue-100 text-blue-800' :
-            'bg-gray-100 text-gray-800'
-          }`}>
+          <Badge variant={variant} className="font-semibold tracking-wide uppercase">
             {val}
-          </span>
+          </Badge>
         );
       }
     },
@@ -76,9 +109,17 @@ export default function AccountsPage() {
         title="Accounts" 
         description="Manage your CRM client accounts and prospects."
       >
-        <Button asChild>
-          <Link href="/crm/accounts/new">Add Account</Link>
-        </Button>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button>Add Account</Button>
+          </SheetTrigger>
+          <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
+            <SheetHeader className="mb-6">
+              <SheetTitle className="text-2xl font-bold font-heading">Add Account</SheetTitle>
+            </SheetHeader>
+            <AccountForm onSuccess={() => window.location.reload()} />
+          </SheetContent>
+        </Sheet>
       </PageHeader>
 
       <div className="flex items-center space-x-2">
@@ -90,37 +131,37 @@ export default function AccountsPage() {
         />
       </div>
 
-      <div className="border rounded-md bg-card overflow-hidden">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-muted text-muted-foreground uppercase text-xs">
+      <div className="border rounded-md bg-card overflow-auto max-h-[calc(100vh-250px)]">
+        <Table>
+          <TableHeader>
             {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id}>
+              <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
-                  <th key={header.id} className="px-4 py-3 font-medium">
+                  <TableHead key={header.id}>
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-          </thead>
-          <tbody className="divide-y divide-border">
+          </TableHeader>
+          <TableBody>
             {loading ? (
-              <tr><td colSpan={columns.length} className="px-4 py-8 text-center text-muted-foreground">Loading accounts...</td></tr>
+              <TableRow><TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">Loading accounts...</TableCell></TableRow>
             ) : table.getRowModel().rows.length === 0 ? (
-              <tr><td colSpan={columns.length} className="px-4 py-8 text-center text-muted-foreground">No accounts found.</td></tr>
+              <TableRow><TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">No accounts found.</TableCell></TableRow>
             ) : (
               table.getRowModel().rows.map(row => (
-                <tr key={row.id} className="hover:bg-muted/50 transition-colors">
+                <TableRow key={row.id}>
                   {row.getVisibleCells().map(cell => (
-                    <td key={cell.id} className="px-4 py-3">
+                    <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       
       {/* Pagination */}

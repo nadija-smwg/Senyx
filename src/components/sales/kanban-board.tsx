@@ -21,6 +21,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { DealForm } from '@/components/sales/deal-form';
 
 const STAGES = ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost'];
 
@@ -45,9 +47,29 @@ function DealCard({ deal }: { deal: any }) {
     >
       <Card className="cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors">
         <CardContent className="p-3">
-          <Link href={`/sales/deals/${deal.id}`} className="font-semibold text-sm hover:underline" onClick={(e) => e.stopPropagation()}>
-            {deal.name}
-          </Link>
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="font-semibold text-sm hover:underline text-left" onClick={(e) => e.stopPropagation()}>
+                {deal.name}
+              </button>
+            </SheetTrigger>
+            <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto" onPointerDown={(e) => e.stopPropagation()}>
+              <SheetHeader className="mb-6">
+                <SheetTitle className="text-2xl font-bold font-heading">Edit Deal</SheetTitle>
+              </SheetHeader>
+              <DealForm 
+                initialData={{
+                  id: deal.id,
+                  name: deal.name,
+                  accountId: deal.accountId,
+                  amount: deal.amount,
+                  currency: deal.currency,
+                  expectedCloseDate: deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toISOString().split('T')[0] : '',
+                  source: deal.source || '',
+                }} 
+              />
+            </SheetContent>
+          </Sheet>
           <div className="text-xs text-muted-foreground mt-1 mb-2">
             Amount: {new Intl.NumberFormat('en-US', { style: 'currency', currency: deal.currency || 'USD' }).format(deal.amount)}
           </div>
