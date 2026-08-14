@@ -35,6 +35,12 @@ export function PaymentFormModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!targetId) {
+      alert(`Please select a valid ${type} before recording a payment.`);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -200,7 +206,7 @@ export function PaymentFormModal({
             <button 
               type="submit" 
               disabled={loading || !targetId}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+              className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
               {loading ? 'Processing...' : 'Record Payment'}
             </button>
