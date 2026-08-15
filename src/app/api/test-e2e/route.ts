@@ -8,7 +8,9 @@ import { createDeal } from '@/server/services/deal.service';
 import { createProject } from '@/server/services/project.service';
 import { createInvoice } from '@/server/services/finance.service';
 
-export async function GET() {
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: Request) {
   const bugs: string[] = [];
   
   try {
