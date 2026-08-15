@@ -4,7 +4,7 @@ import { users } from '../db/schema/identity';
 import { eq, and, desc } from 'drizzle-orm';
 import { auditLogs } from '../db/schema/platform';
 import { encrypt, decrypt } from '../lib/crypto';
-import { supabaseAdmin } from '../lib/supabase-admin';
+import { getSupabaseAdmin } from '../lib/supabase-admin';
 import { generateEmployeeCode } from '../lib/code-generator';
 async function auditAction(data: any) {
   try {
@@ -81,6 +81,7 @@ export async function createEmployee(input: any, actorUserId: string) {
   }).returning();
 
   // 4. Create Supabase Auth User
+  const supabaseAdmin = getSupabaseAdmin();
   const { data: authUser, error } = await supabaseAdmin.auth.admin.createUser({
     email: input.email,
     password: 'TempPassword123!',
