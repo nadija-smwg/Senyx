@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { db } from '@/server/db/client';
 import { invoices, invoiceLineItems } from '@/server/db/schema/finance';
 import { eq } from 'drizzle-orm';

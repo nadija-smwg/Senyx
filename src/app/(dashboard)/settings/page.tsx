@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { PageHeader } from '../../../components/layout/page-header';
 import { Card, CardHeader, CardTitle, CardDescription } from '../../../components/ui/card';
 import Link from 'next/link';

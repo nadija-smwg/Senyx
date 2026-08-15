@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { fetchClient } from '../lib/api-client';
 import { useRouter } from 'next/navigation';

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { db } from '@/server/db/client';
 import { invoices, expenses, subscriptions } from '@/server/db/schema/finance';
 import { projects, paymentMilestones } from '@/server/db/schema/projects';
