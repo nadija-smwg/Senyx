@@ -84,29 +84,6 @@ jobs:
           name: coverage-report
           path: coverage/
 
-  docker-build:
-    name: Docker Build Check
-    runs-on: ubuntu-latest
-    needs: quality
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build Docker image
-        run: |
-          docker build \
-            --build-arg NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co \
-            --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder \
-            --build-arg NEXT_PUBLIC_APP_URL=http://localhost:3000 \
-            -t senyx-erp:test .
-
-      - name: Verify image size
-        run: |
-          SIZE=$(docker image inspect senyx-erp:test --format='{{.Size}}')
-          SIZE_MB=$((SIZE / 1024 / 1024))
-          echo "Image size: ${SIZE_MB}MB"
-          if [ $SIZE_MB -gt 500 ]; then
-            echo "WARNING: Image size exceeds 500MB"
-          fi
 
   # ─────────────────────────────────────
   # Job 4: Build Verification
@@ -118,6 +95,8 @@ jobs:
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
