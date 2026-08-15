@@ -60,16 +60,21 @@ export function ContactForm({ initialData, defaultAccountId, onSuccess, onCancel
   });
 
   React.useEffect(() => {
-    setLoadingAccounts(true);
-    fetch('/api/accounts')
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchAccounts = async () => {
+      setLoadingAccounts(true);
+      try {
+        const res = await fetch('/api/accounts');
+        const data = await res.json();
         if (data.data) {
           setAccounts(data.data);
         }
-      })
-      .catch(() => toast.error('Failed to load accounts'))
-      .finally(() => setLoadingAccounts(false));
+      } catch (error) {
+        toast.error('Failed to load accounts');
+      } finally {
+        setLoadingAccounts(false);
+      }
+    };
+    fetchAccounts();
   }, []);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
