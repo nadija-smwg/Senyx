@@ -21,7 +21,7 @@ jobs:
           sudo mv mc /usr/local/bin/mc
           
           # Configure R2
-          mc alias set r2 ${{ secrets.R2_ENDPOINT }} ${{ secrets.R2_ACCESS_KEY_ID }} ${{ secrets.R2_SECRET_ACCESS_KEY }} --api S3v4
+          mc alias set r2 "${{ secrets.R2_ENDPOINT }}" "${{ secrets.R2_ACCESS_KEY_ID }}" "${{ secrets.R2_SECRET_ACCESS_KEY }}" --api S3v4
           
       - name: Dump and Upload
         run: |
@@ -30,16 +30,16 @@ jobs:
           
           # Create compressed dump
           PGPASSWORD="${{ secrets.DB_PASSWORD }}" pg_dump \
-            -h ${{ secrets.DB_HOST }} \
+            -h "${{ secrets.DB_HOST }}" \
             -p 5432 \
             -U postgres \
             -d senyx_erp \
             -F c \
             -Z 9 \
-            > $FILENAME
+            > "$FILENAME"
             
           # Upload to R2 bucket
-          mc cp $FILENAME r2/${{ secrets.R2_BUCKET_NAME }}/$FILENAME
+          mc cp "$FILENAME" "r2/${{ secrets.R2_BUCKET_NAME }}/$FILENAME"
           
           # Optional: Apply retention policy (e.g. keep last 30 days)
           # Note: Better handled via Cloudflare R2 object lifecycle rules
