@@ -7,7 +7,7 @@
 | **Company** | SENYX Software (Pvt) Ltd |
 | **Document** | Software Requirements Specification |
 | **System** | Internal Enterprise ERP (IT & AI Services + Products) |
-| **Version** | 1.1 (Draft) |
+| **Version** | 1.1 (Final) |
 | **Status** | For review |
 | **Deployment** | Internal system |
 | **Recommended Stack** | Next.js (App Router) · Netlify (hosting) · Supabase (PostgreSQL + Auth + RLS) · Cloudflare R2 (documents) · free transactional email |
@@ -564,4 +564,4 @@ Core entities (detailed schema in the Technical Design Document):
 
 ---
 
-*End of SRS v1.1 (Draft) — SENYX Software (Pvt) Ltd. The Technical Design Document (data models, API routes, TypeScript interfaces) follows separately.*
+*End of SRS v1.1 (Final) — SENYX Software (Pvt) Ltd. The Technical Design Document (data models, API routes, TypeScript interfaces) follows separately.*

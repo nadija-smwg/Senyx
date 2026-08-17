@@ -7,7 +7,7 @@
 | **Company** | SENYX Software (Pvt) Ltd |
 | **Document** | Technical Design Document |
 | **Companion** | SRS v1.1 |
-| **Version** | 1.0 (Draft) |
+| **Version** | 1.0 (Final) |
 | **Database** | PostgreSQL |
 | **Stack** | Next.js (App Router, TypeScript) · Supabase (Postgres + Auth + RLS) · Cloudflare R2 (documents) · Resend (email) |
 
@@ -1443,4 +1443,4 @@ export interface ListResponse<T> {
 
 ---
 
-*End of Technical Design Document v1.0 (Draft) — SENYX Software (Pvt) Ltd. Companion to SRS v1.1.*
+*End of Technical Design Document v1.0 (Final) — SENYX Software (Pvt) Ltd. Companion to SRS v1.1.*
