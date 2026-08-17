@@ -1,7 +1,8 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { roles, permissions, rolePermissions, users, userRoles } from './schema/identity';
-import { departments, designations, leaveTypes, skills } from './schema/hr';
+import { departments, designations, leaveTypes, skills, employees } from './schema/hr';
+import crypto from 'crypto';
 import { settings } from './schema/platform';
 import { eq } from 'drizzle-orm';
 import { loadEnvConfig } from '@next/env';
