@@ -137,6 +137,70 @@ async function main() {
     }
   }
 
+  // 10. Seed Accounts (Employees and Users)
+  const defaultAccounts = [
+    { email: 'admin@senyx.com', first: 'Alice', last: 'Admin', role: 'Admin', code: 'EMP-001', desig: 'CEO', dept: 'Operations' },
+    { email: 'hr@senyx.com', first: 'Bob', last: 'Human', role: 'HR Manager', code: 'EMP-002', desig: 'HR Executive', dept: 'HR' },
+    { email: 'finance@senyx.com', first: 'Carol', last: 'Cash', role: 'Finance', code: 'EMP-003', desig: 'Finance Executive', dept: 'Finance' },
+    { email: 'sales@senyx.com', first: 'Dave', last: 'Deal', role: 'Sales Lead', code: 'EMP-004', desig: 'Sales Executive', dept: 'Sales' },
+    { email: 'project@senyx.com', first: 'Eve', last: 'Planner', role: 'Project Owner', code: 'EMP-005', desig: 'Project Manager', dept: 'Engineering' },
+    { email: 'employee@senyx.com', first: 'Frank', last: 'Worker', role: 'Employee', code: 'EMP-006', desig: 'Developer', dept: 'Engineering' }
+  ];
+
+  const allDesigs = await db.select().from(designations);
+  const allDepts = await db.select().from(departments);
+
+  for (const acc of defaultAccounts) {
+    const desig = allDesigs.find(d => d.title === acc.desig);
+    const dept = allDepts.find(d => d.name === acc.dept);
+    const role = allRoles.find(r => r.name === acc.role);
+
+    if (desig && dept && role) {
+      // 1. Insert Employee
+      const empResult = await db.insert(employees).values({
+        employeeCode: acc.code,
+        firstName: acc.first,
+        lastName: acc.last,
+        email: acc.email,
+        designationId: desig.id,
+        departmentId: dept.id,
+        employmentType: 'full_time',
+        startDate: new Date().toISOString().split('T')[0],
+        status: 'active'
+      }).onConflictDoNothing({ target: employees.email }).returning({ id: employees.id });
+
+      let empId = empResult.length > 0 ? empResult[0].id : null;
+      if (!empId) {
+        const existingEmp = await db.select().from(employees).where(eq(employees.email, acc.email));
+        if (existingEmp.length > 0) empId = existingEmp[0].id;
+      }
+
+      if (empId) {
+        // 2. Insert User (Using predictable crypto.randomUUID or db generated)
+        const userResult = await db.insert(users).values({
+          id: crypto.randomUUID(), // Assuming Node.js env where crypto is available globally
+          employeeId: empId,
+          email: acc.email,
+          isActive: true
+        }).onConflictDoNothing({ target: users.email }).returning({ id: users.id });
+
+        let userId = userResult.length > 0 ? userResult[0].id : null;
+        if (!userId) {
+          const existingUser = await db.select().from(users).where(eq(users.email, acc.email));
+          if (existingUser.length > 0) userId = existingUser[0].id;
+        }
+
+        if (userId) {
+          // 3. Insert User Role
+          await db.insert(userRoles).values({
+            userId: userId,
+            roleId: role.id
+          }).onConflictDoNothing();
+        }
+      }
+    }
+  }
+
   console.log("Seeding completed!");
   process.exit(0);
 }
