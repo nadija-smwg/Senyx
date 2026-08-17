@@ -166,14 +166,14 @@ async function main() {
         designationId: desig.id,
         departmentId: dept.id,
         employmentType: 'full_time',
-        startDate: new Date().toISOString().split('T')[0],
+        startDate: new Date().toISOString().split('T')[0]!,
         status: 'active'
       }).onConflictDoNothing({ target: employees.email }).returning({ id: employees.id });
 
-      let empId = empResult.length > 0 ? empResult[0].id : null;
+      let empId = empResult.length > 0 ? empResult[0]?.id : null;
       if (!empId) {
         const existingEmp = await db.select().from(employees).where(eq(employees.email, acc.email));
-        if (existingEmp.length > 0) empId = existingEmp[0].id;
+        if (existingEmp.length > 0) empId = existingEmp[0]?.id;
       }
 
       if (empId) {
@@ -185,10 +185,10 @@ async function main() {
           isActive: true
         }).onConflictDoNothing({ target: users.email }).returning({ id: users.id });
 
-        let userId = userResult.length > 0 ? userResult[0].id : null;
+        let userId = userResult.length > 0 ? userResult[0]?.id : null;
         if (!userId) {
           const existingUser = await db.select().from(users).where(eq(users.email, acc.email));
-          if (existingUser.length > 0) userId = existingUser[0].id;
+          if (existingUser.length > 0) userId = existingUser[0]?.id;
         }
 
         if (userId) {
