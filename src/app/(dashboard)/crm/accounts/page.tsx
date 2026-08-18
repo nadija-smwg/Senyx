@@ -75,6 +75,14 @@ export default function AccountsPage() {
       header: 'Industry',
     },
     {
+      accessorKey: 'ownerName',
+      header: 'Owner',
+      cell: ({ row }: any) => {
+        const name = row.getValue('ownerName');
+        return <span className="text-muted-foreground">{name || 'Unassigned'}</span>;
+      }
+    },
+    {
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }: any) => {

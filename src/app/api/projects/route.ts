@@ -16,7 +16,12 @@ const schema = z.object({
   endDate: z.string().optional().nullable(),
   budget: z.number().optional().nullable(),
   currency: z.string().max(3).optional(),
-});
+}).refine(data => {
+  if (data.startDate && data.endDate) {
+    return new Date(data.endDate) >= new Date(data.startDate);
+  }
+  return true;
+}, { message: "End date cannot be before start date", path: ["endDate"] });
 
 export async function GET(req: NextRequest) {
   try {

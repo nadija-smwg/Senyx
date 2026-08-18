@@ -38,7 +38,12 @@ const formSchema = z.object({
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
   reason: z.string().optional(),
-})
+}).refine(data => {
+  if (data.startDate && data.endDate) {
+    return new Date(data.endDate) >= new Date(data.startDate);
+  }
+  return true;
+}, { message: "End date cannot be before start date", path: ["endDate"] })
 
 export function LeaveRequestModal({ onSuccess }: { onSuccess: () => void }) {
   const [open, setOpen] = useState(false)
@@ -62,11 +67,28 @@ export function LeaveRequestModal({ onSuccess }: { onSuccess: () => void }) {
     }
   }, [open, leaveTypes.length])
 
+  const startDate = form.watch("startDate");
+  const endDate = form.watch("endDate");
+  const [requestedDays, setRequestedDays] = useState(0);
+
+  useEffect(() => {
+    if (startDate && endDate) {
+      const start = new Date(startDate)
+      const end = new Date(endDate)
+      if (end >= start) {
+        const diffTime = Math.abs(end.getTime() - start.getTime())
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+        setRequestedDays(diffDays)
+      } else {
+        setRequestedDays(0)
+      }
+    }
+  }, [startDate, endDate])
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       setIsSubmitting(true)
       
-      // Calculate basic days (excluding weekends logic for simplicity in this demo)
       const start = new Date(values.startDate)
       const end = new Date(values.endDate)
       const diffTime = Math.abs(end.getTime() - start.getTime())
@@ -85,7 +107,7 @@ export function LeaveRequestModal({ onSuccess }: { onSuccess: () => void }) {
 
       if (!res.ok) {
         const error = await res.json()
-        throw new Error(error.error || "Failed to request leave")
+        throw new Error(error.error?.message || error.message || error.error || "Failed to request leave")
       }
 
       toast.success("Leave request submitted successfully")
@@ -128,9 +150,13 @@ export function LeaveRequestModal({ onSuccess }: { onSuccess: () => void }) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {leaveTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
-                      ))}
+                      {leaveTypes.length === 0 ? (
+                        <SelectItem value="__none__" disabled>No leave types available — contact HR</SelectItem>
+                      ) : (
+                        leaveTypes.map((type) => (
+                          <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -181,7 +207,14 @@ export function LeaveRequestModal({ onSuccess }: { onSuccess: () => void }) {
               )}
             />
 
-            <div className="pt-4 flex justify-end">
+            <div className="pt-4 flex items-center justify-between">
+              <div className="text-sm text-slate-600">
+                {requestedDays > 0 ? (
+                  <span>Requesting <strong>{requestedDays}</strong> day{requestedDays > 1 ? 's' : ''}</span>
+                ) : (
+                  <span>&nbsp;</span>
+                )}
+              </div>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Submitting..." : "Submit Request"}
               </Button>

@@ -5,73 +5,77 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Users, Briefcase, FolderKanban, Settings, Activity,
   Shield, HelpCircle, Contact2, HandshakeIcon, Wallet, CreditCard,
-  BarChart3, Building2, FileText, DollarSign, ClipboardList
+  BarChart3, Building2, FileText, DollarSign, ClipboardList, CheckSquare
 } from 'lucide-react';
 import { Logo } from '../ui/logo';
-
-const navGroups = [
-  {
-    label: 'Core',
-    color: '#1A6DB6', // Blue
-    bg: '#F0F9FF',
-    items: [
-      { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-      { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-      { href: '/help', label: 'Help Center', icon: HelpCircle },
-    ]
-  },
-  {
-    label: 'HR & People',
-    color: '#7F4D9F', // Purple
-    bg: '#F2E8FA',
-    items: [
-      { href: '/hr/employees', label: 'Employees', icon: Users },
-      { href: '/hr/leave', label: 'Leave', icon: ClipboardList },
-    ]
-  },
-  {
-    label: 'CRM & Sales',
-    color: '#F15A22', // Orange
-    bg: '#FEF0EB',
-    items: [
-      { href: '/crm/accounts', label: 'Accounts', icon: Building2 },
-      { href: '/crm/contacts', label: 'Contacts', icon: Contact2 },
-      { href: '/sales/deals', label: 'Deals', icon: HandshakeIcon },
-    ]
-  },
-  {
-    label: 'Projects',
-    color: '#059669', // Emerald
-    bg: '#ECFDF5',
-    items: [
-      { href: '/projects', label: 'Projects', icon: FolderKanban },
-    ]
-  },
-  {
-    label: 'Finance',
-    color: '#C1172C', // Red
-    bg: '#FCECEC',
-    items: [
-      { href: '/finance', label: 'Overview', icon: DollarSign },
-      { href: '/finance/invoices', label: 'Invoices', icon: FileText },
-      { href: '/finance/expenses', label: 'Expenses', icon: Wallet },
-      { href: '/finance/payments', label: 'Payments', icon: CreditCard },
-    ]
-  },
-  {
-    label: 'System',
-    color: '#3B3B3B', // Ash
-    bg: '#F3F4F6',
-    items: [
-      { href: '/settings', label: 'Settings', icon: Settings },
-      { href: '/audit', label: 'Audit Logs', icon: Shield },
-    ]
-  }
-];
+import { useMemo } from 'react';
 
 export function Sidebar() {
   const { roles } = useAuth();
   const pathname = usePathname();
+
+  const isAdminOrHR = roles.includes('Admin') || roles.includes('HR Manager');
+
+  const navGroups = useMemo(() => [
+    {
+      label: 'Core',
+      color: '#1A6DB6', // Blue
+      bg: '#F0F9FF',
+      items: [
+        { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+        { href: '/help', label: 'Help Center', icon: HelpCircle },
+      ]
+    },
+    {
+      label: 'HR & People',
+      color: '#7F4D9F', // Purple
+      bg: '#F2E8FA',
+      items: [
+        { href: '/hr/employees', label: 'Employees', icon: Users },
+        { href: '/hr/leave', label: 'Leave', icon: ClipboardList },
+        ...(isAdminOrHR ? [{ href: '/hr/approval', label: 'Approval', icon: CheckSquare }] : []),
+      ]
+    },
+    {
+      label: 'CRM & Sales',
+      color: '#F15A22', // Orange
+      bg: '#FEF0EB',
+      items: [
+        { href: '/crm/accounts', label: 'Accounts', icon: Building2 },
+        { href: '/crm/contacts', label: 'Contacts', icon: Contact2 },
+        { href: '/sales/deals', label: 'Deals', icon: HandshakeIcon },
+      ]
+    },
+    {
+      label: 'Projects',
+      color: '#059669', // Emerald
+      bg: '#ECFDF5',
+      items: [
+        { href: '/projects', label: 'Projects', icon: FolderKanban },
+      ]
+    },
+    {
+      label: 'Finance',
+      color: '#C1172C', // Red
+      bg: '#FCECEC',
+      items: [
+        { href: '/finance', label: 'Overview', icon: DollarSign },
+        { href: '/finance/invoices', label: 'Invoices', icon: FileText },
+        { href: '/finance/expenses', label: 'Expenses', icon: Wallet },
+        { href: '/finance/payments', label: 'Payments', icon: CreditCard },
+      ]
+    },
+    {
+      label: 'System',
+      color: '#3B3B3B', // Ash
+      bg: '#F3F4F6',
+      items: [
+        { href: '/settings', label: 'Settings', icon: Settings },
+        { href: '/audit', label: 'Audit Logs', icon: Shield },
+      ]
+    }
+  ], [isAdminOrHR]);
 
   return (
     <aside className="w-60 h-screen flex flex-col hidden md:flex shrink-0 z-20" style={{

@@ -1,6 +1,7 @@
 import { db } from '../db/client';
 import { accounts, contacts, interactions, activities } from '../db/schema/crm';
-import { eq, and, desc, asc, isNull } from 'drizzle-orm';
+import { employees } from '../db/schema/hr';
+import { eq, and, desc, asc, isNull, sql } from 'drizzle-orm';
 import { auditLogs } from '../db/schema/platform';
 
 // Utility for auditing
@@ -27,7 +28,23 @@ async function auditAction(data: any) {
 
 export async function listAccounts() {
   // All authenticated users can view CRM (it is shared)
-  return await db.select().from(accounts).where(isNull(accounts.deletedAt)).orderBy(desc(accounts.createdAt));
+  return await db.select({
+    id: accounts.id,
+    name: accounts.name,
+    industry: accounts.industry,
+    size: accounts.size,
+    website: accounts.website,
+    address: accounts.address,
+    status: accounts.status,
+    ownerId: accounts.ownerId,
+    createdAt: accounts.createdAt,
+    updatedAt: accounts.updatedAt,
+    ownerName: sql<string>`${employees.firstName} || ' ' || ${employees.lastName}`,
+  })
+  .from(accounts)
+  .leftJoin(employees, eq(accounts.ownerId, employees.id))
+  .where(isNull(accounts.deletedAt))
+  .orderBy(desc(accounts.createdAt));
 }
 
 export async function getAccount(id: string) {

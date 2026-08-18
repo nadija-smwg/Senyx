@@ -22,35 +22,22 @@ export default function LeavePage() {
   const [data, setData] = useState<LeaveRequest[]>([])
   const [loading, setLoading] = useState(true)
 
-  const fetchLeave = () => {
-    Promise.resolve().then(() => setLoading(true))
-    fetch("/api/leave-requests")
-      .then(res => res.json())
-      .then(json => setData(json.data || []))
-      .finally(() => setLoading(false))
+  const fetchLeave = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/leave-requests")
+      const json = await res.json()
+      setData(json.data || [])
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
     fetchLeave()
   }, [])
 
-  const handleDecision = async (id: string, decision: "approved" | "rejected") => {
-    try {
-      const res = await fetch(`/api/leave-requests/${id}/decision`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ decision })
-      })
-      if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.error?.message || "Failed to submit decision")
-      }
-      toast.success(`Leave request ${decision}`)
-      fetchLeave()
-    } catch (e: any) {
-      toast.error(e.message)
-    }
-  }
+
 
   const columns: ColumnDef<LeaveRequest>[] = [
     { accessorKey: "employeeName", header: "Employee", cell: ({row}) => row.original.employeeName || "Unknown" },
@@ -69,19 +56,6 @@ export default function LeavePage() {
         else if (status === "pending") variant = "warning"
         return <Badge variant={variant} className="font-semibold tracking-wide uppercase">{status.toUpperCase()}</Badge>
       }
-    },
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const req = row.original
-        if (req.status !== "pending") return null
-        return (
-          <div className="flex space-x-2">
-            <Button size="sm" onClick={() => handleDecision(req.id, "approved")}>Approve</Button>
-            <Button size="sm" variant="destructive" onClick={() => handleDecision(req.id, "rejected")}>Reject</Button>
-          </div>
-        )
-      }
     }
   ]
 
@@ -90,7 +64,7 @@ export default function LeavePage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Leave Requests</h1>
-          <p className="text-muted-foreground">Manage employee time off.</p>
+          <p className="text-muted-foreground">View and manage your time off.</p>
         </div>
         <LeaveRequestModal onSuccess={fetchLeave} />
       </div>

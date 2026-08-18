@@ -7,6 +7,7 @@ import { UnauthorizedError } from '../../../../../server/types/errors';
 
 const DecideLeaveRequestSchema = z.object({
   decision: z.enum(['approved', 'rejected']),
+  comment: z.string().optional(),
 });
 
 export async function POST(
@@ -28,9 +29,9 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { decision } = DecideLeaveRequestSchema.parse(body);
+    const { decision, comment } = DecideLeaveRequestSchema.parse(body);
 
-    const updated = await decideLeaveRequest(id, decision, ctx.employeeId, ctx.userId);
+    const updated = await decideLeaveRequest(id, decision, ctx.employeeId, ctx.userId, comment);
 
     return NextResponse.json({ data: updated });
   } catch (error) {

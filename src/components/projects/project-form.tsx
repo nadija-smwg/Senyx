@@ -24,16 +24,29 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
   const [formData, setFormData] = React.useState({
     name: '',
     accountId: '',
+    ownerId: '',
     type: 'internal',
     billingType: 'fixed',
     budget: '',
+    currency: 'USD',
+    startDate: '',
+    endDate: '',
   });
+  const [selectedDevelopers, setSelectedDevelopers] = React.useState<string[]>([]);
+  const [employees, setEmployees] = React.useState<any[]>([]);
 
   React.useEffect(() => {
-    fetch('/api/crm/accounts')
+    fetch('/api/accounts')
       .then(res => res.json())
       .then(json => {
         if (json.data) setAccounts(json.data);
+      })
+      .catch(console.error);
+
+    fetch('/api/employees?minimal=true')
+      .then(res => res.json())
+      .then(json => {
+        if (json.data) setEmployees(json.data);
       })
       .catch(console.error)
       .finally(() => {
@@ -60,6 +73,10 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.startDate && formData.endDate && formData.endDate < formData.startDate) {
+      toast.error('End date cannot be before start date');
+      return;
+    }
     setSubmitting(true);
     
     try {
@@ -79,6 +96,16 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
       if (!res.ok) throw new Error(json.error?.message || json.error || 'Failed to create project');
       
       toast.success('Project created successfully!');
+      
+      // Assign developers
+      for (const empId of selectedDevelopers) {
+        await fetch(`/api/projects/${json.data.id}/assignments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ employeeId: empId, roleOnProject: 'Developer', allocationPct: 100 }),
+        }).catch(console.error); // Best effort
+      }
+      
       if (onSuccess) onSuccess();
       router.push(`/projects/${json.data.id}`);
     } catch (err: any) {
@@ -141,6 +168,58 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
             </select>
           </div>
         )}
+
+        <div className="space-y-2">
+          <Label>Accountable Person (Owner)</Label>
+          <select 
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            value={formData.ownerId}
+            onChange={e => setFormData({ ...formData, ownerId: e.target.value })}
+          >
+            <option value="">Select an owner...</option>
+            {employees.map(emp => (
+              <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Developers</Label>
+          <div className="flex flex-col gap-2 p-2 border rounded-md max-h-40 overflow-y-auto bg-background">
+            {employees.map(emp => (
+              <label key={emp.id} className="flex items-center space-x-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedDevelopers.includes(emp.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) setSelectedDevelopers([...selectedDevelopers, emp.id]);
+                    else setSelectedDevelopers(selectedDevelopers.filter(id => id !== emp.id));
+                  }}
+                />
+                <span>{emp.firstName} {emp.lastName}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Start Date</Label>
+            <Input 
+              type="date"
+              value={formData.startDate} 
+              onChange={e => setFormData({ ...formData, startDate: e.target.value })} 
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>End Date</Label>
+            <Input 
+              type="date"
+              value={formData.endDate} 
+              onChange={e => setFormData({ ...formData, endDate: e.target.value })} 
+            />
+          </div>
+        </div>
       </form>
 
       <div className="absolute bottom-0 left-0 right-0 p-6 border-t bg-background flex justify-end gap-3 z-10 mt-auto">

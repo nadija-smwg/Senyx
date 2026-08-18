@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 const schema = z.object({
   name: z.string().min(1).max(140).optional(),
-  type: z.enum(['solution', 'product']).optional(),
+  type: z.enum(['solution', 'product', 'internal']).optional(),
   accountId: z.string().uuid().optional().nullable(),
   dealId: z.string().uuid().optional().nullable(),
   ownerId: z.string().uuid().optional(),
@@ -16,7 +16,12 @@ const schema = z.object({
   endDate: z.string().optional().nullable(),
   budget: z.number().optional().nullable(),
   currency: z.string().max(3).optional(),
-});
+}).refine(data => {
+  if (data.startDate && data.endDate) {
+    return new Date(data.endDate) >= new Date(data.startDate);
+  }
+  return true;
+}, { message: "End date cannot be before start date", path: ["endDate"] });
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {

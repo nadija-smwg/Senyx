@@ -1,9 +1,10 @@
 import { db } from '../db/client';
-import { leaveRequests, leaveBalances, employees } from '../db/schema/hr';
+import { leaveRequests, leaveBalances, employees, leaveTypes, departments } from '../db/schema/hr';
 import { eq, and, sql } from 'drizzle-orm';
 import { auditLogs } from '../db/schema/platform';
 import { sendNotification } from './notification.service';
 import { users } from '../db/schema/identity';
+import { AppError } from '../types/errors';
 async function auditAction(data: any) {
   try {
     await db.insert(auditLogs).values({
@@ -22,10 +23,33 @@ async function auditAction(data: any) {
 }
 
 export async function listLeaveRequests(scope: 'all' | 'own', currentEmployeeId: string) {
+  const query = db
+    .select({
+      id: leaveRequests.id,
+      startDate: leaveRequests.startDate,
+      endDate: leaveRequests.endDate,
+      days: leaveRequests.days,
+      reason: leaveRequests.reason,
+      status: leaveRequests.status,
+      approverId: leaveRequests.approverId,
+      decidedAt: leaveRequests.decidedAt,
+      createdAt: leaveRequests.createdAt,
+      employeeId: leaveRequests.employeeId,
+      employeeName: sql<string>`${employees.firstName} || ' ' || ${employees.lastName}`,
+      employeeCode: employees.employeeCode,
+      departmentName: departments.name,
+      leaveTypeName: leaveTypes.name,
+      leaveTypeId: leaveRequests.leaveTypeId,
+    })
+    .from(leaveRequests)
+    .leftJoin(employees, eq(leaveRequests.employeeId, employees.id))
+    .leftJoin(leaveTypes, eq(leaveRequests.leaveTypeId, leaveTypes.id))
+    .leftJoin(departments, eq(employees.departmentId, departments.id));
+
   if (scope === 'own') {
-    return await db.select().from(leaveRequests).where(eq(leaveRequests.employeeId, currentEmployeeId));
+    return await query.where(eq(leaveRequests.employeeId, currentEmployeeId));
   }
-  return await db.select().from(leaveRequests);
+  return await query;
 }
 
 export async function createLeaveRequest(input: {
@@ -47,14 +71,14 @@ export async function createLeaveRequest(input: {
   );
 
   if (!balance) {
-    throw new Error('No leave balance found for this type in the current year');
+    throw new AppError('No leave balance found for this leave type in the current year. Please contact HR.', 422, 'NO_BALANCE');
   }
 
   const requestedDays = parseFloat(input.days);
   const availableDays = parseFloat(balance.balanceDays);
 
   if (requestedDays > availableDays) {
-    throw new Error('Insufficient leave balance');
+    throw new AppError(`Insufficient leave balance. You have ${availableDays} day(s) available.`, 422, 'INSUFFICIENT_BALANCE');
   }
 
   const [request] = await db.insert(leaveRequests).values({
@@ -68,7 +92,7 @@ export async function createLeaveRequest(input: {
   }).returning();
 
   if (!request) {
-    throw new Error('Failed to create leave request');
+    throw new AppError('Failed to create leave request', 500, 'CREATE_FAILED');
   }
 
   await auditAction({
@@ -100,15 +124,16 @@ export async function createLeaveRequest(input: {
   return request;
 }
 
-export async function decideLeaveRequest(id: string, decision: 'approved' | 'rejected', approverEmployeeId: string, actorUserId: string) {
+export async function decideLeaveRequest(id: string, decision: 'approved' | 'rejected', approverEmployeeId: string, actorUserId: string, approverComment?: string) {
   const [request] = await db.select().from(leaveRequests).where(eq(leaveRequests.id, id));
-  if (!request) throw new Error('Request not found');
-  if (request.status !== 'pending') throw new Error('Request already decided');
+  if (!request) throw new AppError('Request not found', 404, 'NOT_FOUND');
+  if (request.status !== 'pending') throw new AppError('Request already decided', 400, 'BAD_REQUEST');
 
   const updated = await db.transaction(async (tx) => {
     const [updatedReq] = await tx.update(leaveRequests).set({
       status: decision,
       approverId: approverEmployeeId,
+      approverComment: approverComment || null,
       decidedAt: new Date(),
     }).where(eq(leaveRequests.id, id)).returning();
 

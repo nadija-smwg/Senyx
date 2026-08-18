@@ -93,6 +93,7 @@ export const leaveRequests = pgTable('leave_requests', {
   reason: text('reason'),
   status: varchar('status', { length: 12 }).default('pending').notNull(),
   approverId: uuid('approver_id').references(() => employees.id),
+  approverComment: text('approver_comment'),
   decidedAt: timestamp('decided_at', { withTimezone: true }),
   ...baseColumns,
 }, (table) => [
