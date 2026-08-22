@@ -26,13 +26,22 @@ async function auditAction(data: any) {
 }
 
 export async function generateProjectCode() {
-  const [latest] = await db.select().from(projects).orderBy(desc(projects.createdAt)).limit(1);
-  if (!latest || !latest.code.startsWith('PRJ-')) {
-    return 'PRJ-0001';
+  const allProjects = await db.select({ code: projects.code }).from(projects);
+  
+  let maxNum = 0;
+  for (const p of allProjects) {
+    if (p.code && p.code.startsWith('PRJ-')) {
+      const numStr = p.code.split('-')[1];
+      if (numStr) {
+        const num = parseInt(numStr, 10);
+        if (!isNaN(num) && num > maxNum) {
+          maxNum = num;
+        }
+      }
+    }
   }
-  const codeStr = latest.code || 'PRJ-0000';
-  const num = parseInt(codeStr.split('-')[1] || '0', 10);
-  return `PRJ-${String(num + 1).padStart(4, '0')}`;
+  
+  return `PRJ-${String(maxNum + 1).padStart(4, '0')}`;
 }
 
 export async function listProjects(scope: 'all' | 'own' | 'assigned', currentEmployeeId: string | null) {
@@ -69,6 +78,7 @@ export async function createProject(input: any, actorUserId: string, currentEmpl
       code,
       name: input.name,
       type: input.type,
+      companyName: input.companyName || null,
       accountId: input.accountId || null,
       dealId: input.dealId || null,
       ownerId: input.ownerId || currentEmployeeId,

@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Search, Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface ProjectFormProps {
@@ -23,6 +26,7 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
 
   const [formData, setFormData] = React.useState({
     name: '',
+    companyName: '',
     accountId: '',
     ownerId: '',
     type: 'internal',
@@ -34,6 +38,11 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
   });
   const [selectedDevelopers, setSelectedDevelopers] = React.useState<string[]>([]);
   const [employees, setEmployees] = React.useState<any[]>([]);
+  
+  const [ownerSearch, setOwnerSearch] = React.useState('');
+  const [developerSearch, setDeveloperSearch] = React.useState('');
+  const [ownerOpen, setOwnerOpen] = React.useState(false);
+  const [developersOpen, setDevelopersOpen] = React.useState(false);
 
   React.useEffect(() => {
     fetch('/api/accounts')
@@ -129,6 +138,15 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
             required 
           />
         </div>
+
+        <div className="space-y-2">
+          <Label>Company</Label>
+          <Input 
+            placeholder="e.g. Acme Corp"
+            value={formData.companyName} 
+            onChange={e => setFormData({ ...formData, companyName: e.target.value })} 
+          />
+        </div>
         
         <div className="space-y-2">
           <Label>Budget (USD)</Label>
@@ -169,37 +187,136 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
           </div>
         )}
 
-        <div className="space-y-2">
+        <div className="space-y-2 flex flex-col">
           <Label>Accountable Person (Owner)</Label>
-          <select 
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            value={formData.ownerId}
-            onChange={e => setFormData({ ...formData, ownerId: e.target.value })}
-          >
-            <option value="">Select an owner...</option>
-            {employees.map(emp => (
-              <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
-            ))}
-          </select>
+          <Popover open={ownerOpen} onOpenChange={setOwnerOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={ownerOpen}
+                className={cn(
+                  "justify-between font-normal",
+                  !formData.ownerId && "text-muted-foreground"
+                )}
+              >
+                {formData.ownerId
+                  ? `${employees.find((emp) => emp.id === formData.ownerId)?.firstName || ''} ${employees.find((emp) => emp.id === formData.ownerId)?.lastName || ''}`
+                  : "Select an owner..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+              <div className="flex items-center border-b px-3">
+                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                <input
+                  className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Search owner..."
+                  value={ownerSearch}
+                  onChange={(e) => setOwnerSearch(e.target.value)}
+                />
+              </div>
+              <div className="max-h-[200px] overflow-y-auto p-1">
+                {employees
+                  .filter(emp => `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(ownerSearch.toLowerCase()))
+                  .map(emp => (
+                    <div
+                      key={emp.id}
+                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                      onClick={() => {
+                        setFormData({ ...formData, ownerId: emp.id });
+                        setOwnerOpen(false);
+                        setOwnerSearch('');
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          formData.ownerId === emp.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {emp.firstName} {emp.lastName}
+                    </div>
+                  ))}
+                {employees.filter(emp => `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(ownerSearch.toLowerCase())).length === 0 && (
+                  <div className="py-6 text-center text-sm">No owner found.</div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 flex flex-col">
           <Label>Developers</Label>
-          <div className="flex flex-col gap-2 p-2 border rounded-md max-h-40 overflow-y-auto bg-background">
-            {employees.map(emp => (
-              <label key={emp.id} className="flex items-center space-x-2 text-sm cursor-pointer">
+          <Popover open={developersOpen} onOpenChange={setDevelopersOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={developersOpen}
+                className={cn(
+                  "justify-between font-normal",
+                  selectedDevelopers.length === 0 && "text-muted-foreground"
+                )}
+              >
+                {selectedDevelopers.length > 0
+                  ? `${selectedDevelopers.length} developer(s) selected`
+                  : "Select developers..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+              <div className="flex items-center border-b px-3">
+                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
                 <input
-                  type="checkbox"
-                  checked={selectedDevelopers.includes(emp.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) setSelectedDevelopers([...selectedDevelopers, emp.id]);
-                    else setSelectedDevelopers(selectedDevelopers.filter(id => id !== emp.id));
-                  }}
+                  className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Search developer..."
+                  value={developerSearch}
+                  onChange={(e) => setDeveloperSearch(e.target.value)}
                 />
-                <span>{emp.firstName} {emp.lastName}</span>
-              </label>
-            ))}
-          </div>
+              </div>
+              <div className="max-h-[200px] overflow-y-auto p-1">
+                {employees
+                  .filter(emp => `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(developerSearch.toLowerCase()))
+                  .map(emp => (
+                    <div
+                      key={emp.id}
+                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                      onClick={() => {
+                        setSelectedDevelopers(prev => 
+                          prev.includes(emp.id) ? prev.filter(id => id !== emp.id) : [...prev, emp.id]
+                        );
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedDevelopers.includes(emp.id) ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {emp.firstName} {emp.lastName}
+                    </div>
+                  ))}
+                {employees.filter(emp => `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(developerSearch.toLowerCase())).length === 0 && (
+                  <div className="py-6 text-center text-sm">No developer found.</div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+          {selectedDevelopers.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {selectedDevelopers.map(devId => {
+                const emp = employees.find(e => e.id === devId);
+                if (!emp) return null;
+                return (
+                  <span key={devId} className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-xs font-medium">
+                    {emp.firstName} {emp.lastName}
+                    <button type="button" onClick={() => setSelectedDevelopers(prev => prev.filter(id => id !== devId))} className="hover:text-destructive text-muted-foreground">&times;</button>
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">

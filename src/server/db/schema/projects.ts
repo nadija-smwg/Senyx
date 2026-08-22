@@ -14,6 +14,7 @@ export const projects = pgTable('projects', {
   code: varchar('code', { length: 20 }).notNull().unique(), // e.g. PRJ-0007
   name: varchar('name', { length: 140 }).notNull(),
   type: varchar('type', { length: 10 }), // solution / product
+  companyName: varchar('company_name', { length: 140 }),
   accountId: uuid('account_id').references(() => accounts.id),
   dealId: uuid('deal_id').references(() => deals.id),
   ownerId: uuid('owner_id').references(() => employees.id).notNull(),
@@ -29,7 +30,7 @@ export const projects = pgTable('projects', {
   check('project_status_check', sql`${table.status} IN ('planning', 'active', 'on_hold', 'completed', 'cancelled')`),
   check('project_dates_check', sql`${table.endDate} >= ${table.startDate}`),
   check('project_budget_check', sql`${table.budget} >= 0`),
-  check('project_account_required_check', sql`${table.type} = 'product' OR ${table.accountId} IS NOT NULL`),
+  check('project_account_required_check', sql`${table.type} IN ('product', 'internal') OR ${table.accountId} IS NOT NULL`),
   
   index('project_account_idx').on(table.accountId),
   index('project_deal_idx').on(table.dealId),

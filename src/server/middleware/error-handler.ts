@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server';
 import { ZodError } from 'zod';
 import { AppError } from '../types/errors';
+import fs from 'fs';
 
 export function handleError(error: unknown) {
+  try {
+    fs.appendFileSync('error.log', new Date().toISOString() + ': ' + ((error as any).stack || (error as any).message || String(error)) + '\n');
+  } catch (e) {
+    console.error('Failed to write to error.log', e);
+  }
+
   if (error instanceof AppError) {
     return NextResponse.json({
       error: {

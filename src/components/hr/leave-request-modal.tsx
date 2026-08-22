@@ -49,6 +49,7 @@ export function LeaveRequestModal({ onSuccess }: { onSuccess: () => void }) {
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [leaveTypes, setLeaveTypes] = useState<any[]>([])
+  const [leaveBalances, setLeaveBalances] = useState<any[]>([])
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,14 +62,19 @@ export function LeaveRequestModal({ onSuccess }: { onSuccess: () => void }) {
 
   useEffect(() => {
     if (open && leaveTypes.length === 0) {
-      fetch("/api/leave-types")
-        .then(res => res.json())
-        .then(json => setLeaveTypes(json.data || []))
+      Promise.all([
+        fetch("/api/leave-types").then(res => res.json()),
+        fetch("/api/leave-balances").then(res => res.json())
+      ]).then(([typesRes, balancesRes]) => {
+        setLeaveTypes(typesRes.data || [])
+        setLeaveBalances(balancesRes.data || [])
+      })
     }
   }, [open, leaveTypes.length])
 
   const startDate = form.watch("startDate");
   const endDate = form.watch("endDate");
+  const selectedLeaveTypeId = form.watch("leaveTypeId");
   const [requestedDays, setRequestedDays] = useState(0);
 
   useEffect(() => {
@@ -85,18 +91,17 @@ export function LeaveRequestModal({ onSuccess }: { onSuccess: () => void }) {
     }
   }, [startDate, endDate])
 
+  const selectedBalanceRecord = leaveBalances.find(b => b.leaveTypeId === selectedLeaveTypeId);
+  const selectedBalanceNum = selectedBalanceRecord ? parseFloat(selectedBalanceRecord.balanceDays) : 0;
+  const isOverBalance = requestedDays > selectedBalanceNum;
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       setIsSubmitting(true)
       
-      const start = new Date(values.startDate)
-      const end = new Date(values.endDate)
-      const diffTime = Math.abs(end.getTime() - start.getTime())
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
-      
       const payload = {
         ...values,
-        days: diffDays.toString()
+        days: requestedDays.toString()
       }
 
       const res = await fetch("/api/leave-requests", {
@@ -153,9 +158,17 @@ export function LeaveRequestModal({ onSuccess }: { onSuccess: () => void }) {
                       {leaveTypes.length === 0 ? (
                         <SelectItem value="__none__" disabled>No leave types available — contact HR</SelectItem>
                       ) : (
-                        leaveTypes.map((type) => (
-                          <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
-                        ))
+                        leaveTypes.map((type) => {
+                          const balanceRecord = leaveBalances.find(b => b.leaveTypeId === type.id);
+                          const balanceNum = balanceRecord ? parseFloat(balanceRecord.balanceDays) : 0;
+                          const isDisabled = balanceNum <= 0;
+                          
+                          return (
+                            <SelectItem key={type.id} value={type.id} disabled={isDisabled}>
+                              {type.name} ({balanceNum} days available)
+                            </SelectItem>
+                          )
+                        })
                       )}
                     </SelectContent>
                   </Select>
@@ -207,17 +220,22 @@ export function LeaveRequestModal({ onSuccess }: { onSuccess: () => void }) {
               )}
             />
 
-            <div className="pt-4 flex items-center justify-between">
-              <div className="text-sm text-slate-600">
-                {requestedDays > 0 ? (
-                  <span>Requesting <strong>{requestedDays}</strong> day{requestedDays > 1 ? 's' : ''}</span>
-                ) : (
-                  <span>&nbsp;</span>
-                )}
+            <div>
+              <div className="pt-4 flex items-center justify-between">
+                <div className="text-sm text-slate-600">
+                  {requestedDays > 0 ? (
+                    <span>Requesting <strong>{requestedDays}</strong> day{requestedDays > 1 ? 's' : ''}</span>
+                  ) : (
+                    <span>&nbsp;</span>
+                  )}
+                </div>
+                <Button type="submit" disabled={isSubmitting || requestedDays <= 0 || isOverBalance || !selectedLeaveTypeId}>
+                  {isSubmitting ? "Submitting..." : "Submit Request"}
+                </Button>
               </div>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : "Submit Request"}
-              </Button>
+              {selectedLeaveTypeId && isOverBalance && (
+                <p className="text-sm text-red-500 mt-2 text-right">Requested days exceed available balance.</p>
+              )}
             </div>
           </form>
         </Form>

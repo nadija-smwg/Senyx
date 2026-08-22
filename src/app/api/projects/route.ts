@@ -16,6 +16,7 @@ const schema = z.object({
   endDate: z.string().optional().nullable(),
   budget: z.number().optional().nullable(),
   currency: z.string().max(3).optional(),
+  companyName: z.string().max(140).optional().nullable(),
 }).refine(data => {
   if (data.startDate && data.endDate) {
     return new Date(data.endDate) >= new Date(data.startDate);

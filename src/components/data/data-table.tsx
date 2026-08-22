@@ -25,6 +25,11 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { format } from "date-fns"
+import { DateRange } from "react-day-picker"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -33,6 +38,7 @@ interface DataTableProps<TData, TValue> {
   searchPlaceholder?: string
   isLoading?: boolean
   renderSubComponent?: (props: { row: any }) => React.ReactNode
+  dateFilterColumn?: string
 }
 
 export function DataTable<TData, TValue>({
@@ -42,14 +48,56 @@ export function DataTable<TData, TValue>({
   searchPlaceholder = "Search...",
   isLoading = false,
   renderSubComponent,
+  dateFilterColumn,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>()
+
+  const filteredData = React.useMemo(() => {
+    if (!dateRange?.from || !dateFilterColumn) return data;
+    return data.filter((item: any) => {
+      const val = item[dateFilterColumn];
+      if (!val) return false;
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return false;
+      
+      const from = dateRange.from;
+      if (!from) return true;
+      const to = dateRange.to || from;
+      
+      const targetTime = new Date(d); targetTime.setHours(0,0,0,0);
+      const fTime = new Date(from); fTime.setHours(0,0,0,0);
+      const tTime = new Date(to); tTime.setHours(23,59,59,999);
+      
+      return targetTime.getTime() >= fTime.getTime() && targetTime.getTime() <= tTime.getTime();
+    })
+  }, [data, dateRange, dateFilterColumn]);
+
+  const handleExport = () => {
+    const rows = table.getFilteredRowModel().rows;
+    if (!rows.length) return;
+    const exportColumns = columns.filter(c => 'accessorKey' in c);
+    const headers = exportColumns.map(c => (c as any).accessorKey);
+    const headerRow = exportColumns.map(c => typeof c.header === 'string' ? c.header : (c as any).accessorKey).join(",");
+    
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + headerRow + "\n" 
+      + rows.map(e => headers.map(h => `"${String(e.original[h as keyof TData] || '').replace(/"/g, '""')}"`).join(",")).join("\n");
+      
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "export.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -84,18 +132,61 @@ export function DataTable<TData, TValue>({
             />
           </div>
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="outline" className="h-10 text-slate-600 rounded-xl bg-white shadow-sm font-medium">
+            <Button onClick={handleExport} variant="outline" className="h-10 text-slate-600 rounded-xl bg-white shadow-sm font-medium">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
               Export
             </Button>
-            <Button variant="outline" className="h-10 text-slate-600 rounded-xl bg-white shadow-sm font-medium">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-              Filter
-            </Button>
-            <Button variant="outline" className="h-10 text-slate-600 rounded-xl bg-white shadow-sm font-medium">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-              Date Range
-            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="h-10 text-slate-600 rounded-xl bg-white shadow-sm font-medium">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  Filter
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {table.getAllColumns().filter(c => c.getCanHide()).map(c => {
+                  return (
+                    <DropdownMenuCheckboxItem key={c.id} className="capitalize" checked={c.getIsVisible()} onCheckedChange={v => c.toggleVisibility(!!v)}>
+                      {typeof c.columnDef.header === 'string' ? c.columnDef.header : c.id}
+                    </DropdownMenuCheckboxItem>
+                  )
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {dateFilterColumn && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="h-10 text-slate-600 rounded-xl bg-white shadow-sm font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                    {dateRange?.from ? (
+                      dateRange.to ? (
+                        <>{format(dateRange.from, "LLL dd")} - {format(dateRange.to, "LLL dd")}</>
+                      ) : (
+                        format(dateRange.from, "LLL dd, y")
+                      )
+                    ) : (
+                      <span>Date Range</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="range"
+                    defaultMonth={dateRange?.from}
+                    selected={dateRange}
+                    onSelect={setDateRange}
+                    numberOfMonths={2}
+                  />
+                  {dateRange && (
+                    <div className="p-3 border-t flex justify-end">
+                      <Button variant="ghost" size="sm" onClick={() => setDateRange(undefined)}>Clear</Button>
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
+            )}
           </div>
         </div>
       )}

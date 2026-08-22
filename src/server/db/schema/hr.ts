@@ -13,6 +13,7 @@ export const designations = pgTable('designations', {
   id: uuid('id').primaryKey().defaultRandom(),
   title: varchar('title', { length: 80 }).notNull().unique(),
   description: text('description'),
+  annualLeaveDays: numeric('annual_leave_days', { precision: 5, scale: 2 }).default('30.00').notNull(),
   ...baseColumns,
 });
 

@@ -116,7 +116,7 @@ export function AccountForm({ initialData, onSuccess, onCancel }: AccountFormPro
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-2 pb-6">
       {error && <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
       
       <Form {...form}>

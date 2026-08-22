@@ -99,11 +99,14 @@ export async function createEmployee(input: any, actorUserId: string) {
   const allLeaveTypes = await db.select().from(leaveTypes);
   const currentYear = new Date().getFullYear();
   
+  const [empDesignation] = await db.select().from(designations).where(eq(designations.id, input.designationId));
+  const annualLeaveDays = empDesignation?.annualLeaveDays || '30.00';
+  
   const balancesToInsert = allLeaveTypes.map(lt => ({
     employeeId: newEmp!.id,
     leaveTypeId: lt.id,
     year: currentYear,
-    balanceDays: lt.defaultAnnualDays,
+    balanceDays: lt.name === 'Annual' ? annualLeaveDays : lt.defaultAnnualDays,
   }));
   
   if (balancesToInsert.length > 0) {

@@ -153,7 +153,7 @@ export default function ApprovalPage() {
         description="Review and manage employee leave requests."
       />
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
-        <DataTable columns={columns} data={data} searchKey="employeeName" isLoading={loading} searchPlaceholder="Search by employee name..." />
+        <DataTable columns={columns} data={data} searchKey="employeeName" isLoading={loading} searchPlaceholder="Search by employee name..." dateFilterColumn="startDate" />
       </div>
     </div>
   )

@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { LeaveRequestModal } from "@/components/hr/leave-request-modal"
+import { useAuth } from "@/hooks/use-auth"
+import Link from "next/link"
 
 type LeaveRequest = {
   id: string
@@ -21,6 +23,8 @@ type LeaveRequest = {
 export default function LeavePage() {
   const [data, setData] = useState<LeaveRequest[]>([])
   const [loading, setLoading] = useState(true)
+  const { roles, isLoading: authLoading } = useAuth()
+  const isAdmin = roles.includes("Admin")
 
   const fetchLeave = async () => {
     setLoading(true)
@@ -66,9 +70,20 @@ export default function LeavePage() {
           <h1 className="text-3xl font-bold tracking-tight">Leave Requests</h1>
           <p className="text-muted-foreground">View and manage your time off.</p>
         </div>
-        <LeaveRequestModal onSuccess={fetchLeave} />
+        <div className="flex gap-2">
+          {!authLoading && isAdmin && (
+            <Link href="/hr/designations">
+              <Button variant="outline">Manage Leave Days</Button>
+            </Link>
+          )}
+          {!authLoading && !isAdmin && (
+            <LeaveRequestModal onSuccess={fetchLeave} />
+          )}
+        </div>
       </div>
-      <DataTable columns={columns} data={data} searchKey="employeeName" isLoading={loading} searchPlaceholder="Search by employee name..." />
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+        <DataTable columns={columns} data={data} searchKey="leaveTypeName" searchPlaceholder="Search by leave type..." isLoading={loading} dateFilterColumn="startDate" />
+      </div>
     </div>
   )
 }

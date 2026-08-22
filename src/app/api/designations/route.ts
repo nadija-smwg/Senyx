@@ -13,3 +13,28 @@ export async function GET(req: NextRequest) {
     return handleError(error);
   }
 }
+
+import { eq } from 'drizzle-orm';
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const session = await withAuth(req);
+    // Add role check if needed, typically handled by middleware or explicit check
+    
+    const body = await req.json();
+    const { id, annualLeaveDays } = body;
+    
+    if (!id || !annualLeaveDays) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const [updated] = await db.update(designations)
+      .set({ annualLeaveDays: annualLeaveDays.toString() })
+      .where(eq(designations.id, id))
+      .returning();
+
+    return NextResponse.json({ data: updated });
+  } catch (error) {
+    return handleError(error);
+  }
+}

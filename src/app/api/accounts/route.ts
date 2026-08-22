@@ -11,7 +11,7 @@ const schema = z.object({
   website: z.string().url().optional().or(z.literal('')),
   address: z.any().optional(),
   status: z.enum(['prospect', 'active', 'inactive']).optional(),
-  ownerId: z.string().uuid().optional(),
+  ownerId: z.string().uuid().optional().nullable().or(z.literal('')),
 });
 
 export async function GET(req: NextRequest) {

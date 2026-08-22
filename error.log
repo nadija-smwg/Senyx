@@ -1,0 +1,29 @@
+2026-08-18T16:06:53.594Z: Error: Failed query: insert into "projects" ("id", "created_at", "updated_at", "deleted_at", "created_by", "updated_by", "code", "name", "type", "company_name", "account_id", "deal_id", "owner_id", "billing_type", "status", "start_date", "end_date", "budget", "currency") values (default, default, default, default, $1, default, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) returning "id", "created_at", "updated_at", "deleted_at", "created_by", "updated_by", "code", "name", "type", "company_name", "account_id", "deal_id", "owner_id", "billing_type", "status", "start_date", "end_date", "budget", "currency"
+params: 290648d8-9b8a-4351-90b8-003628c90751,PRJ-0002,test project ,solution,aws,f530ef4e-0a6b-4cc5-b861-2d662e53134f,,e0ffe29d-8cd1-4c33-b783-cfebe5860905,fixed,planning,2026-08-18,2026-08-29,10000,USD
+    at PostgresJsPreparedQuery.queryWithCache (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\.next\dev\server\chunks\node_modules_drizzle-orm_0kui1js._.js:8642:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\.next\dev\server\chunks\node_modules_drizzle-orm_0kui1js._.js:8801:26
+    at async C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\.next\dev\server\chunks\[root-of-the-server]__18do7z_._.js:1741:27
+    at async scope (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\.next\dev\server\chunks\node_modules_0gnr807._.js:17264:26)
+    at async sql.begin (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\.next\dev\server\chunks\node_modules_0gnr807._.js:17250:20)
+    at async createProject (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\.next\dev\server\chunks\[root-of-the-server]__18do7z_._.js:1740:12)
+    at async POST (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\.next\dev\server\chunks\[root-of-the-server]__18do7z_._.js:2008:22)
+    at async AppRouteRouteModule.do (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:40255)
+    at async AppRouteRouteModule.handle (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:47535)
+    at async responseGenerator (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\.next\dev\server\chunks\node_modules_next_1dm74_u._.js:17929:38)
+    at async AppRouteRouteModule.handleResponse (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:1:229143)
+    at async handleResponse (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\.next\dev\server\chunks\node_modules_next_1dm74_u._.js:17992:32)
+    at async Module.handler (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\.next\dev\server\chunks\node_modules_next_1dm74_u._.js:18046:13)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\node_modules\next\dist\server\base-server.js:1462:9)
+    at async DevServer.renderPageComponent (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\node_modules\next\dist\server\base-server.js:1514:24)
+    at async DevServer.renderToResponseImpl (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\node_modules\next\dist\server\base-server.js:1564:32)
+    at async DevServer.pipeImpl (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\node_modules\next\dist\server\base-server.js:1044:25)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\node_modules\next\dist\server\next-server.js:338:17)
+    at async DevServer.handleRequestImpl (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\node_modules\next\dist\server\base-server.js:935:17)
+    at async C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\node_modules\next\dist\server\dev\next-dev-server.js:394:20
+    at async Span.traceAsyncFn (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\node_modules\next\dist\trace\trace.js:164:20)
+    at async DevServer.handleRequest (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\node_modules\next\dist\server\dev\next-dev-server.js:390:24)
+    at async invokeRender (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\node_modules\next\dist\server\lib\router-server.js:266:21)
+    at async handleRequest (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\node_modules\next\dist\server\lib\router-server.js:465:24)
+    at async requestHandlerImpl (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\node_modules\next\dist\server\lib\router-server.js:514:13)
+    at async Server.requestListener (C:\Users\KM Computers\OneDrive\Desktop\Projects\Senyx\node_modules\next\dist\server\lib\start-server.js:225:13)

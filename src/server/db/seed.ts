@@ -96,7 +96,7 @@ async function main() {
 
   // 7. HR Leave Types
   const defaultLeaveTypes = [
-    { name: 'Annual', defaultAnnualDays: '14.00' },
+    { name: 'Annual', defaultAnnualDays: '30.00' },
     { name: 'Sick', defaultAnnualDays: '7.00' },
     { name: 'Casual', defaultAnnualDays: '7.00' },
     { name: 'Maternity', defaultAnnualDays: '84.00' },
