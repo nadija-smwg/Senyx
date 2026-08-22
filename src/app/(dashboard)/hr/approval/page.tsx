@@ -160,21 +160,3 @@ function ActionCell({ req, onDecision }: { req: LeaveRequest, onDecision: (id: s
     </Dialog>
   )
 }
-
-  if (authLoading) {
-    return <div className="p-8">Loading...</div>
-  }
-
-  return (
-    <div className="container mx-auto py-8 max-w-7xl">
-      <PageHeader 
-        pretitle="HR & People"
-        title="Leave Approvals"
-        description="Review and manage employee leave requests."
-      />
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
-        <DataTable columns={columns} data={data} searchKey="employeeName" isLoading={loading} searchPlaceholder="Search by employee name..." dateFilterColumn="startDate" />
-      </div>
-    </div>
-  )
-}
