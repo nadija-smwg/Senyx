@@ -98,48 +98,68 @@ export default function ApprovalPage() {
     },
     {
       id: "actions",
-      cell: ({ row }) => {
-        const req = row.original
-        const [open, setOpen] = useState(false)
-        const [comment, setComment] = useState("")
-        const [decisionType, setDecisionType] = useState<"approved" | "rejected" | null>(null)
-
-        if (req.status !== "pending") return null
-        return (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <div className="flex space-x-2">
-              <Button size="sm" onClick={() => { setDecisionType("approved"); setOpen(true) }}>Approve</Button>
-              <Button size="sm" variant="destructive" onClick={() => { setDecisionType("rejected"); setOpen(true) }}>Reject</Button>
-            </div>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{decisionType === 'approved' ? 'Approve' : 'Reject'} Leave Request</DialogTitle>
-                <DialogDescription>Add an optional comment for this decision.</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label>Comment (Optional)</Label>
-                  <Input value={comment} onChange={e => setComment(e.target.value)} placeholder="Enter your remarks here..." />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                  <Button 
-                    variant={decisionType === 'rejected' ? 'destructive' : 'default'}
-                    onClick={() => {
-                      if (decisionType) handleDecision(req.id, decisionType, comment)
-                      setOpen(false)
-                    }}
-                  >
-                    Confirm
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )
-      }
+      cell: ({ row }) => <ActionCell req={row.original} onDecision={handleDecision} />
     }
   ]
+
+  if (authLoading) {
+    return <div className="p-8">Loading...</div>
+  }
+
+  return (
+    <div className="container mx-auto py-8 max-w-7xl">
+      <PageHeader 
+        pretitle="HR & People"
+        title="Leave Approvals"
+        description="Review and manage employee leave requests."
+      />
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+        <DataTable columns={columns} data={data} searchKey="employeeName" isLoading={loading} searchPlaceholder="Search by employee name..." dateFilterColumn="startDate" />
+      </div>
+    </div>
+  )
+}
+
+function ActionCell({ req, onDecision }: { req: LeaveRequest, onDecision: (id: string, decision: "approved" | "rejected", comment?: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const [comment, setComment] = useState("")
+  const [decisionType, setDecisionType] = useState<"approved" | "rejected" | null>(null)
+
+  if (req.status !== "pending") return null
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <div className="flex space-x-2">
+        <Button size="sm" onClick={() => { setDecisionType("approved"); setOpen(true) }}>Approve</Button>
+        <Button size="sm" variant="destructive" onClick={() => { setDecisionType("rejected"); setOpen(true) }}>Reject</Button>
+      </div>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{decisionType === 'approved' ? 'Approve' : 'Reject'} Leave Request</DialogTitle>
+          <DialogDescription>Add an optional comment for this decision.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label>Comment (Optional)</Label>
+            <Input value={comment} onChange={e => setComment(e.target.value)} placeholder="Enter your remarks here..." />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button 
+              variant={decisionType === 'rejected' ? 'destructive' : 'default'}
+              onClick={() => {
+                if (decisionType) onDecision(req.id, decisionType, comment)
+                setOpen(false)
+              }}
+            >
+              Confirm
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
   if (authLoading) {
     return <div className="p-8">Loading...</div>

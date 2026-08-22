@@ -8,11 +8,12 @@ loadEnvConfig(process.cwd());
 async function main() {
   try {
     const allEmps = await db.select().from(employees).limit(1);
-    if (allEmps.length === 0) {
+    const firstEmp = allEmps[0];
+    if (!firstEmp) {
       console.log("No employees found");
       process.exit(1);
     }
-    const empId = allEmps[0].id;
+    const empId = firstEmp.id;
     // mock user id
     const userId = '00000000-0000-0000-0000-000000000000'; // this might fail if users table has FK constraint on createdBy
     

@@ -15,7 +15,8 @@ const db = drizzle(client);
 async function main() {
   try {
     const allEmps = await db.select().from(employees).limit(1);
-    if (allEmps.length === 0) throw new Error("No employees");
+    const firstEmp = allEmps[0];
+    if (!firstEmp) throw new Error("No employees");
     
     console.log("Inserting project...");
     await db.insert(projects).values({
@@ -23,7 +24,7 @@ async function main() {
       name: 'ppp',
       type: 'internal',
       companyName: 'uper',
-      ownerId: allEmps[0].id,
+      ownerId: firstEmp.id,
       billingType: 'fixed',
       status: 'planning',
       startDate: '2026-08-18',
