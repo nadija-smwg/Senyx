@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Search, Check, ChevronsUpDown } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Search, Check, ChevronsUpDown, ChevronUp, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -15,6 +16,8 @@ interface ProjectFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
 }
+
+const ROLES = ['DevOps', 'Front-end', 'Back-end', 'Marketing', 'QA'];
 
 export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProps) {
   const router = useRouter();
@@ -36,13 +39,19 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
     startDate: '',
     endDate: '',
   });
-  const [selectedDevelopers, setSelectedDevelopers] = React.useState<string[]>([]);
+  const [teamMembers, setTeamMembers] = React.useState<{id: string, role: string}[]>([]);
   const [employees, setEmployees] = React.useState<any[]>([]);
+  
+  const [accountSearch, setAccountSearch] = React.useState('');
+  const [accountOpen, setAccountOpen] = React.useState(false);
   
   const [ownerSearch, setOwnerSearch] = React.useState('');
   const [developerSearch, setDeveloperSearch] = React.useState('');
   const [ownerOpen, setOwnerOpen] = React.useState(false);
   const [developersOpen, setDevelopersOpen] = React.useState(false);
+  const [expandedGroups, setExpandedGroups] = React.useState<Record<string, boolean>>({
+    'DevOps': false, 'Front-end': false, 'Back-end': false, 'Marketing': false, 'QA': false
+  });
 
   React.useEffect(() => {
     fetch('/api/accounts')
@@ -107,11 +116,11 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
       toast.success('Project created successfully!');
       
       // Assign developers
-      for (const empId of selectedDevelopers) {
+      for (const member of teamMembers) {
         await fetch(`/api/projects/${json.data.id}/assignments`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ employeeId: empId, roleOnProject: 'Developer', allocationPct: 100 }),
+          body: JSON.stringify({ employeeId: member.id, roleOnProject: member.role, allocationPct: 100 }),
         }).catch(console.error); // Best effort
       }
       
@@ -127,9 +136,71 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
     return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
   }
 
+
+
   return (
-    <div className="flex flex-col h-full">
-      <form id="project-form" onSubmit={handleSubmit} className="space-y-4 flex-1 overflow-y-auto pr-2 pb-24">
+    <div className="flex flex-col">
+      <form id="project-form" onSubmit={handleSubmit} className="space-y-4 pr-2">
+        
+        <div className="space-y-2 flex flex-col">
+          <Label>Account</Label>
+          <Popover open={accountOpen} onOpenChange={setAccountOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={accountOpen}
+                className={cn(
+                  "justify-between font-normal",
+                  !formData.accountId && "text-muted-foreground"
+                )}
+              >
+                {formData.accountId
+                  ? accounts.find((acc) => acc.id === formData.accountId)?.name || formData.accountId
+                  : "Select an account..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+              <div className="flex items-center border-b px-3">
+                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                <input
+                  className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Search account..."
+                  value={accountSearch}
+                  onChange={(e) => setAccountSearch(e.target.value)}
+                />
+              </div>
+              <div className="max-h-[200px] overflow-y-auto p-1">
+                {accounts
+                  .filter(acc => acc.name.toLowerCase().includes(accountSearch.toLowerCase()))
+                  .map(acc => (
+                    <div
+                      key={acc.id}
+                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                      onClick={() => {
+                        setFormData({ ...formData, accountId: acc.id });
+                        setAccountOpen(false);
+                        setAccountSearch('');
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          formData.accountId === acc.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {acc.name}
+                    </div>
+                  ))}
+                {accounts.filter(acc => acc.name.toLowerCase().includes(accountSearch.toLowerCase())).length === 0 && (
+                  <div className="py-6 text-center text-sm">No account found.</div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+
         <div className="space-y-2">
           <Label>Project Name</Label>
           <Input 
@@ -162,30 +233,13 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
           <select 
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={formData.type}
-            onChange={e => setFormData({ ...formData, type: e.target.value, accountId: e.target.value !== 'solution' ? '' : formData.accountId })}
+            onChange={e => setFormData({ ...formData, type: e.target.value })}
           >
             <option value="solution">Solution Delivery</option>
             <option value="product">Product Development</option>
             <option value="internal">Internal</option>
           </select>
         </div>
-
-        {formData.type === 'solution' && (
-          <div className="space-y-2">
-            <Label>Client Account</Label>
-            <select 
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              value={formData.accountId}
-              onChange={e => setFormData({ ...formData, accountId: e.target.value })}
-              required
-            >
-              <option value="">Select an account...</option>
-              {accounts.map(acc => (
-                <option key={acc.id} value={acc.id}>{acc.name}</option>
-              ))}
-            </select>
-          </div>
-        )}
 
         <div className="space-y-2 flex flex-col">
           <Label>Accountable Person (Owner)</Label>
@@ -256,11 +310,11 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
                 aria-expanded={developersOpen}
                 className={cn(
                   "justify-between font-normal",
-                  selectedDevelopers.length === 0 && "text-muted-foreground"
+                  teamMembers.length === 0 && "text-muted-foreground"
                 )}
               >
-                {selectedDevelopers.length > 0
-                  ? `${selectedDevelopers.length} developer(s) selected`
+                {teamMembers.length > 0
+                  ? `${teamMembers.length} developer(s) selected`
                   : "Select developers..."}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
@@ -276,43 +330,78 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
                 />
               </div>
               <div className="max-h-[200px] overflow-y-auto p-1">
-                {employees
-                  .filter(emp => `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(developerSearch.toLowerCase()))
-                  .map(emp => (
-                    <div
-                      key={emp.id}
-                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                      onClick={() => {
-                        setSelectedDevelopers(prev => 
-                          prev.includes(emp.id) ? prev.filter(id => id !== emp.id) : [...prev, emp.id]
-                        );
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          selectedDevelopers.includes(emp.id) ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {emp.firstName} {emp.lastName}
+                {(() => {
+                  const filteredEmps = employees.filter(emp => `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(developerSearch.toLowerCase()));
+                  if (filteredEmps.length === 0) {
+                    return <div className="py-6 text-center text-sm">No developer found.</div>;
+                  }
+
+                  return ROLES.map(group => (
+                    <div key={group}>
+                      <div 
+                        className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider bg-muted/10 flex justify-between items-center cursor-pointer hover:bg-muted/30"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
+                        }}
+                      >
+                        {group}
+                        {expandedGroups[group] ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                      </div>
+                      {expandedGroups[group] && filteredEmps.map(emp => (
+                        <div
+                          key={emp.id}
+                          className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setTeamMembers(prev => {
+                              const existingIndex = prev.findIndex(m => m.id === emp.id && m.role === group);
+                              if (existingIndex >= 0) {
+                                return prev.filter((_, i) => i !== existingIndex);
+                              }
+                              return [...prev, { id: emp.id, role: group }];
+                            });
+                          }}
+                        >
+                          <Checkbox
+                            className="mr-2 pointer-events-none"
+                            checked={teamMembers.some(m => m.id === emp.id && m.role === group)}
+                          />
+                          {emp.firstName} {emp.lastName}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                {employees.filter(emp => `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(developerSearch.toLowerCase())).length === 0 && (
-                  <div className="py-6 text-center text-sm">No developer found.</div>
-                )}
+                  ));
+                })()}
               </div>
             </PopoverContent>
           </Popover>
-          {selectedDevelopers.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {selectedDevelopers.map(devId => {
-                const emp = employees.find(e => e.id === devId);
+          {teamMembers.length > 0 && (
+            <div className="flex flex-col gap-2 mt-3 bg-muted/20 p-2 rounded-md border">
+              {teamMembers.map(member => {
+                const emp = employees.find(e => e.id === member.id);
                 if (!emp) return null;
                 return (
-                  <span key={devId} className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-xs font-medium">
-                    {emp.firstName} {emp.lastName}
-                    <button type="button" onClick={() => setSelectedDevelopers(prev => prev.filter(id => id !== devId))} className="hover:text-destructive text-muted-foreground">&times;</button>
-                  </span>
+                  <div key={`${member.id}-${member.role}`} className="flex items-center justify-between bg-background border px-3 py-2 rounded-md shadow-sm">
+                    <span className="text-sm font-medium">{emp.firstName} {emp.lastName}</span>
+                    <div className="flex items-center gap-3">
+                      <select 
+                        className="h-8 text-xs rounded-md border border-input bg-transparent px-2 py-1 outline-none focus:ring-1 focus:ring-ring"
+                        value={member.role}
+                        onChange={(e) => setTeamMembers(prev => prev.map(m => (m.id === member.id && m.role === member.role) ? { ...m, role: e.target.value } : m))}
+                      >
+                        {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                      <button 
+                        type="button" 
+                        onClick={() => setTeamMembers(prev => prev.filter(m => !(m.id === member.id && m.role === member.role)))} 
+                        className="text-muted-foreground hover:text-destructive flex items-center justify-center w-6 h-6 rounded-md hover:bg-muted"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -339,7 +428,7 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
         </div>
       </form>
 
-      <div className="absolute bottom-0 left-0 right-0 p-6 border-t bg-background flex justify-end gap-3 z-10 mt-auto">
+      <div className="pt-6 mt-2 border-t bg-background flex justify-end gap-3">
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
         )}
@@ -350,3 +439,4 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
     </div>
   );
 }
+

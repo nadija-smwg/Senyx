@@ -45,12 +45,12 @@ export function MobileNav() {
           
           <Link href="/crm/accounts" onClick={() => setOpen(false)} className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#FFF3EC] hover:text-[#F15A22] font-medium transition-colors"><Briefcase className="w-5 h-5" /> Accounts</Link>
           <Link href="/crm/contacts" onClick={() => setOpen(false)} className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#FFF3EC] hover:text-[#F15A22] font-medium transition-colors"><Contact2 className="w-5 h-5" /> Contacts</Link>
-          <Link href="/sales/deals" onClick={() => setOpen(false)} className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#FFF3EC] hover:text-[#F15A22] font-medium transition-colors"><HandshakeIcon className="w-5 h-5" /> Deals</Link>
           <Link href="/projects" onClick={() => setOpen(false)} className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#FFF3EC] hover:text-[#F15A22] font-medium transition-colors"><FolderKanban className="w-5 h-5" /> Projects</Link>
           
           <div className="h-px bg-gray-100 my-2 mx-2" />
           
           <Link href="/finance/invoices" onClick={() => setOpen(false)} className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F0F9FF] hover:text-[#1A6DB6] font-medium transition-colors"><Receipt className="w-5 h-5" /> Finance</Link>
+          <Link href="/sales/deals" onClick={() => setOpen(false)} className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F0F9FF] hover:text-[#1A6DB6] font-medium transition-colors"><HandshakeIcon className="w-5 h-5" /> Deals</Link>
           
           <div className="h-px bg-gray-100 my-2 mx-2" />
           

@@ -22,6 +22,9 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet"
 import Link from "next/link"
+import { useState } from "react"
+import { EmployeeForm } from "@/components/hr/employee-form"
+import { toast } from "sonner"
 
 export type Employee = {
   id: string
@@ -29,6 +32,7 @@ export type Employee = {
   firstName: string
   lastName: string
   email: string
+  phone?: string
   departmentName?: string
   designationTitle?: string
   status: "active" | "on_leave" | "suspended" | "terminated"
@@ -92,16 +96,80 @@ export const columns: ColumnDef<Employee>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => <EmployeeActions employee={row.original} />
+    cell: ({ row, table }) => (
+      <EmployeeActions
+        employee={row.original}
+        onRefresh={(table.options.meta as any)?.onRefresh}
+      />
+    ),
   },
 ]
 
-import { useState } from "react"
-import { EmployeeForm } from "@/components/hr/employee-form"
+interface EmployeeActionsProps {
+  employee: Employee
+  onRefresh?: () => void
+}
 
-function EmployeeActions({ employee }: { employee: Employee }) {
+function EmployeeActions({ employee, onRefresh }: EmployeeActionsProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+
+  const handleActivate = async () => {
+    if (isProcessing) return
+    setIsProcessing(true)
+    try {
+      const res = await fetch(`/api/employees/${employee.id}/activate`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error?.message || 'Failed to activate employee')
+      toast.success(data.message || 'Employee activated successfully. Login access restored.')
+      onRefresh?.()
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleDeactivate = async () => {
+    if (isProcessing) return
+    setIsProcessing(true)
+    try {
+      const res = await fetch(`/api/employees/${employee.id}/deactivate`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error?.message || 'Failed to deactivate employee')
+      toast.success(data.message || 'Employee deactivated. Login access has been revoked.')
+      onRefresh?.()
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (isProcessing) return
+    setIsProcessing(true)
+    try {
+      const res = await fetch(`/api/employees/${employee.id}/reset-password`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error?.message || 'Failed to send password reset')
+      
+      // In development, show the reset link in a toast for easy testing
+      if (data.resetLink) {
+        toast.success('Password reset link generated (dev mode). Copy from console.', { duration: 8000 })
+        console.info('[DEV] Password reset link for', employee.email, ':', data.resetLink)
+      } else {
+        toast.success(data.message || 'Password reset email sent to employee.')
+      }
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const isActive = employee.status === 'active'
 
   return (
     <DropdownMenu>
@@ -111,12 +179,15 @@ function EmployeeActions({ employee }: { employee: Employee }) {
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuItem onClick={() => navigator.clipboard.writeText(employee.employeeCode)}>
           Copy Employee Code
         </DropdownMenuItem>
+
         <DropdownMenuSeparator />
+
+        {/* View / Edit Sheet */}
         <Sheet open={isOpen} onOpenChange={(open) => { setIsOpen(open); if(!open) setIsEditing(false); }}>
           <SheetTrigger asChild>
             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>View Details</DropdownMenuItem>
@@ -128,18 +199,18 @@ function EmployeeActions({ employee }: { employee: Employee }) {
                   <SheetTitle className="text-2xl font-bold font-heading">Edit Employee</SheetTitle>
                   <SheetDescription>Update information for {employee.firstName} {employee.lastName}</SheetDescription>
                 </SheetHeader>
-                <EmployeeForm 
+                <EmployeeForm
                   initialData={{
                     id: employee.id,
                     firstName: employee.firstName,
                     lastName: employee.lastName,
                     email: employee.email,
-                    employmentType: "full_time", // Requires full fetch ideally, but for now we fallback
+                    employmentType: "full_time",
                     startDate: new Date().toISOString().split('T')[0],
-                    designationId: "", // Fallback
-                  } as any} 
+                    designationId: "",
+                  } as any}
                   onCancel={() => setIsEditing(false)}
-                  onSuccess={() => { setIsEditing(false); setIsOpen(false); }}
+                  onSuccess={() => { setIsEditing(false); setIsOpen(false); onRefresh?.() }}
                 />
               </>
             ) : (
@@ -150,7 +221,7 @@ function EmployeeActions({ employee }: { employee: Employee }) {
                 </SheetHeader>
                 <div className="py-6 space-y-6">
                   <div className="space-y-1">
-                    <p className="text-sm text-slate-500 font-medium">Employee ID</p>
+                    <p className="text-sm text-slate-500 font-medium">Employee Code</p>
                     <p className="font-mono text-sm">{employee.employeeCode}</p>
                   </div>
                   <div className="space-y-1">
@@ -161,15 +232,60 @@ function EmployeeActions({ employee }: { employee: Employee }) {
                     <p className="text-sm text-slate-500 font-medium">Department</p>
                     <p className="font-medium">{employee.departmentName || "N/A"}</p>
                   </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-slate-500 font-medium">Status</p>
+                    <Badge
+                      variant={
+                        employee.status === 'active' ? 'positive' :
+                        employee.status === 'suspended' ? 'negative' :
+                        employee.status === 'on_leave' ? 'warning' : 'default'
+                      }
+                      className="font-semibold tracking-wide uppercase"
+                    >
+                      {employee.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
                 </div>
                 <SheetFooter className="absolute bottom-0 w-full left-0 p-6 border-t border-slate-100 bg-slate-50/50">
-                  <Button variant="outline" asChild className="w-full"><Link href={`/hr/employees/${employee.id}`}>Full Profile</Link></Button>
+                  <Button variant="outline" asChild className="w-full">
+                    <Link href={`/hr/employees/${employee.id}`}>Full Profile</Link>
+                  </Button>
                   <Button className="w-full" onClick={() => setIsEditing(true)}>Edit Employee</Button>
                 </SheetFooter>
               </>
             )}
           </SheetContent>
         </Sheet>
+
+        <DropdownMenuSeparator />
+
+        {/* Activate / Deactivate */}
+        {isActive ? (
+          <DropdownMenuItem
+            className="text-amber-600 focus:text-amber-700 focus:bg-amber-50"
+            onSelect={(e) => { e.preventDefault(); handleDeactivate() }}
+            disabled={isProcessing}
+          >
+            {isProcessing ? "Processing..." : "Deactivate Employee"}
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem
+            className="text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50"
+            onSelect={(e) => { e.preventDefault(); handleActivate() }}
+            disabled={isProcessing || employee.status === 'terminated'}
+          >
+            {isProcessing ? "Processing..." : "Activate Employee"}
+          </DropdownMenuItem>
+        )}
+
+        {/* Reset Password */}
+        <DropdownMenuItem
+          className="text-blue-600 focus:text-blue-700 focus:bg-blue-50"
+          onSelect={(e) => { e.preventDefault(); handleResetPassword() }}
+          disabled={isProcessing}
+        >
+          Reset Password
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

@@ -55,14 +55,6 @@ export function useAuth() {
     return data;
   };
 
-  const register = async (input: any) => {
-    const data = await fetchClient<{ success: boolean }>('/api/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    });
-    return data;
-  };
-
   const logout = async () => {
     try {
       await fetchClient('/api/auth/logout', { method: 'POST' });
@@ -74,5 +66,5 @@ export function useAuth() {
     }
   };
 
-  return { ...authState, login, logout, register };
+  return { ...authState, login, logout };
 }

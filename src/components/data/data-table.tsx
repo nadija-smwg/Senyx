@@ -39,6 +39,8 @@ interface DataTableProps<TData, TValue> {
   isLoading?: boolean
   renderSubComponent?: (props: { row: any }) => React.ReactNode
   dateFilterColumn?: string
+  /** Optional callback invoked by action cells to trigger a data refresh */
+  onRefresh?: () => void
 }
 
 export function DataTable<TData, TValue>({
@@ -49,6 +51,7 @@ export function DataTable<TData, TValue>({
   isLoading = false,
   renderSubComponent,
   dateFilterColumn,
+  onRefresh,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -114,6 +117,7 @@ export function DataTable<TData, TValue>({
       rowSelection,
     },
     getExpandedRowModel: getExpandedRowModel(),
+    meta: { onRefresh },
   })
 
   return (

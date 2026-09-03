@@ -44,7 +44,6 @@ export function Sidebar() {
       items: [
         { href: '/crm/accounts', label: 'Accounts', icon: Building2 },
         { href: '/crm/contacts', label: 'Contacts', icon: Contact2 },
-        { href: '/sales/deals', label: 'Deals', icon: HandshakeIcon },
       ]
     },
     {
@@ -64,6 +63,7 @@ export function Sidebar() {
         { href: '/finance/invoices', label: 'Invoices', icon: FileText },
         { href: '/finance/expenses', label: 'Expenses', icon: Wallet },
         { href: '/finance/payments', label: 'Payments', icon: CreditCard },
+        { href: '/sales/deals', label: 'Deals', icon: HandshakeIcon },
       ]
     },
     {

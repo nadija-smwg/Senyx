@@ -14,17 +14,20 @@ const CreateEmployeeSchema = z.object({
   departmentId: z.string().uuid().optional(),
   managerId: z.string().uuid().optional(),
   employmentType: z.enum(['full_time', 'part_time', 'contract', 'intern']),
-  startDate: z.string(), // YYYY-MM-DD
-  salary: z.string().optional(), // Expected as plain text numeric string, to be encrypted
-  bankDetails: z.any().optional(), // Expected as object, to be encrypted
-  nationalId: z.string().optional(), // Expected as plain text string, to be encrypted
+  startDate: z.string(),
+  salary: z.string().optional(),
+  bankDetails: z.any().optional(),
+  nationalId: z.string().optional(),
+  // Auth account fields
+  initialPassword: z.string().min(8, 'Password must be at least 8 characters'),
+  roleId: z.string().uuid().optional(), // If omitted, defaults to "Employee" role
 });
 
 export async function GET(req: NextRequest) {
   try {
     const ctx = await withAuth(req);
     
-    // Check if user has HR/Admin role to see all records unmasked
+    // Admin and HR Managers see all employees; everyone else sees only their own
     const isAdminOrHR = ctx.roles.includes('Admin') || ctx.roles.includes('HR Manager');
     const scope = isAdminOrHR ? 'all' : 'own';
     
@@ -39,18 +42,25 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const ctx = await withAuth(req);
-    
+
+    // Only Admins and HR Managers can create employees
     const isAdminOrHR = ctx.roles.includes('Admin') || ctx.roles.includes('HR Manager');
     if (!isAdminOrHR) {
-      throw new UnauthorizedError('Only HR Managers and Admins can create employees');
+      throw new UnauthorizedError('Only administrators can add employees.');
     }
 
     const body = await req.json();
     const validatedData = CreateEmployeeSchema.parse(body);
-    
+
     const newEmployee = await createEmployee(validatedData, ctx.userId);
 
-    return NextResponse.json({ data: newEmployee }, { status: 201 });
+    return NextResponse.json(
+      {
+        data: newEmployee,
+        message: 'Employee created successfully. Login access has been created.',
+      },
+      { status: 201 }
+    );
   } catch (error) {
     return handleError(error);
   }

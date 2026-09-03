@@ -1,11 +1,13 @@
 import { db } from '../db/client';
 import { employees, employeeSkills, leaveBalances, leaveTypes, departments, designations } from '../db/schema/hr';
-import { users } from '../db/schema/identity';
+import { users, userRoles, roles } from '../db/schema/identity';
 import { eq, and, desc } from 'drizzle-orm';
 import { auditLogs } from '../db/schema/platform';
 import { encrypt, decrypt } from '../lib/crypto';
 import { getSupabaseAdmin } from '../lib/supabase-admin';
 import { generateEmployeeCode } from '../lib/code-generator';
+import { AppError, ConflictError, NotFoundError } from '../types/errors';
+
 async function auditAction(data: any) {
   try {
     await db.insert(auditLogs).values({
@@ -19,7 +21,7 @@ async function auditAction(data: any) {
       ipAddress: data.ipAddress,
     });
   } catch (e) {
-    console.error("Failed to insert audit log", e);
+    console.error('Failed to insert audit log', e);
   }
 }
 
@@ -45,7 +47,7 @@ export async function listEmployees(scope: 'all' | 'own', userId: string, employ
     return ownEmp ? [ownEmp] : [];
   }
   
-  // Return all but mask sensitive fields for standard lists unless requested specifically
+  // Return all but mask sensitive fields for standard lists
   return allEmps.map(e => ({
     ...e,
     salary: scope === 'all' ? decrypt(e.salary) : null,
@@ -55,15 +57,37 @@ export async function listEmployees(scope: 'all' | 'own', userId: string, employ
 }
 
 export async function createEmployee(input: any, actorUserId: string) {
-  // 1. Generate Code
+  const supabaseAdmin = getSupabaseAdmin();
+
+  // ── 1. Duplicate email check (employees table) ─────────────────────────────
+  const [existingEmp] = await db
+    .select({ id: employees.id })
+    .from(employees)
+    .where(eq(employees.email, input.email))
+    .limit(1);
+
+  if (existingEmp) {
+    throw new ConflictError('An employee with this email already exists.');
+  }
+
+  // ── 2. Duplicate check in Supabase auth (via admin API) ────────────────────
+  // We use listUsers + filter since Supabase admin doesn't expose getUserByEmail directly
+  const { data: existingAuthUsers } = await supabaseAdmin.auth.admin.listUsers({
+    page: 1,
+    perPage: 1,
+  });
+  // Quick check via getUserByEmail equivalent — try to sign up and handle conflict
+  // Instead we rely on Supabase returning error code 'email_exists' on createUser below.
+
+  // ── 3. Generate employee code ──────────────────────────────────────────────
   const code = await generateEmployeeCode();
-  
-  // 2. Encrypt sensitive fields
+
+  // ── 4. Encrypt sensitive fields ────────────────────────────────────────────
   const encSalary = input.salary ? encrypt(input.salary) : null;
   const encBank = input.bankDetails ? encrypt(JSON.stringify(input.bankDetails)) : null;
   const encNationalId = input.nationalId ? encrypt(input.nationalId) : null;
-  
-  // 3. Create Employee
+
+  // ── 5. Create Employee record ──────────────────────────────────────────────
   const [newEmp] = await db.insert(employees).values({
     employeeCode: code,
     firstName: input.firstName,
@@ -75,55 +99,97 @@ export async function createEmployee(input: any, actorUserId: string) {
     managerId: input.managerId,
     employmentType: input.employmentType,
     startDate: input.startDate,
+    status: 'active',
     salary: encSalary,
     bankDetails: encBank,
     nationalId: encNationalId,
   }).returning();
 
-  // 4. Create Supabase Auth User
-  const supabaseAdmin = getSupabaseAdmin();
-  const { data: authUser, error } = await supabaseAdmin.auth.admin.createUser({
+  // ── 6. Create Supabase Auth User ──────────────────────────────────────────
+  const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
     email: input.email,
-    password: 'TempPassword123!',
-    email_confirm: true,
+    password: input.initialPassword,
+    email_confirm: true, // Skip email verification — admin-provisioned account
+    user_metadata: {
+      firstName: input.firstName,
+      lastName: input.lastName,
+      employeeCode: code,
+      // Flag so the employee knows to change their password on first login
+      mustChangePassword: true,
+    },
   });
 
-  if (error || !authUser.user) {
-    console.error('Supabase auth error:', error);
-    // Use AppError so the UI gets a proper message instead of generic 500
-    const { AppError } = require('../types/errors');
-    throw new AppError(error?.message || 'Failed to create auth user', 'AUTH_CREATION_FAILED', 400);
+  if (authError || !authUser.user) {
+    // Rollback employee record on auth failure
+    await db.delete(employees).where(eq(employees.id, newEmp!.id));
+    
+    const msg = authError?.message || 'Failed to create authentication account';
+    const isEmailConflict = msg.toLowerCase().includes('already') || msg.toLowerCase().includes('exists');
+    if (isEmailConflict) {
+      throw new ConflictError('An account with this email already exists in the authentication system.');
+    }
+    throw new AppError(msg, 400, 'AUTH_CREATION_FAILED');
   }
 
-  // 5. Initialize Leave Balances
+  const supabaseUserId = authUser.user.id;
+
+  // ── 7. Insert users table row (links Supabase auth ↔ employee) ─────────────
+  const [newUser] = await db.insert(users).values({
+    id: supabaseUserId,
+    employeeId: newEmp!.id,
+    email: input.email,
+    isActive: true,
+  }).returning();
+
+  // ── 8. Assign role ─────────────────────────────────────────────────────────
+  if (input.roleId) {
+    const [role] = await db.select().from(roles).where(eq(roles.id, input.roleId)).limit(1);
+    if (role) {
+      await db.insert(userRoles).values({
+        userId: supabaseUserId,
+        roleId: input.roleId,
+      }).onConflictDoNothing();
+    }
+  } else {
+    // Default to 'Employee' role if none specified
+    const [employeeRole] = await db.select().from(roles).where(eq(roles.name, 'Employee')).limit(1);
+    if (employeeRole) {
+      await db.insert(userRoles).values({
+        userId: supabaseUserId,
+        roleId: employeeRole.id,
+      }).onConflictDoNothing();
+    }
+  }
+
+  // ── 9. Initialize Leave Balances ──────────────────────────────────────────
   const allLeaveTypes = await db.select().from(leaveTypes);
   const currentYear = new Date().getFullYear();
-  
+
   const [empDesignation] = await db.select().from(designations).where(eq(designations.id, input.designationId));
   const annualLeaveDays = empDesignation?.annualLeaveDays || '30.00';
-  
+
   const balancesToInsert = allLeaveTypes.map(lt => ({
     employeeId: newEmp!.id,
     leaveTypeId: lt.id,
     year: currentYear,
     balanceDays: lt.name === 'Annual' ? annualLeaveDays : lt.defaultAnnualDays,
   }));
-  
+
   if (balancesToInsert.length > 0) {
     await db.insert(leaveBalances).values(balancesToInsert);
   }
 
-  // 6. Audit
+  // ── 10. Audit ──────────────────────────────────────────────────────────────
   await auditAction({
     userId: actorUserId,
     action: 'employee.create',
     module: 'hr',
     targetId: newEmp!.id,
-    ipAddress: '127.0.0.1', // Should come from context in real implementation
-    details: { employeeCode: code },
+    ipAddress: '127.0.0.1',
+    details: { employeeCode: code, email: input.email },
   });
 
-  return newEmp;
+  return { ...newEmp, employeeCode: code };
 }
 
 export async function getEmployeeById(id: string, scope: 'all' | 'own', currentEmployeeId?: string) {
@@ -167,23 +233,25 @@ export async function updateEmployee(id: string, input: any, actorUserId: string
 }
 
 export async function deactivateEmployee(id: string, actorUserId: string) {
-  // Soft delete employee
+  const [emp] = await db.select().from(employees).where(eq(employees.id, id));
+  if (!emp) throw new NotFoundError('Employee not found');
+
+  // Soft suspend — do NOT delete or set terminated; status remains reversible
   await db.update(employees)
-    .set({ status: 'terminated', deletedAt: new Date() })
+    .set({ status: 'suspended' })
     .where(eq(employees.id, id));
-    
-  // Find linked user
+
+  // Find and deactivate linked user record
   const [user] = await db.select().from(users).where(eq(users.employeeId, id));
-  
+
   if (user) {
-    // Deactivate application user
     await db.update(users).set({ isActive: false }).where(eq(users.id, user.id));
-    
-    // Suspend in Supabase Auth
-    // Note: admin.updateUserById isn't documented to suspend easily without deleting, 
-    // but setting ban_duration works in true enterprise. 
-    // We will just change their password to lock them out or use admin.deleteUser if needed.
-    // For now we rely on the isActive check in middleware.
+
+    // Ban in Supabase Auth so active sessions are also invalidated
+    const supabaseAdmin = getSupabaseAdmin();
+    await supabaseAdmin.auth.admin.updateUserById(user.id, {
+      ban_duration: '876000h', // ~100 years = effectively permanent until explicitly lifted
+    });
   }
 
   await auditAction({
@@ -192,7 +260,39 @@ export async function deactivateEmployee(id: string, actorUserId: string) {
     module: 'hr',
     targetId: id,
     ipAddress: '127.0.0.1',
-    details: {},
+    details: { status: 'suspended' },
+  });
+}
+
+export async function activateEmployee(id: string, actorUserId: string) {
+  const [emp] = await db.select().from(employees).where(eq(employees.id, id));
+  if (!emp) throw new NotFoundError('Employee not found');
+
+  // Re-activate employee record
+  await db.update(employees)
+    .set({ status: 'active' })
+    .where(eq(employees.id, id));
+
+  // Re-activate linked user record
+  const [user] = await db.select().from(users).where(eq(users.employeeId, id));
+
+  if (user) {
+    await db.update(users).set({ isActive: true }).where(eq(users.id, user.id));
+
+    // Lift Supabase Auth ban
+    const supabaseAdmin = getSupabaseAdmin();
+    await supabaseAdmin.auth.admin.updateUserById(user.id, {
+      ban_duration: 'none',
+    });
+  }
+
+  await auditAction({
+    userId: actorUserId,
+    action: 'employee.activate',
+    module: 'hr',
+    targetId: id,
+    ipAddress: '127.0.0.1',
+    details: { status: 'active' },
   });
 }
 

@@ -1,130 +1,64 @@
 'use client';
-import { useState } from 'react';
-import { useAuth } from '../../../hooks/use-auth';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../../components/ui/card';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
+import { ShieldCheck } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
-import { Logo } from '../../../components/ui/logo';
+import Link from 'next/link';
 
+/**
+ * /register — Closed registration page.
+ * Public self-registration is disabled; accounts are
+ * created by administrators only.
+ */
 export default function RegisterPage() {
-  const { register } = useAuth();
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    setStatus('loading');
-    setError('');
-    try {
-      await register({ firstName, lastName, email, password });
-      setStatus('success');
-    } catch (err: any) {
-      setError(err.message || 'Failed to register');
-      setStatus('idle');
-    }
-  };
-
   return (
-    <Card className="rounded-2xl backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-white/20 shadow-2xl border shadow-slate-200/50 dark:shadow-none">
-      <CardHeader className="space-y-1 text-center flex flex-col items-center">
-        <Logo className="justify-center mb-4 scale-110" />
-        <CardTitle className="text-2xl font-heading font-bold tracking-tight">Create an account</CardTitle>
-        <CardDescription>
-          Enter your details below to sign up
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {status === 'success' ? (
-          <div className="text-center space-y-4">
-            <p className="text-sm text-muted-foreground">Check your email for a link to verify your account. If it doesn't appear within a few minutes, check your spam folder.</p>
-            <Button variant="outline" className="w-full" onClick={() => window.location.href = '/login'}>
-              Back to Login
-            </Button>
+    <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.06)] text-center space-y-6">
+      {/* Logo */}
+      <div className="flex justify-center mb-2 group cursor-default">
+        <div className="flex items-center gap-3">
+          <img
+            src="/logo-transparent.png"
+            alt="Senyx Icon"
+            className="w-8 h-8 object-contain group-hover:scale-105 transition-transform duration-300"
+          />
+          <div className="flex flex-col justify-center mt-1">
+            <img
+              src="/name-transparent.png"
+              alt="SENYX"
+              className="h-6 object-contain object-left"
+            />
+            <div
+              className="text-[10px] font-bold tracking-[0.2em] uppercase mt-0.5 text-center"
+              style={{ color: '#1A6DB6' }}
+            >
+              Command Center
+            </div>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && <div className="text-sm text-destructive font-medium">{error}</div>}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input 
-                  id="firstName" 
-                  placeholder="John" 
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  required 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input 
-                  id="lastName" 
-                  placeholder="Doe" 
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  required 
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="name@company.com" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required 
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required 
-                minLength={6}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input 
-                id="confirmPassword" 
-                type="password" 
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required 
-                minLength={6}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={status === 'loading'}>
-              {status === 'loading' ? 'Creating account...' : 'Sign up'}
-            </Button>
-          </form>
-        )}
-      </CardContent>
-      {status !== 'success' && (
-        <CardFooter className="flex justify-center">
-          <div className="text-sm text-muted-foreground">
-            Already have an account?{' '}
-            <a href="/login" className="text-primary hover:underline font-medium">
-              Log in
-            </a>
-          </div>
-        </CardFooter>
-      )}
-    </Card>
+        </div>
+      </div>
+
+      {/* Icon */}
+      <div className="flex justify-center">
+        <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center">
+          <ShieldCheck className="w-7 h-7 text-[#1A6DB6]" />
+        </div>
+      </div>
+
+      {/* Heading */}
+      <div>
+        <h1 className="text-xl font-bold font-heading text-gray-900">
+          Access by Invitation Only
+        </h1>
+        <p className="text-sm text-gray-500 mt-2 leading-relaxed max-w-xs mx-auto">
+          Employee accounts in Senyx Command Center are created by your
+          organisation's administrator. Please contact your admin to get access.
+        </p>
+      </div>
+
+      {/* CTA */}
+      <div className="pt-2">
+        <Button asChild className="w-full h-9">
+          <Link href="/login">Back to Sign In</Link>
+        </Button>
+      </div>
+    </div>
   );
 }
