@@ -114,11 +114,26 @@ export class AuthService {
   }
 
   async getMe(ctx: AuthContext) {
-    const [user] = await db.select().from(users).where(eq(users.id, ctx.userId));
-    if (!user) throw new NotFoundError('User not found');
+    const [userData] = await db
+      .select({
+        user: users,
+        employee: {
+          firstName: employees.firstName,
+          lastName: employees.lastName,
+        }
+      })
+      .from(users)
+      .innerJoin(employees, eq(users.employeeId, employees.id))
+      .where(eq(users.id, ctx.userId));
+
+    if (!userData) throw new NotFoundError('User not found');
 
     return {
-      user,
+      user: {
+        ...userData.user,
+        firstName: userData.employee.firstName,
+        lastName: userData.employee.lastName,
+      },
       roles: ctx.roles,
       permissions: ctx.permissions,
     };
