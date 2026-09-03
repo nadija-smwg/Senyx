@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProjectHeaderActions } from '@/components/projects/project-header-actions';
-import { LayoutDashboard, Kanban, ListTodo, Users, Flag, DollarSign, Clock, AlertTriangle, FileText } from 'lucide-react';
+import { LayoutDashboard, Link2, Users, Flag, DollarSign, Clock, AlertTriangle, FileText } from 'lucide-react';
 import { db } from '@/server/db/client';
 import { projects } from '@/server/db/schema/projects';
 import { eq } from 'drizzle-orm';
@@ -37,15 +37,14 @@ export default async function ProjectLayout({
   }
 
   const navItems = [
-    { name: 'Overview', href: `/projects/${project.id}`, icon: LayoutDashboard },
-    { name: 'Board', href: `/projects/${project.id}/board`, icon: Kanban },
-    { name: 'Tasks', href: `/projects/${project.id}/tasks`, icon: ListTodo },
-    { name: 'Team', href: `/projects/${project.id}/team`, icon: Users },
-    { name: 'Milestones', href: `/projects/${project.id}/milestones`, icon: Flag },
-    { name: 'Payments', href: `/projects/${project.id}/payments`, icon: DollarSign },
-    { name: 'Time', href: `/projects/${project.id}/time`, icon: Clock },
-    { name: 'Risks', href: `/projects/${project.id}/risks`, icon: AlertTriangle },
-    { name: 'Documents', href: `/projects/${project.id}/documents`, icon: FileText },
+    { name: 'Overview',   href: `/projects/${project.id}`,            icon: LayoutDashboard },
+    { name: 'Links',      href: `/projects/${project.id}/links`,       icon: Link2 },
+    { name: 'Team',       href: `/projects/${project.id}/team`,        icon: Users },
+    { name: 'Milestones', href: `/projects/${project.id}/milestones`,  icon: Flag },
+    { name: 'Payments',   href: `/projects/${project.id}/payments`,    icon: DollarSign },
+    { name: 'Time',       href: `/projects/${project.id}/time`,        icon: Clock },
+    { name: 'Risks',      href: `/projects/${project.id}/risks`,       icon: AlertTriangle },
+    { name: 'Documents',  href: `/projects/${project.id}/documents`,   icon: FileText },
   ];
 
   return (

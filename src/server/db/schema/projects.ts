@@ -200,3 +200,19 @@ export const projectRisks = pgTable('project_risks', {
   check('risk_status_check', sql`${table.status} IN ('open', 'mitigating', 'closed')`),
   index('risk_project_idx').on(table.projectId),
 ]);
+
+// ----------------------------------------------------------------------------
+// PROJECT LINKS
+// ----------------------------------------------------------------------------
+export const projectLinks = pgTable('project_links', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ...baseColumns,
+  projectId: uuid('project_id').references(() => projects.id).notNull(),
+  name: varchar('name', { length: 80 }).notNull(),
+  url: text('url').notNull(),
+  description: text('description'),
+  position: smallint('position').default(0).notNull(),
+}, (table) => [
+  index('link_project_idx').on(table.projectId),
+]);
+
