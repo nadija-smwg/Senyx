@@ -50,8 +50,8 @@ export function useClock() {
       if (!res.ok) throw new Error(data.error?.message || 'Failed to clock in');
       toast.success('Clocked in successfully');
       await fetchActiveSession();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsProcessing(false);
     }
@@ -73,8 +73,8 @@ export function useClock() {
       toast.success(`Clocked out — ${hours}h logged`);
       
       await mutateActiveSession();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsProcessing(false);
     }

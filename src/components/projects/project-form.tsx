@@ -268,7 +268,11 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
         }).catch(console.error); // Best effort
       }
 
-      if (onSuccess) onSuccess();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.refresh();
+      }
       router.push(`/projects/${json.data.id}`);
     } catch (err: any) {
       toast.error(err.message || 'Something went wrong', {

@@ -332,7 +332,7 @@ export function AuthAside() {
     return (
         <div className="text-white max-w-lg space-auto">
             <h2 className="font-heading text-4xl xl:text-5xl font-extrabold tracking-tight leading-tight">
-                Manage  Senyx  from  one <span className="bg-gradient-to-r from-white via-[#F9A01B] to-white bg-clip-text text-transparent">central  workspace</span>.
+                Manage Senyx from  one <span className="bg-gradient-to-r from-white via-[#F9A01B] to-white bg-clip-text text-transparent">central  workspace</span>.
             </h2>
             <p className="mt-5 text-base xl:text-lg text-white/85 leading-relaxed">
                 A unified internal system for managing finance, HR, employees, projects, customers, sales,

@@ -328,7 +328,6 @@ export default function LeavePage() {
 
   const columns: ColumnDef<LeaveRequest>[] = [
     {
-      id: "employee",
       accessorKey: "employeeName",
       header: "Employee",
       cell: ({ row }) => {

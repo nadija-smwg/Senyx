@@ -2,7 +2,7 @@
 import { ShieldCheck } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import Link from 'next/link';
-
+import Image from 'next/image';
 /**
  * /register — Closed registration page.
  * Public self-registration is disabled; accounts are
@@ -14,16 +14,20 @@ export default function RegisterPage() {
       {/* Logo */}
       <div className="flex justify-center mb-2 group cursor-default">
         <div className="flex items-center gap-3">
-          <img
+          <Image
             src="/logo-transparent.png"
             alt="Senyx Icon"
-            className="w-14 h-14 object-contain group-hover:scale-105 transition-transform duration-300"
+            width={56}
+            height={56}
+            className="object-contain group-hover:scale-105 transition-transform duration-300"
           />
           <div className="flex flex-col justify-center mt-1">
-            <img
+            <Image
               src="/name-transparent.png"
               alt="SENYX"
-              className="h-10 object-contain object-left"
+              width={120}
+              height={40}
+              className="object-contain object-left"
             />
             <div
               className="text-xs font-bold tracking-[0.2em] uppercase mt-1 text-center"

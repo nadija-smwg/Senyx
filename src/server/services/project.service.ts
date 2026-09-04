@@ -26,22 +26,23 @@ async function auditAction(data: any) {
 }
 
 export async function generateProjectCode() {
-  const allProjects = await db.select({ code: projects.code }).from(projects);
-  
-  let maxNum = 0;
-  for (const p of allProjects) {
-    if (p.code && p.code.startsWith('PRJ-')) {
-      const numStr = p.code.split('-')[1];
-      if (numStr) {
-        const num = parseInt(numStr, 10);
-        if (!isNaN(num) && num > maxNum) {
-          maxNum = num;
-        }
+  const [result] = await db
+    .select({ maxCode: sql<string>`MAX(${projects.code})` })
+    .from(projects)
+    .where(sql`${projects.code} LIKE 'PRJ-%'`);
+
+  let nextNumber = 1;
+  if (result && result.maxCode) {
+    const numStr = result.maxCode.split('-')[1];
+    if (numStr) {
+      const num = parseInt(numStr, 10);
+      if (!isNaN(num)) {
+        nextNumber = num + 1;
       }
     }
   }
-  
-  return `PRJ-${String(maxNum + 1).padStart(4, '0')}`;
+
+  return `PRJ-${String(nextNumber).padStart(4, '0')}`;
 }
 
 export async function listProjects(scope: 'all' | 'own' | 'assigned', currentEmployeeId: string | null) {

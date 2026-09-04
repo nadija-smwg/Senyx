@@ -8,7 +8,7 @@ export function usePermissions() {
   const { permissions } = useAuth();
 
   const hasPermission = (module: string, action: string, requiredScope?: string) => {
-    const perm = permissions.find((p: any) => p.module === module && p.action === action);
+    const perm = permissions.find((p: { module: string; action: string; scope: string }) => p.module === module && p.action === action);
     if (!perm) return false;
     if (requiredScope && perm.scope !== 'all' && perm.scope !== requiredScope) return false;
     return true;

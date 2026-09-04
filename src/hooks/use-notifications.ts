@@ -27,12 +27,23 @@ export function useNotifications(options?: {
     revalidateOnFocus: true,
   });
 
+interface Notification {
+  id: string;
+  isRead: boolean;
+  [key: string]: any;
+}
+
+interface NotificationsResponse {
+  notifications: Notification[];
+  unreadCount: number;
+}
+
   const markAsRead = async (id: string) => {
     try {
       // Optimistic UI update
-      mutate((currentData: any) => {
+      mutate((currentData: NotificationsResponse | undefined) => {
         if (!currentData) return currentData;
-        const updatedNotifications = currentData.notifications.map((n: any) => 
+        const updatedNotifications = currentData.notifications.map((n: Notification) => 
           n.id === id ? { ...n, isRead: true } : n
         );
         return {
@@ -55,9 +66,9 @@ export function useNotifications(options?: {
   const markAllAsRead = async () => {
     try {
       // Optimistic UI update
-      mutate((currentData: any) => {
+      mutate((currentData: NotificationsResponse | undefined) => {
         if (!currentData) return currentData;
-        const updatedNotifications = currentData.notifications.map((n: any) => ({ ...n, isRead: true }));
+        const updatedNotifications = currentData.notifications.map((n: Notification) => ({ ...n, isRead: true }));
         return {
           ...currentData,
           notifications: updatedNotifications,

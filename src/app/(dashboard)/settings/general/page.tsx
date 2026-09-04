@@ -35,8 +35,8 @@ export default function GeneralSettingsPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/reminder-schedules').then(res => res.json()),
-      fetch('/api/settings').then(res => res.json())
+      fetch('/api/reminder-schedules').then(res => res.json()).catch(err => ({ error: err, data: [] })),
+      fetch('/api/settings').then(res => res.json()).catch(err => ({ error: err, data: [] }))
     ]).then(([schedData, settingsData]) => {
       if (schedData.data) setSchedules(schedData.data);
       if (settingsData.data) {

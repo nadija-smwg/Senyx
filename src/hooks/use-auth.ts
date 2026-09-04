@@ -13,7 +13,7 @@ export interface User {
 export interface AuthState {
   user: User | null;
   roles: string[];
-  permissions: any[];
+  permissions: { module: string; action: string; scope: string }[];
   isLoading: boolean;
 }
 

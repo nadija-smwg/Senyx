@@ -5,8 +5,8 @@ import { UnauthorizedError } from '../types/errors';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { db } from '../db/client';
-import { users, userRoles, roles, rolePermissions, permissions } from '../db/schema/identity';
-import { eq } from 'drizzle-orm';
+import { users, userRoles, roles, rolePermissions, permissions, sessions } from '../db/schema/identity';
+import { eq, desc } from 'drizzle-orm';
 import crypto from 'crypto';
 
 export async function withAuth(request: NextRequest): Promise<AuthContext> {
@@ -79,12 +79,19 @@ export async function withAuth(request: NextRequest): Promise<AuthContext> {
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'Unknown';
   const apiRoute = request.nextUrl.pathname;
 
+  const [activeSession] = await db
+    .select()
+    .from(sessions)
+    .where(eq(sessions.userId, user.id))
+    .orderBy(desc(sessions.startedAt))
+    .limit(1);
+
   return {
     userId: dbUser.id,
-    employeeId: dbUser.employeeId, // Assuming FK to employees isn't set up yet, will be null initially? Wait, employeeId is NOT NULL in schema. It's a string/uuid.
+    employeeId: dbUser.employeeId,
     roles: roleNames,
     permissions: perms,
-    sessionId: crypto.randomUUID(),
+    sessionId: activeSession ? activeSession.id : crypto.randomUUID(),
     deviceInfo,
     ip,
     apiRoute,

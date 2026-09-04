@@ -7,8 +7,13 @@ import { AuthContext, DeviceInfo } from '../types/context';
 import { UnauthorizedError, NotFoundError, AppError } from '../types/errors';
 import { withAudit } from '../lib/with-audit';
 
+type CookieStore = {
+  getAll: () => { name: string; value: string }[];
+  set: (name: string, value: string, options: any) => void;
+};
+
 export class AuthService {
-  private getSupabase(cookieStore: any) {
+  private getSupabase(cookieStore: CookieStore) {
     return createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -27,7 +32,7 @@ export class AuthService {
     );
   }
 
-  async login(email: string, password: string, deviceInfo: DeviceInfo, ip: string, cookieStore: any) {
+  async login(email: string, password: string, deviceInfo: DeviceInfo, ip: string, cookieStore: CookieStore) {
     const supabase = this.getSupabase(cookieStore);
 
     // 1. Authenticate against Supabase
@@ -94,7 +99,7 @@ export class AuthService {
     return { user: dbUser, session, token: data.session.access_token };
   }
 
-  async logout(ctx: AuthContext, cookieStore: any) {
+  async logout(ctx: AuthContext, cookieStore: CookieStore) {
     const supabase = this.getSupabase(cookieStore);
     await supabase.auth.signOut();
 

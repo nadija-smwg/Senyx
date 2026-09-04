@@ -1,11 +1,6 @@
-'use client';
-
 import * as React from 'react';
 import { Briefcase, CheckCircle2, Clock, FolderKanban, Plus } from 'lucide-react';
-import {
-  ProjectsTable,
-  type Project,
-} from '@/components/projects/projects-table';
+import { ProjectsTable, type Project } from '@/components/projects/projects-table';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -17,49 +12,27 @@ import {
 } from '@/components/ui/sheet';
 import { ProjectForm } from '@/components/projects/project-form';
 import { ProjectPageShell, ProjectStatCard } from '@/components/projects/project-shell';
+import { db } from '@/server/db/client';
+import { projects } from '@/server/db/schema/projects';
+import { accounts as accountsSchema } from '@/server/db/schema/crm';
+import { isNull, desc } from 'drizzle-orm';
 
-type Account = { id: string; name: string };
+export const dynamic = 'force-dynamic';
 
-export default function ProjectsPage() {
-  const [projects, setProjects] = React.useState<Project[]>([]);
-  const [accounts, setAccounts] = React.useState<Account[]>([]);
-  const [loading, setLoading] = React.useState(true);
+export default async function ProjectsPage() {
+  const [projectsData, accountsData] = await Promise.all([
+    db.select().from(projects).where(isNull(projects.deletedAt)).orderBy(desc(projects.createdAt)),
+    db.select({ id: accountsSchema.id, name: accountsSchema.name }).from(accountsSchema).where(isNull(accountsSchema.deletedAt)),
+  ]);
 
-  async function fetchAll() {
-    setLoading(true);
-    try {
-      const [pRes, aRes] = await Promise.all([
-        fetch('/api/projects?scope=all'),
-        fetch('/api/accounts'),
-      ]);
-      const pJson = await pRes.json();
-      const aJson = await aRes.json();
-      setProjects(Array.isArray(pJson.data) ? (pJson.data as Project[]) : []);
-      setAccounts(Array.isArray(aJson.data) ? (aJson.data as Account[]) : []);
-    } catch {
-      // Errors are surfaced inside the table itself.
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchAll();
-  }, []);
-
-  const stats = React.useMemo(() => {
-    const total = projects.length;
-    const active = projects.filter(p => p.status === 'active').length;
-    const planning = projects.filter(p => p.status === 'planning').length;
-    const onHold = projects.filter(p => p.status === 'on_hold').length;
-    const completed = projects.filter(p => p.status === 'completed').length;
-    const totalBudget = projects.reduce(
-      (s, p) => s + (parseFloat(String(p.budget || '0')) || 0),
-      0
-    );
-    return { total, active, planning, onHold, completed, totalBudget };
-  }, [projects]);
+  const stats = {
+    total: projectsData.length,
+    active: projectsData.filter(p => p.status === 'active').length,
+    planning: projectsData.filter(p => p.status === 'planning').length,
+    onHold: projectsData.filter(p => p.status === 'on_hold').length,
+    completed: projectsData.filter(p => p.status === 'completed').length,
+    totalBudget: projectsData.reduce((s, p) => s + (parseFloat(String(p.budget || '0')) || 0), 0),
+  };
 
   return (
     <ProjectPageShell
@@ -82,7 +55,7 @@ export default function ProjectsPage() {
               </SheetDescription>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-6 py-2 relative h-full">
-              <ProjectForm onSuccess={fetchAll} />
+              <ProjectForm />
             </div>
           </SheetContent>
         </Sheet>
@@ -119,10 +92,7 @@ export default function ProjectsPage() {
         </>
       }
     >
-      <ProjectsTable projects={projects} accounts={accounts} />
-      {loading && projects.length === 0 ? (
-        <div className="sr-only">Loading projects…</div>
-      ) : null}
+      <ProjectsTable projects={projectsData as unknown as Project[]} accounts={accountsData} />
     </ProjectPageShell>
   );
 }

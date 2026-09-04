@@ -405,3 +405,258 @@
   background-color: var(--primary-soft);
   color: var(--primary);
 }
+
+/* =========================================
+   ANIMATED APP BACKGROUND
+   ---------------------------------------------------------
+   Premium, calm, enterprise SaaS-style animated
+   background. Sits behind all dashboard content.
+   Pure CSS, GPU-only transforms (translate/scale),
+   respects prefers-reduced-motion.
+
+   Design principles:
+   - very low opacity so the white UI stays dominant
+   - large soft blobs that move along curved paths
+   - 4-stop keyframes (0/33/66/100) so motion never
+     loops linearly and never shows an animation seam
+   - prime-ish durations + negative delays so blobs
+     never re-sync visually
+   - blur(160px) for buttery edges
+   ========================================= */
+@layer utilities {
+  .senyx-app-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    /* Pure light base — content contrast remains strong */
+    background-color: #F8F9FC;
+    /* A whisper of corner tint only */
+    background-image:
+      radial-gradient(1200px 800px at 8% -12%, rgba(34, 191, 232, 0.035), transparent 60%),
+      radial-gradient(1000px 800px at 112% 8%, rgba(127, 77, 159, 0.030), transparent 60%),
+      radial-gradient(900px 700px at 50% 110%, rgba(34, 191, 232, 0.025), transparent 60%);
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    contain: strict;
+  }
+
+  .senyx-app-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    /* Very subtle grid texture, masked to fade at edges.
+       Kept extremely faint to avoid distraction. */
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.035) 1px, transparent 0);
+    background-size: 28px 28px;
+    opacity: 0.45;
+    mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0) 75%);
+    -webkit-mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0) 75%);
+  }
+
+  /* Anti-flicker overlay: a faint white veil over the
+     blobs to keep the canvas dominantly light and
+     hide any GPU compositing seams between blobs. */
+  .senyx-app-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: rgba(255, 255, 255, 0.55);
+    pointer-events: none;
+  }
+
+  .senyx-bg-blob {
+    position: absolute;
+    border-radius: 9999px;
+    /* Larger blur = softer edges, less perceptual motion */
+    filter: blur(160px);
+    opacity: 0.32;
+    /* Promote each blob to its own compositor layer */
+    will-change: transform;
+    transform: translate3d(0, 0, 0) scale(1);
+    backface-visibility: hidden;
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 1) 55%, rgba(0, 0, 0, 0) 100%);
+    mask-image: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 1) 55%, rgba(0, 0, 0, 0) 100%);
+  }
+
+  /* Each blob is oversized so its visible portion stays
+     inside the viewport at every keyframe position —
+     prevents visible edges as it drifts. */
+
+  .senyx-bg-blob--blue {
+    width: 75vmax;
+    height: 75vmax;
+    top: -32vmax;
+    left: -28vmax;
+    background: radial-gradient(circle at 50% 50%,
+        rgba(34, 191, 232, 0.45) 0%,
+        rgba(34, 191, 232, 0.18) 35%,
+        rgba(34, 191, 232, 0) 70%);
+    animation: senyx-drift-a 62s ease-in-out infinite;
+    animation-delay: -12s;
+  }
+
+  .senyx-bg-blob--purple {
+    width: 70vmax;
+    height: 70vmax;
+    top: -18vmax;
+    right: -30vmax;
+    background: radial-gradient(circle at 50% 50%,
+        rgba(127, 77, 159, 0.35) 0%,
+        rgba(127, 77, 159, 0.14) 35%,
+        rgba(127, 77, 159, 0) 70%);
+    animation: senyx-drift-b 71s ease-in-out infinite;
+    animation-delay: -28s;
+  }
+
+  .senyx-bg-blob--orange {
+    width: 65vmax;
+    height: 65vmax;
+    bottom: -28vmax;
+    left: -16vmax;
+    background: radial-gradient(circle at 50% 50%,
+        rgba(249, 160, 27, 0.30) 0%,
+        rgba(249, 160, 27, 0.12) 35%,
+        rgba(249, 160, 27, 0) 70%);
+    animation: senyx-drift-c 54s ease-in-out infinite;
+    animation-delay: -7s;
+  }
+
+  .senyx-bg-blob--red {
+    width: 62vmax;
+    height: 62vmax;
+    bottom: -24vmax;
+    right: -22vmax;
+    background: radial-gradient(circle at 50% 50%,
+        rgba(193, 23, 44, 0.22) 0%,
+        rgba(193, 23, 44, 0.09) 35%,
+        rgba(193, 23, 44, 0) 70%);
+    animation: senyx-drift-d 67s ease-in-out infinite;
+    animation-delay: -19s;
+  }
+
+  .senyx-bg-blob--cyan {
+    width: 60vmax;
+    height: 60vmax;
+    top: 24vmax;
+    left: 30vmax;
+    background: radial-gradient(circle at 50% 50%,
+        rgba(34, 191, 232, 0.22) 0%,
+        rgba(34, 191, 232, 0.09) 35%,
+        rgba(34, 191, 232, 0) 70%);
+    animation: senyx-drift-e 78s ease-in-out infinite;
+    animation-delay: -41s;
+  }
+}
+
+/* Multi-stop keyframes — each blob traces a curved
+   path through four waypoints. With ease-in-out on
+   every segment the motion feels organic and the
+   final frame returns to the start so there is no
+   visible animation seam. */
+@keyframes senyx-drift-a {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate3d(6vmax, -3vmax, 0) scale(1.04);
+  }
+
+  66% {
+    transform: translate3d(3vmax, 5vmax, 0) scale(0.98);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes senyx-drift-b {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate3d(-5vmax, 4vmax, 0) scale(0.97);
+  }
+
+  66% {
+    transform: translate3d(-2vmax, -4vmax, 0) scale(1.05);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes senyx-drift-c {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate3d(7vmax, 2vmax, 0) scale(1.03);
+  }
+
+  66% {
+    transform: translate3d(2vmax, -4vmax, 0) scale(0.99);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes senyx-drift-d {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate3d(-4vmax, -3vmax, 0) scale(1.04);
+  }
+
+  66% {
+    transform: translate3d(2vmax, -5vmax, 0) scale(0.98);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes senyx-drift-e {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate3d(-6vmax, 3vmax, 0) scale(0.98);
+  }
+
+  66% {
+    transform: translate3d(-3vmax, -2vmax, 0) scale(1.04);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+/* Respect users who prefer reduced motion.
+   Replace the animated blobs with a calm static
+   gradient composition that still feels premium. */
+@media (prefers-reduced-motion: reduce) {
+  .senyx-app-bg::after {
+    background-color: rgba(255, 255, 255, 0.65);
+  }
+
+  .senyx-bg-blob {
+    animation: none !important;
+    transform: none !important;
+  }
+}
