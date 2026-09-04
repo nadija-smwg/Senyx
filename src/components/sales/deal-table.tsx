@@ -1,165 +1,224 @@
 'use client';
+
 import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { DealForm } from '@/components/sales/deal-form';
-import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-  getPaginationRowModel,
-  getFilteredRowModel,
-} from '@tanstack/react-table';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { format } from 'date-fns';
+import { Pencil } from 'lucide-react';
+import {
+  CrmTable,
+  CrmStageBadge,
+  CrmDealStatusBadge,
+  CrmHealthBadge,
+  CrmSearchBar,
+  CrmPagination,
+  CrmEmptyState,
+  CrmToolbar,
+  CrmSection,
+  type CrmTableColumn,
+} from '@/components/crm/crm-shell';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { CurrencyDisplay } from '@/components/ui/currency-display';
+import { DealForm } from '@/components/sales/deal-form';
 
-export function DealTable({ deals }: { deals: any[] }) {
-  const [globalFilter, setGlobalFilter] = useState('');
+type Deal = {
+  id: string;
+  name: string;
+  accountId: string;
+  amount: string | number;
+  currency: string;
+  stage: string;
+  probability: string | number;
+  expectedCloseDate?: string | null;
+  source?: string | null;
+  status: string;
+  health?: {
+    daysInStage?: number;
+    riskFlag?: boolean;
+    history?: Array<{ id?: string; fromStage?: string | null; toStage?: string }>;
+  };
+};
 
-  const columns = [
+export function DealTable({ deals }: { deals: Deal[] }) {
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+
+  const q = search.trim().toLowerCase();
+  const filtered = deals.filter(d =>
+    !q ||
+    d.name?.toLowerCase().includes(q) ||
+    d.stage?.toLowerCase().includes(q) ||
+    d.source?.toLowerCase().includes(q)
+  );
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const rows = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  const columns: CrmTableColumn<Deal>[] = [
     {
-      accessorKey: 'name',
-      header: 'Deal Name',
-      cell: ({ row }: any) => {
-        const deal = row.original;
-        return (
-          <Sheet>
-            <SheetTrigger asChild>
-              <button className="font-medium text-primary hover:underline bg-transparent border-none cursor-pointer text-left">
-                {row.getValue('name')}
-              </button>
-            </SheetTrigger>
-            <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
-              <SheetHeader className="mb-6">
-                <SheetTitle className="text-2xl font-bold font-heading">Edit Deal</SheetTitle>
-              </SheetHeader>
-              <DealForm 
-                initialData={{
-                  id: deal.id,
-                  name: deal.name,
-                  accountId: deal.accountId,
-                  amount: deal.amount,
-                  currency: deal.currency,
-                  expectedCloseDate: deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toISOString().split('T')[0] : '',
-                  source: deal.source || '',
-                }} 
-              />
-            </SheetContent>
-          </Sheet>
-        );
-      }
+      id: 'name',
+      header: 'Deal',
+      cell: (d: Deal) => (
+        <div className="min-w-0">
+          <div className="text-sm font-semibold text-gray-900 truncate">{d.name}</div>
+          <div className="text-[11px] text-gray-400 truncate">
+            {d.source ? `Source · ${d.source}` : '—'}
+          </div>
+        </div>
+      ),
     },
     {
-      accessorKey: 'stage',
+      id: 'stage',
       header: 'Stage',
-      cell: ({ row }: any) => <span className="capitalize">{row.getValue('stage')}</span>
+      cell: (d: Deal) => <CrmStageBadge stage={d.stage} />,
+      width: 'w-[150px]',
     },
     {
-      accessorKey: 'amount',
+      id: 'amount',
       header: 'Amount',
-      cell: ({ row }: any) => new Intl.NumberFormat('en-US', { style: 'currency', currency: row.original.currency || 'USD' }).format(row.getValue('amount'))
+      align: 'right',
+      cell: (d: Deal) => (
+        <CurrencyDisplay
+          amount={parseFloat(String(d.amount || '0')) || 0}
+          className="!text-[14px]"
+        />
+      ),
+      width: 'w-[160px]',
     },
     {
-      accessorKey: 'probability',
+      id: 'probability',
       header: 'Probability',
-      cell: ({ row }: any) => `${row.getValue('probability')}%`
+      align: 'right',
+      cell: (d: Deal) => {
+        const p = Math.round(parseFloat(String(d.probability || '0')) || 0);
+        return (
+          <div className="inline-flex flex-col items-end gap-1 min-w-[80px]">
+            <span className="text-xs font-semibold text-gray-700 tabular-nums">{p}%</span>
+            <div className="h-1 w-16 rounded-full bg-gray-100 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-[#F15A22]"
+                style={{ width: `${Math.min(100, Math.max(0, p))}%` }}
+              />
+            </div>
+          </div>
+        );
+      },
+      width: 'w-[120px]',
+      hideOn: 'sm',
     },
     {
-      accessorKey: 'expectedCloseDate',
+      id: 'closeDate',
       header: 'Close Date',
-      cell: ({ row }: any) => row.getValue('expectedCloseDate') ? format(new Date(row.getValue('expectedCloseDate')), 'MMM d, yyyy') : '—'
+      cell: (d: Deal) =>
+        d.expectedCloseDate ? (
+          <span className="text-sm text-gray-700">
+            {format(new Date(d.expectedCloseDate), 'MMM d, yyyy')}
+          </span>
+        ) : (
+          <span className="text-xs text-gray-400">—</span>
+        ),
+      hideOn: 'md',
     },
     {
-      accessorKey: 'health',
-      header: 'Health',
-      cell: ({ row }: any) => {
-        const risk = row.original.health?.riskFlag;
-        return risk ? <Badge variant="negative" className="font-semibold tracking-wide uppercase">At Risk</Badge> : <Badge variant="positive" className="font-semibold tracking-wide uppercase">Healthy</Badge>;
-      }
-    }
+      id: 'status',
+      header: 'Status',
+      cell: (d: Deal) => (
+        <div className="flex flex-col items-start gap-1">
+          <CrmDealStatusBadge status={d.status} />
+          <CrmHealthBadge risk={d.health?.riskFlag} className="text-[9px] px-1.5 py-0" />
+        </div>
+      ),
+      width: 'w-[140px]',
+    },
+    {
+      id: 'actions',
+      header: <span className="sr-only">Actions</span>,
+      align: 'right',
+      width: 'w-[80px]',
+      cell: (d: Deal) => (
+        <DealRowSheet deal={d} />
+      ),
+    },
   ];
 
-  const table = useReactTable({
-    data: deals,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    state: {
-      globalFilter,
-    },
-    onGlobalFilterChange: setGlobalFilter,
-  });
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <Input 
-          placeholder="Search deals..." 
-          value={globalFilter ?? ''}
-          onChange={e => setGlobalFilter(e.target.value)}
-          className="max-w-sm"
+    <div className="space-y-3">
+      <CrmSection
+        actions={
+          <CrmToolbar>
+            <CrmSearchBar
+              value={search}
+              onChange={v => {
+                setSearch(v);
+                setPage(1);
+              }}
+              placeholder="Search deals…"
+            />
+          </CrmToolbar>
+        }
+      >
+        <CrmTable
+          columns={columns}
+          rows={rows}
+          rowKey={r => r.id}
+          emptyState={
+            <CrmEmptyState
+              icon={<Pencil />}
+              title={q ? 'No matching deals' : 'No deals yet'}
+              description={q ? 'Try a different search term.' : 'Create your first deal to populate the pipeline.'}
+            />
+          }
         />
-      </div>
-
-      <div className="border rounded-md bg-card overflow-auto max-h-[calc(100vh-250px)]">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map(headerGroup => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.length === 0 ? (
-              <TableRow><TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">No deals found.</TableCell></TableRow>
-            ) : (
-              table.getRowModel().rows.map(row => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map(cell => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Previous
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next
-        </Button>
-      </div>
+        {totalPages > 1 && (
+          <div className="px-4 py-3 border-t border-gray-100">
+            <CrmPagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
+          </div>
+        )}
+      </CrmSection>
     </div>
+  );
+}
+
+function DealRowSheet({ deal }: { deal: Deal }) {
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex items-center justify-center h-7 w-7 rounded-md text-gray-500 hover:text-[#F15A22] hover:bg-[#FEF0EB] border border-gray-200 hover:border-[#FBD9C9] transition-colors"
+          aria-label="Edit deal"
+        >
+          <Pencil className="w-3.5 h-3.5" />
+        </button>
+      </SheetTrigger>
+      <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
+        <SheetHeader className="mb-4">
+          <SheetTitle>Edit Deal</SheetTitle>
+          <SheetDescription>
+            Update details for <span className="font-semibold">{deal.name}</span>.
+          </SheetDescription>
+        </SheetHeader>
+        <DealForm
+          initialData={{
+            id: deal.id,
+            name: deal.name,
+            accountId: deal.accountId,
+            amount: String(deal.amount ?? ''),
+            currency: deal.currency,
+            expectedCloseDate: deal.expectedCloseDate
+              ? new Date(deal.expectedCloseDate).toISOString().split('T')[0]
+              : '',
+            source: deal.source || '',
+          }}
+        />
+      </SheetContent>
+    </Sheet>
   );
 }

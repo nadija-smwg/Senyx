@@ -1,13 +1,15 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { headers } from 'next/headers';
 import { ProjectHeaderActions } from '@/components/projects/project-header-actions';
-import { LayoutDashboard, Link2, Users, Flag, DollarSign, Clock, AlertTriangle, FileText } from 'lucide-react';
 import { db } from '@/server/db/client';
 import { projects } from '@/server/db/schema/projects';
 import { eq } from 'drizzle-orm';
+import {
+  ProjectTabs,
+  ProjectStatusBadge,
+  type ProjectTab,
+} from '@/components/projects/project-shell';
 
 export const metadata: Metadata = {
   title: 'Project Detail',
@@ -17,7 +19,7 @@ async function getProject(id: string) {
   try {
     const [project] = await db.select().from(projects).where(eq(projects.id, id));
     return project;
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -36,54 +38,52 @@ export default async function ProjectLayout({
     notFound();
   }
 
-  const navItems = [
-    { name: 'Overview',   href: `/projects/${project.id}`,            icon: LayoutDashboard },
-    { name: 'Links',      href: `/projects/${project.id}/links`,       icon: Link2 },
-    { name: 'Team',       href: `/projects/${project.id}/team`,        icon: Users },
-    { name: 'Milestones', href: `/projects/${project.id}/milestones`,  icon: Flag },
-    { name: 'Payments',   href: `/projects/${project.id}/payments`,    icon: DollarSign },
-    { name: 'Time',       href: `/projects/${project.id}/time`,        icon: Clock },
-    { name: 'Risks',      href: `/projects/${project.id}/risks`,       icon: AlertTriangle },
-    { name: 'Documents',  href: `/projects/${project.id}/documents`,   icon: FileText },
+  // Detect the active sub-route from the request URL so the tab nav can
+  // highlight it. Falls back to the Overview tab.
+  const headerList = await headers();
+  const rawPath =
+    headerList.get('x-invoke-path') ||
+    headerList.get('next-url') ||
+    headerList.get('x-pathname') ||
+    `/projects/${project.id}`;
+  const normalizedPath: string = rawPath.split('?')[0] ?? `/projects/${project.id}`;
+
+  const navItems: ProjectTab[] = [
+    { name: 'Overview', href: `/projects/${project.id}`, iconName: 'overview' },
+    { name: 'Links', href: `/projects/${project.id}/links`, iconName: 'links' },
+    { name: 'Team', href: `/projects/${project.id}/team`, iconName: 'team' },
+    { name: 'Milestones', href: `/projects/${project.id}/milestones`, iconName: 'milestones' },
+    { name: 'Payments', href: `/projects/${project.id}/payments`, iconName: 'payments' },
+    { name: 'Time', href: `/projects/${project.id}/time`, iconName: 'time' },
+    { name: 'Risks', href: `/projects/${project.id}/risks`, iconName: 'risks' },
+    { name: 'Documents', href: `/projects/${project.id}/documents`, iconName: 'documents' },
   ];
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2">
-            <h2 className="text-3xl font-bold tracking-tight">{project.name}</h2>
-            <Badge variant="outline">{project.code}</Badge>
-            <Badge className="capitalize">{project.status.replace('_', ' ')}</Badge>
+    <div className="space-y-4">
+      {/* Compact title bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[10px] font-black tracking-[0.2em] uppercase text-[#047857]">
+            Project
+          </p>
+          <div className="mt-1 flex items-center gap-2 flex-wrap">
+            <h2 className="text-2xl font-extrabold font-heading text-gray-900 tracking-tight truncate">
+              {project.name}
+            </h2>
+            <span className="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-mono font-semibold bg-[#ECFDF5] text-[#047857] border border-[#A7F3D0]">
+              {project.code}
+            </span>
+            <ProjectStatusBadge status={project.status} />
           </div>
         </div>
         <ProjectHeaderActions projectId={project.id} />
       </div>
 
-      {/* Tabs Navigation */}
-      <div className="flex overflow-x-auto border-b border-border hide-scrollbar">
-        <div className="flex space-x-1 pb-px">
-          {navItems.map((item) => (
-            <Button
-              key={item.name}
-              asChild
-              variant="ghost"
-              className={`flex items-center gap-2 rounded-none border-b-2 px-4 py-2 font-medium ${
-                'border-transparent text-muted-foreground hover:border-border hover:text-foreground'
-              }`}
-            >
-              <Link href={item.href}>
-                <item.icon className="h-4 w-4" />
-                {item.name}
-              </Link>
-            </Button>
-          ))}
-        </div>
-      </div>
+      {/* Polished tab nav */}
+      <ProjectTabs tabs={navItems} currentPath={normalizedPath} />
 
-      <div className="pt-4">
-        {children}
-      </div>
+      <div>{children}</div>
     </div>
   );
 }

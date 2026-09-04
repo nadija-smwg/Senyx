@@ -9,7 +9,7 @@
   /* Sameeha (Blue) */
   --color-brand-blue-light: #22BFE8;
   --color-brand-blue-dark: #1A6DB6;
-  
+
   /* Eranda (Purple) */
   --color-brand-purple-light: #7F4D9F;
   --color-brand-purple-mid: #3E308E;
@@ -38,7 +38,7 @@
   --color-destructive-foreground: #FFFFFF;
   --color-warning: var(--color-brand-orange-mid);
   --color-warning-foreground: #FFFFFF;
-  
+
   --color-muted: #F1F3F5;
   --color-muted-foreground: #6B7280;
   --color-border: #E5E7EB;
@@ -47,7 +47,8 @@
   --color-background: #F8F9FC;
   --color-foreground: var(--color-brand-ash-dark);
 
-  --color-positive: #059669; /* Keeping a standard green for positive financial indicators */
+  --color-positive: #059669;
+  /* Keeping a standard green for positive financial indicators */
   --color-negative: var(--color-brand-red-mid);
 
   --font-sans: var(--font-inter), sans-serif;
@@ -56,19 +57,31 @@
 }
 
 :root {
+  /* === CANVAS === */
   --background: #F8F9FC;
-  --foreground: #3B3B3B; /* Ash Dark */
+  --foreground: #3B3B3B;
+  /* Ash Dark */
 
+  /* === SURFACES === */
   --card: #FFFFFF;
   --card-foreground: #3B3B3B;
   --popover: #FFFFFF;
   --popover-foreground: #3B3B3B;
 
-  --primary: #1A6DB6; /* Blue Dark */
+  /* === BRAND === */
+  --primary: #1A6DB6;
+  /* Blue Dark */
   --primary-foreground: #FFFFFF;
+  --primary-hover: #155A96;
+  --primary-active: #114B7D;
+  --primary-soft: #F0F9FF;
+  /* Light blue tint */
+  --primary-softer: #E0F2FE;
 
+  /* === NEUTRAL === */
   --secondary: #F1F3F5;
   --secondary-foreground: #3C3535;
+  --secondary-hover: #E5E7EB;
 
   --muted: #F1F3F5;
   --muted-foreground: #6B7280;
@@ -76,31 +89,85 @@
   --accent: #F1F3F5;
   --accent-foreground: #1A6DB6;
 
-  --destructive: #C1172C; /* Red Mid */
+  /* === STATUS === */
+  --destructive: #C1172C;
+  /* Red Mid */
   --destructive-foreground: #FFFFFF;
+  --destructive-soft: #FEF2F2;
 
+  --success: #059669;
+  --success-foreground: #FFFFFF;
+  --success-soft: #ECFDF5;
+
+  --warning: #F9A01B;
+  --warning-foreground: #FFFFFF;
+  --warning-soft: #FFFBEB;
+
+  /* === LINES === */
   --border: #E5E7EB;
+  --border-strong: #D1D5DB;
   --input: #FFFFFF;
-  --ring: #22BFE8; /* Blue Light */
+  --ring: #22BFE8;
+  /* Blue Light */
+  --ring-soft: rgba(34, 191, 232, 0.18);
 
-  /* Charts */
-  --chart-1: #22BFE8; /* Blue */
-  --chart-2: #7F4D9F; /* Purple */
-  --chart-3: #F9A01B; /* Orange */
-  --chart-4: #EC4C49; /* Red */
-  --chart-5: #3E308E; /* Purple Mid */
+  /* === CHARTS === */
+  --chart-1: #22BFE8;
+  /* Blue */
+  --chart-2: #7F4D9F;
+  /* Purple */
+  --chart-3: #F9A01B;
+  /* Orange */
+  --chart-4: #EC4C49;
+  /* Red */
+  --chart-5: #3E308E;
+  /* Purple Mid */
 
-  --radius: 0.75rem;
+  /* === RADIUS SCALE (standardized) === */
+  --radius-sm: 6px;
+  /* xs/sm primitives */
+  --radius: 10px;
+  /* default primitives */
+  --radius-md: 10px;
+  /* alias */
+  --radius-lg: 14px;
+  /* cards, dialogs, sheets */
+  --radius-xl: 18px;
+  /* page hero headers only */
+  --radius-2xl: 22px;
+  /* rare, very large surfaces */
+  --radius-pill: 999px;
+  /* pills / status dots */
 
-  /* Sidebar */
+  /* === SHADOW SCALE (standardized) === */
+  --shadow-xs: 0 1px 1px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 1px rgba(15, 23, 42, 0.03);
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.05);
+  --shadow-popover: 0 4px 16px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-floating: 0 12px 32px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(15, 23, 42, 0.05);
+  --shadow-topbar: 0 1px 0 rgba(15, 23, 42, 0.04);
+  --shadow-sidebar: 1px 0 0 rgba(15, 23, 42, 0.04);
+
+  /* === SIDEBAR === */
   --sidebar: #FFFFFF;
   --sidebar-foreground: #3C3535;
   --sidebar-primary: #1A6DB6;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F0F9FF; /* Light blue tint */
+  --sidebar-accent: #F0F9FF;
+  /* Light blue tint */
   --sidebar-accent-foreground: #1A6DB6;
   --sidebar-border: #E5E7EB;
   --sidebar-ring: #22BFE8;
+
+  /* === TOPBAR === */
+  --topbar: rgba(255, 255, 255, 0.82);
+  --topbar-foreground: #1F2937;
+  --topbar-border: rgba(15, 23, 42, 0.06);
+
+  /* === SPACING & SIZING === */
+  --sidebar-width: 256px;
+  --topbar-height: 64px;
+  --content-max-width: 1440px;
 }
 
 @theme inline {
@@ -135,11 +202,12 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
 }
 
 /* =========================================
@@ -149,17 +217,106 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
-    background-color: #F8F9FC;
+    background-color: var(--background);
     color: var(--color-brand-ash-dark);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  html { @apply font-sans; }
-  h1, h2, h3, h4, h5, h6 {
+
+  html {
+    @apply font-sans;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-heading);
     font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  /* Standardized focus ring across all interactive elements */
+  :where(button, a, [role="button"], input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* =========================================
+   SENYX UTILITIES
+   ========================================= */
+@layer utilities {
+
+  /* === SHELL === */
+  .senyx-shell {
+    @apply flex h-screen w-full overflow-hidden font-sans;
+    background-color: var(--background);
+  }
+
+  .senyx-main {
+    @apply flex-1 flex flex-col min-w-0;
+  }
+
+  .senyx-content {
+    @apply flex-1 overflow-auto;
+    padding: 24px;
+  }
+
+  @media (max-width: 768px) {
+    .senyx-content {
+      padding: 16px;
+    }
+  }
+
+  .senyx-content-inner {
+    @apply w-full mx-auto;
+    max-width: var(--content-max-width);
+  }
+
+  /* === TYPOGRAPHY === */
+  .text-eyebrow {
+    @apply text-[10px] font-bold uppercase tracking-[0.15em];
+  }
+
+  .text-pretitle {
+    @apply text-[11px] font-bold uppercase tracking-[0.18em];
+  }
+
+  .text-data {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* === SHADOWS === */
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-popover {
+    box-shadow: var(--shadow-popover);
+  }
+
+  .shadow-floating {
+    box-shadow: var(--shadow-floating);
+  }
+
+  .shadow-topbar {
+    box-shadow: var(--shadow-topbar);
+  }
+
+  .shadow-sidebar {
+    box-shadow: var(--shadow-sidebar);
+  }
+
+  /* === STATUS DOTS === */
+  .senyx-status-dot {
+    @apply inline-block w-2 h-2 rounded-full;
   }
 }
 
@@ -169,12 +326,15 @@
 .bg-gradient-blue {
   background: linear-gradient(135deg, #22BFE8 0%, #1A6DB6 100%);
 }
+
 .bg-gradient-purple {
   background: linear-gradient(135deg, #7F4D9F 0%, #3E308E 50%, #25215F 100%);
 }
+
 .bg-gradient-orange {
   background: linear-gradient(135deg, #F9A01B 0%, #F15A22 50%, #D3362A 100%);
 }
+
 .bg-gradient-red {
   background: linear-gradient(135deg, #EC4C49 0%, #C1172C 50%, #6B0002 100%);
 }
@@ -189,26 +349,59 @@
 /* =========================================
    STATUS COLORS
    ========================================= */
-.text-positive { color: #059669; }
-.text-negative { color: #C1172C; }
-.text-warning  { color: #F9A01B; }
+.text-positive {
+  color: var(--success);
+}
+
+.text-negative {
+  color: var(--destructive);
+}
+
+.text-warning {
+  color: var(--warning);
+}
+
+.bg-positive-soft {
+  background-color: var(--success-soft);
+}
+
+.bg-negative-soft {
+  background-color: var(--destructive-soft);
+}
+
+.bg-warning-soft {
+  background-color: var(--warning-soft);
+}
+
+.bg-primary-soft {
+  background-color: var(--primary-soft);
+}
 
 /* =========================================
    SCROLLBAR
    ========================================= */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 ::-webkit-scrollbar-thumb {
   background: #D1D5DB;
   border-radius: 99px;
 }
-::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
 
 /* =========================================
-   SIDEBAR ACTIVE
+   SIDEBAR ACTIVE (utility)
    ========================================= */
 .sidebar-item-active {
-  background-color: #F0F9FF;
-  color: #1A6DB6;
-  border-left: 3px solid #1A6DB6;
+  background-color: var(--primary-soft);
+  color: var(--primary);
 }

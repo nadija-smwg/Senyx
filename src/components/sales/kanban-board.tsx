@@ -18,15 +18,33 @@ import {
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent } from '@/components/ui/card';
-import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import Link from 'next/link';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { DealForm } from '@/components/sales/deal-form';
+import { CurrencyDisplay } from '@/components/ui/currency-display';
+import { AlertTriangle, GripVertical } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { DEAL_STAGES, DEAL_STAGE_META, type DealStage } from '@/components/crm/crm-shell';
 
-const STAGES = ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost'];
+type Deal = {
+  id: string;
+  name: string;
+  accountId: string;
+  amount: string | number;
+  currency: string;
+  stage: string;
+  probability: string | number;
+  expectedCloseDate?: string | null;
+  source?: string | null;
+  status?: string;
+  health?: {
+    daysInStage?: number;
+    riskFlag?: boolean;
+    history?: Array<{ id?: string; fromStage?: string | null; toStage?: string }>;
+  };
+};
 
-function DealCard({ deal }: { deal: any }) {
+function DealCard({ deal }: { deal: Deal }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: deal.id,
     data: { type: 'Deal', deal },
@@ -36,6 +54,9 @@ function DealCard({ deal }: { deal: any }) {
     transform: CSS.Transform.toString(transform),
     transition,
   };
+  // Fallback to the "lead" meta entry when an unknown stage is encountered.
+  const stageMeta = DEAL_STAGE_META[(DEAL_STAGES as readonly string[]).includes(deal.stage) ? (deal.stage as DealStage) : 'lead'];
+  const prob = Math.round(parseFloat(String(deal.probability || '0')) || 0);
 
   return (
     <div
@@ -43,41 +64,82 @@ function DealCard({ deal }: { deal: any }) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`mb-3 touch-none ${isDragging ? 'opacity-50' : 'opacity-100'}`}
+      className={cn('mb-3 touch-none group', isDragging ? 'opacity-40' : 'opacity-100')}
     >
-      <Card className="cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors">
-        <CardContent className="p-3">
-          <Sheet>
-            <SheetTrigger asChild>
-              <button className="font-semibold text-sm hover:underline text-left" onClick={(e) => e.stopPropagation()}>
-                {deal.name}
-              </button>
-            </SheetTrigger>
-            <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto" onPointerDown={(e) => e.stopPropagation()}>
-              <SheetHeader className="mb-6">
-                <SheetTitle className="text-2xl font-bold font-heading">Edit Deal</SheetTitle>
-              </SheetHeader>
-              <DealForm 
-                initialData={{
-                  id: deal.id,
-                  name: deal.name,
-                  accountId: deal.accountId,
-                  amount: deal.amount,
-                  currency: deal.currency,
-                  expectedCloseDate: deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toISOString().split('T')[0] : '',
-                  source: deal.source || '',
-                }} 
-              />
-            </SheetContent>
-          </Sheet>
-          <div className="text-xs text-muted-foreground mt-1 mb-2">
-            Amount: {new Intl.NumberFormat('en-US', { style: 'currency', currency: deal.currency || 'USD' }).format(deal.amount)}
+      <Card className="cursor-grab active:cursor-grabbing hover:border-[#FBD9C9] hover:shadow-[0_6px_18px_rgba(241,90,34,0.10)] transition-all">
+        <CardContent className="p-3.5 space-y-2">
+          {/* Drag handle + name */}
+          <div className="flex items-start gap-2">
+            <GripVertical className="w-3.5 h-3.5 text-gray-300 mt-0.5 shrink-0 group-hover:text-[#F15A22] transition-colors" />
+            <div className="min-w-0 flex-1">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <button
+                    className="text-sm font-semibold text-gray-900 hover:text-[#F15A22] text-left leading-snug w-full"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {deal.name}
+                  </button>
+                </SheetTrigger>
+                <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto" onPointerDown={(e) => e.stopPropagation()}>
+                  <SheetHeader className="mb-4">
+                    <SheetTitle>Edit Deal</SheetTitle>
+                    <SheetDescription>
+                      Update details for <span className="font-semibold">{deal.name}</span>.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <DealForm
+                    initialData={{
+                      id: deal.id,
+                      name: deal.name,
+                      accountId: deal.accountId,
+                      amount: String(deal.amount ?? ''),
+                      currency: deal.currency,
+                      expectedCloseDate: deal.expectedCloseDate
+                        ? new Date(deal.expectedCloseDate).toISOString().split('T')[0]
+                        : '',
+                      source: deal.source || '',
+                    }}
+                  />
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
-          <div className="flex justify-between items-center text-xs">
-            <Badge variant="secondary" className="text-[10px]">{deal.probability}% Win</Badge>
-            <span className={deal.health?.riskFlag ? 'text-destructive font-medium' : 'text-muted-foreground'}>
-              {deal.health?.daysInStage || 0}d in stage
+
+          {/* Amount */}
+          <div className="flex items-center justify-between gap-2 pl-5">
+            <CurrencyDisplay amount={parseFloat(String(deal.amount || '0')) || 0} className="!text-[15px]" />
+            {deal.health?.riskFlag && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-rose-600">
+                <AlertTriangle className="w-3 h-3" />
+                At risk
+              </span>
+            )}
+          </div>
+
+          {/* Footer: probability, days in stage */}
+          <div className="flex items-center justify-between gap-2 pl-5 pt-1 border-t border-gray-100">
+            <Badge variant="secondary" className="text-[10px]">
+              {prob}% · Win
+            </Badge>
+            <span
+              className={cn(
+                'text-[10px] tabular-nums',
+                deal.health?.riskFlag ? 'text-rose-600 font-semibold' : 'text-gray-400'
+              )}
+            >
+              {deal.health?.daysInStage ?? 0}d in stage
             </span>
+          </div>
+
+          {/* Progress bar for probability */}
+          <div className="pl-5">
+            <div className="h-1 rounded-full bg-gray-100 overflow-hidden">
+              <div
+                className={cn('h-full rounded-full transition-all', stageMeta.dot)}
+                style={{ width: `${Math.min(100, Math.max(0, prob))}%` }}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -85,34 +147,58 @@ function DealCard({ deal }: { deal: any }) {
   );
 }
 
-function Column({ stage, deals }: { stage: string, deals: any[] }) {
-  const totalAmount = deals.reduce((sum, d) => sum + parseFloat(d.amount), 0);
-  
+function Column({ stage, deals }: { stage: DealStage; deals: Deal[] }) {
+  const totalAmount = deals.reduce((sum, d) => sum + (parseFloat(String(d.amount)) || 0), 0);
+  const meta = DEAL_STAGE_META[stage];
+
   return (
-    <div className="flex flex-col flex-shrink-0 w-80 bg-muted/40 rounded-lg p-3">
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="font-semibold capitalize">{stage}</h3>
-        <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
-          {deals.length}
-        </span>
+    <div className="flex flex-col flex-shrink-0 w-80 bg-white rounded-2xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+      {/* Header */}
+      <div className="px-3.5 pt-3 pb-2.5 border-b border-gray-100 bg-gray-50/60">
+        <div className="flex items-center justify-between mb-1">
+          <span
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border',
+              meta.bg,
+              meta.fg,
+              meta.border
+            )}
+          >
+            <span className={cn('w-1.5 h-1.5 rounded-full', meta.dot)} />
+            {meta.label}
+          </span>
+          <span className="text-xs font-semibold text-gray-700 tabular-nums">{deals.length}</span>
+        </div>
+        <CurrencyDisplay
+          amount={totalAmount}
+          className="!text-[13px]"
+        />
       </div>
-      <div className="text-xs text-muted-foreground mb-4">
-        {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(totalAmount)}
-      </div>
-      
-      <div className="flex-1 overflow-y-auto min-h-[150px]">
+
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto p-2.5 min-h-[160px] bg-gray-50/30">
         <SortableContext items={deals.map(d => d.id)} strategy={verticalListSortingStrategy}>
-          {deals.map(deal => (
-            <DealCard key={deal.id} deal={deal} />
-          ))}
+          {deals.length === 0 ? (
+            <div className="h-[120px] flex items-center justify-center text-[11px] text-gray-400 border border-dashed border-gray-200 rounded-lg">
+              Drop deals here
+            </div>
+          ) : (
+            deals.map(deal => <DealCard key={deal.id} deal={deal} />)
+          )}
         </SortableContext>
       </div>
     </div>
   );
 }
 
-export function KanbanBoard({ deals, onStageChange }: { deals: any[], onStageChange: (dealId: string, newStage: string) => void }) {
-  const [activeDeal, setActiveDeal] = useState<any | null>(null);
+export function KanbanBoard({
+  deals,
+  onStageChange,
+}: {
+  deals: Deal[];
+  onStageChange: (dealId: string, newStage: string) => void;
+}) {
+  const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -123,30 +209,24 @@ export function KanbanBoard({ deals, onStageChange }: { deals: any[], onStageCha
     useSensor(KeyboardSensor)
   );
 
-  const handleDragStart = (event: any) => {
+  const handleDragStart = (event: { active: { id: string | number } }) => {
     const { active } = event;
     const deal = deals.find(d => d.id === active.id);
     if (deal) setActiveDeal(deal);
   };
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: { active: { id: string | number }; over: { id: string | number } | null }) => {
     setActiveDeal(null);
     const { active, over } = event;
     if (!over) return;
 
-    // Check if dropped over another deal
     const activeDeal = deals.find(d => d.id === active.id);
     const overDeal = deals.find(d => d.id === over.id);
-    
+
     let newStage = activeDeal?.stage;
 
     if (overDeal) {
       newStage = overDeal.stage;
-    } else {
-      // It might be dropped on a column (if we registered columns as droppable)
-      // For simplicity in SortableContext, we rely on dropping on other deals.
-      // If a column is empty, we would need a droppable area for it.
-      // Let's implement full columns as droppable if needed, but for now we just find the closest.
     }
 
     if (newStage && activeDeal && activeDeal.stage !== newStage) {
@@ -154,10 +234,9 @@ export function KanbanBoard({ deals, onStageChange }: { deals: any[], onStageCha
     }
   };
 
-  // Group deals by stage
-  const columnsData = STAGES.map(stage => ({
+  const columnsData = DEAL_STAGES.map(stage => ({
     stage,
-    deals: deals.filter(d => d.stage === stage)
+    deals: deals.filter(d => d.stage === stage),
   }));
 
   const dropAnimation = {
@@ -165,21 +244,23 @@ export function KanbanBoard({ deals, onStageChange }: { deals: any[], onStageCha
   };
 
   return (
-    <DndContext 
-      sensors={sensors} 
-      collisionDetection={closestCorners} 
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCorners}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex space-x-4 overflow-x-auto pb-4 h-[calc(100vh-280px)]">
+      <div className="flex gap-3 overflow-x-auto pb-4 snap-x">
         {columnsData.map(col => (
-          <Column key={col.stage} stage={col.stage} deals={col.deals} />
+          <div key={col.stage} className="snap-start">
+            <Column stage={col.stage} deals={col.deals} />
+          </div>
         ))}
       </div>
-      
+
       <DragOverlay dropAnimation={dropAnimation}>
         {activeDeal ? (
-          <div className="w-80">
+          <div className="w-80 rotate-2">
             <DealCard deal={activeDeal} />
           </div>
         ) : null}

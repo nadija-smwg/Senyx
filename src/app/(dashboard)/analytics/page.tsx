@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { FilterBuilder, FilterGroup } from '@/components/data/filter-builder';
 import { SavedFilters } from '@/components/data/saved-filters';
-import { BarChartWidget } from '@/components/charts/bar-chart-widget';
-import { LineChartWidget } from '@/components/charts/line-chart-widget';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { PageHeader } from '@/components/layout/page-header';
+import { LoadingState, EmptyState, SectionTitle } from '@/components/shared/page-states';
 
 const TABS = ['Sales', 'Projects', 'Finance', 'HR', 'Activity'];
 
@@ -63,73 +63,80 @@ export default function AnalyticsDashboard() {
 
   const getFieldsForModule = () => {
     if (activeTab === 'Sales') return [
-      { label: 'Stage', value: 'stage', type: 'select' as const, options: [{label: 'Lead', value: 'lead'}, {label: 'Qualified', value: 'qualified'}, {label: 'Proposal', value: 'proposal'}, {label: 'Negotiation', value: 'negotiation'}] }, 
-      { label: 'Status', value: 'status', type: 'select' as const, options: [{label: 'Open', value: 'open'}, {label: 'Won', value: 'won'}, {label: 'Lost', value: 'lost'}] },
+      { label: 'Stage', value: 'stage', type: 'select' as const, options: [{ label: 'Lead', value: 'lead' }, { label: 'Qualified', value: 'qualified' }, { label: 'Proposal', value: 'proposal' }, { label: 'Negotiation', value: 'negotiation' }] },
+      { label: 'Status', value: 'status', type: 'select' as const, options: [{ label: 'Open', value: 'open' }, { label: 'Won', value: 'won' }, { label: 'Lost', value: 'lost' }] },
       { label: 'Amount', value: 'amount', type: 'text' as const }
     ];
     if (activeTab === 'Finance') return [
-      { label: 'Status', value: 'status', type: 'select' as const, options: [{label: 'Draft', value: 'draft'}, {label: 'Sent', value: 'sent'}, {label: 'Paid', value: 'paid'}, {label: 'Overdue', value: 'overdue'}] }, 
+      { label: 'Status', value: 'status', type: 'select' as const, options: [{ label: 'Draft', value: 'draft' }, { label: 'Sent', value: 'sent' }, { label: 'Paid', value: 'paid' }, { label: 'Overdue', value: 'overdue' }] },
       { label: 'Issue Date', value: 'issueDate', type: 'date' as const }
     ];
     if (activeTab === 'Projects') return [
-      { label: 'Status', value: 'status', type: 'select' as const, options: [{label: 'Planning', value: 'planning'}, {label: 'Active', value: 'active'}, {label: 'On Hold', value: 'on hold'}, {label: 'Completed', value: 'completed'}] }
+      { label: 'Status', value: 'status', type: 'select' as const, options: [{ label: 'Planning', value: 'planning' }, { label: 'Active', value: 'active' }, { label: 'On Hold', value: 'on hold' }, { label: 'Completed', value: 'completed' }] }
     ];
     if (activeTab === 'HR') return [
-      { label: 'Status', value: 'status', type: 'select' as const, options: [{label: 'Active', value: 'active'}, {label: 'On Leave', value: 'on_leave'}, {label: 'Terminated', value: 'terminated'}] }
+      { label: 'Status', value: 'status', type: 'select' as const, options: [{ label: 'Active', value: 'active' }, { label: 'On Leave', value: 'on_leave' }, { label: 'Terminated', value: 'terminated' }] }
     ];
     if (activeTab === 'Activity') return [
-      { label: 'Status', value: 'status', type: 'select' as const, options: [{label: 'Todo', value: 'todo'}, {label: 'In Progress', value: 'in_progress'}, {label: 'Review', value: 'review'}, {label: 'Completed', value: 'completed'}] }
+      { label: 'Status', value: 'status', type: 'select' as const, options: [{ label: 'Todo', value: 'todo' }, { label: 'In Progress', value: 'in_progress' }, { label: 'Review', value: 'review' }, { label: 'Completed', value: 'completed' }] }
     ];
     return [{ label: 'Keyword', value: 'keyword', type: 'text' as const }];
   };
 
   const renderDataGrid = () => {
-    if (!data || data.length === 0) return <p className="text-gray-500 text-sm">No records found.</p>;
-    
-    let columns: {key: string, label: string}[] = [];
+    if (!data || data.length === 0) {
+      return (
+        <EmptyState
+          title="No records found"
+          description="Try a different tab or widen your filters to see results."
+        />
+      );
+    }
+
+    let columns: { key: string, label: string }[] = [];
     if (activeTab === 'Sales') {
       columns = [
-        {key: 'name', label: 'Deal Name'},
-        {key: 'amount', label: 'Amount'},
-        {key: 'currency', label: 'Currency'},
-        {key: 'stage', label: 'Stage'},
-        {key: 'status', label: 'Status'}
+        { key: 'name', label: 'Deal Name' },
+        { key: 'amount', label: 'Amount' },
+        { key: 'currency', label: 'Currency' },
+        { key: 'stage', label: 'Stage' },
+        { key: 'status', label: 'Status' }
       ];
     } else if (activeTab === 'Finance') {
       columns = [
-        {key: 'invoiceNumber', label: 'Invoice #'},
-        {key: 'subtotal', label: 'Subtotal'},
-        {key: 'total', label: 'Total'},
-        {key: 'status', label: 'Status'},
-        {key: 'issueDate', label: 'Issue Date'}
+        { key: 'invoiceNumber', label: 'Invoice #' },
+        { key: 'subtotal', label: 'Subtotal' },
+        { key: 'total', label: 'Total' },
+        { key: 'status', label: 'Status' },
+        { key: 'issueDate', label: 'Issue Date' }
       ];
     } else if (activeTab === 'HR') {
-       columns = [
-        {key: 'firstName', label: 'First Name'},
-        {key: 'lastName', label: 'Last Name'},
-        {key: 'email', label: 'Email'},
-        {key: 'status', label: 'Status'}
+      columns = [
+        { key: 'firstName', label: 'First Name' },
+        { key: 'lastName', label: 'Last Name' },
+        { key: 'email', label: 'Email' },
+        { key: 'status', label: 'Status' }
       ];
     } else if (activeTab === 'Projects') {
-       columns = [
-        {key: 'code', label: 'Code'},
-        {key: 'name', label: 'Project Name'},
-        {key: 'status', label: 'Status'},
-        {key: 'budget', label: 'Budget'}
+      columns = [
+        { key: 'code', label: 'Code' },
+        { key: 'name', label: 'Project Name' },
+        { key: 'status', label: 'Status' },
+        { key: 'budget', label: 'Budget' }
       ];
     } else if (activeTab === 'Activity') {
-       columns = [
-        {key: 'title', label: 'Title'},
-        {key: 'priority', label: 'Priority'},
-        {key: 'status', label: 'Status'}
+      columns = [
+        { key: 'title', label: 'Title' },
+        { key: 'priority', label: 'Priority' },
+        { key: 'status', label: 'Status' }
       ];
     } else {
       const keys = Object.keys(data[0]).filter(k => typeof data[0][k] !== 'object').slice(0, 5);
-      columns = keys.map(k => ({key: k, label: k}));
+      columns = keys.map(k => ({ key: k, label: k }));
     }
 
     return (
-      <div className="rounded-md border border-gray-100 overflow-hidden">
+      <div className="rounded-2xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -151,61 +158,51 @@ export default function AnalyticsDashboard() {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto min-h-screen">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Advanced Analytics</h1>
-          <p className="text-gray-500 mt-1">Deep dive into your modules with custom filtering.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <SavedFilters currentGroup={filterGroup} onLoad={handleApplyFilter} />
-          <FilterBuilder fields={getFieldsForModule()} onApply={handleApplyFilter} onClear={() => handleApplyFilter({ logic: 'AND', rules: [] })} />
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Advanced Analytics"
+        description="Deep dive into your modules with custom filtering."
+        actions={
+          <div className="flex items-center gap-3">
+            <SavedFilters currentGroup={filterGroup} onLoad={handleApplyFilter} />
+            <FilterBuilder fields={getFieldsForModule()} onApply={handleApplyFilter} onClear={() => handleApplyFilter({ logic: 'AND', rules: [] })} />
+          </div>
+        }
+      />
 
-      <div className="border-b border-gray-200 mb-8">
-        <nav className="-mb-px flex space-x-8">
-          {TABS.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => handleTabChange(tab)}
-              className={`${
-                activeTab === tab
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
-            >
-              {tab}
-            </button>
-          ))}
-        </nav>
-      </div>
-
-      {loading ? (
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="rounded-2xl bg-white border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] px-3 pt-1">
+        <div className="border-b border-gray-100">
+          <nav className="-mb-px flex flex-wrap gap-x-6 gap-y-1">
+            {TABS.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => handleTabChange(tab)}
+                className={`whitespace-nowrap py-3 px-1 border-b-2 text-sm font-semibold transition-colors ${activeTab === tab
+                  ? 'border-[#C1172C] text-[#C1172C]'
+                  : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-200'
+                  }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </nav>
         </div>
-      ) : (
-        <div className="animate-in fade-in duration-300">
-          {/* Dynamic Content based on activeTab */}
-          {activeTab === 'Sales' && data && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-               <div className="bg-white p-6 rounded-xl border border-gray-100 col-span-full shadow-sm">
-                 <h3 className="font-semibold text-gray-900 mb-2">Query Results</h3>
-                 <p className="text-gray-500 text-sm mb-6">Returned {data?.length || 0} records for {activeTab}</p>
-                 {renderDataGrid()}
-               </div>
-            </div>
-          )}
-          {activeTab !== 'Sales' && (
-            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-2">Query Results</h3>
-              <p className="text-gray-500 text-sm mb-6">Returned {data?.length || 0} records for {activeTab}</p>
+
+        <div className="px-3 pb-5 pt-5">
+          <SectionTitle
+            label={`Query results · ${activeTab}`}
+            action={<span className="text-xs text-gray-400">{data?.length ?? 0} record{data?.length === 1 ? '' : 's'}</span>}
+          />
+
+          {loading ? (
+            <LoadingState label="Running query…" />
+          ) : (
+            <div className="animate-in fade-in duration-300">
               {renderDataGrid()}
             </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

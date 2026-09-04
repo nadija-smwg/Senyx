@@ -17,16 +17,16 @@ export default function RegisterPage() {
           <img
             src="/logo-transparent.png"
             alt="Senyx Icon"
-            className="w-8 h-8 object-contain group-hover:scale-105 transition-transform duration-300"
+            className="w-14 h-14 object-contain group-hover:scale-105 transition-transform duration-300"
           />
           <div className="flex flex-col justify-center mt-1">
             <img
               src="/name-transparent.png"
               alt="SENYX"
-              className="h-6 object-contain object-left"
+              className="h-10 object-contain object-left"
             />
             <div
-              className="text-[10px] font-bold tracking-[0.2em] uppercase mt-0.5 text-center"
+              className="text-xs font-bold tracking-[0.2em] uppercase mt-1 text-center"
               style={{ color: '#1A6DB6' }}
             >
               Command Center

@@ -2,11 +2,29 @@ export const dynamic = 'force-dynamic';
 import { db } from '@/server/db/client';
 import { invoices, expenses, subscriptions } from '@/server/db/schema/finance';
 import { projects, paymentMilestones } from '@/server/db/schema/projects';
-import { eq, inArray, and, isNull, sum, count } from 'drizzle-orm';
-import { PageHeader } from '@/components/layout/page-header';
+import { eq, isNull, and } from 'drizzle-orm';
 import { CurrencyDisplay } from '@/components/ui/currency-display';
+import {
+  FinancePageShell,
+  FinanceStatCard,
+  FinanceSection,
+  FinanceAmount,
+  FinanceEmptyState,
+  AgingBar,
+  ProjectReceivableCard,
+  formatFinanceDate,
+} from '@/components/finance/finance-shell';
+import {
+  AlertTriangle,
+  Banknote,
+  CircleDollarSign,
+  PiggyBank,
+  Receipt,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react';
 
-// Mock function for now, in a real app these would be proper DB queries
 async function getFinanceDashboardStats() {
   const allInvoices = await db.select().from(invoices).where(isNull(invoices.deletedAt));
   const allExpenses = await db.select().from(expenses).where(and(isNull(expenses.deletedAt), eq(expenses.approvalStatus, 'approved')));
@@ -39,24 +57,23 @@ async function getFinanceDashboardStats() {
 
   const netProfit = revenue - totalExpenses;
 
-  // AR Aging and Project Breakdown
   const aging = {
     current: 0,
     days30: 0,
     days60: 0,
     days90: 0,
-    days90Plus: 0
+    days90Plus: 0,
   };
 
-  const projectReceivables: Record<string, { 
-    name: string; 
-    outstanding: number; 
-    milestones: Record<string, { name: string; outstanding: number }> 
+  const projectReceivables: Record<string, {
+    name: string;
+    outstanding: number;
+    milestones: Record<string, { name: string; outstanding: number }>;
   }> = {};
-  
+
   const allProjects = await db.select({ id: projects.id, name: projects.name }).from(projects);
   const allMilestones = await db.select({ id: paymentMilestones.id, name: paymentMilestones.name }).from(paymentMilestones);
-  
+
   allProjects.forEach(p => {
     projectReceivables[p.id] = { name: p.name, outstanding: 0, milestones: {} };
   });
@@ -64,8 +81,7 @@ async function getFinanceDashboardStats() {
   const today = new Date();
   allInvoices.filter(inv => inv.status === 'sent' || inv.status === 'overdue').forEach(inv => {
     const total = parseFloat(inv.total || '0');
-    
-    // Project breakdown
+
     if (inv.projectId) {
       const proj = projectReceivables[inv.projectId];
       if (proj) {
@@ -87,7 +103,6 @@ async function getFinanceDashboardStats() {
       }
     }
 
-    // Aging
     if (!inv.dueDate) {
       aging.current += total;
       return;
@@ -107,7 +122,7 @@ async function getFinanceDashboardStats() {
     .filter(p => p.outstanding > 0)
     .map(p => ({
       ...p,
-      milestones: Object.values(p.milestones)
+      milestones: Object.values(p.milestones),
     }));
 
   return {
@@ -119,109 +134,211 @@ async function getFinanceDashboardStats() {
     mrr,
     netProfit,
     aging,
-    activeProjectReceivables
+    activeProjectReceivables,
   };
 }
 
 export default async function FinanceDashboard() {
   const stats = await getFinanceDashboardStats();
 
+  const agingBuckets = [
+    { label: 'Current', amount: stats.aging.current, tone: 'positive' as const },
+    { label: '1–30d', amount: stats.aging.days30, tone: 'positive' as const },
+    { label: '31–60d', amount: stats.aging.days60, tone: 'warning' as const },
+    { label: '61–90d', amount: stats.aging.days90, tone: 'warning' as const },
+    { label: '90d+', amount: stats.aging.days90Plus, tone: 'negative' as const },
+  ];
+
   return (
-    <div className="space-y-6">
-      <PageHeader title="Finance Overview" description="Monitor company financial metrics and receivables." />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-card text-card-foreground p-6 rounded-lg shadow-sm border">
-          <h3 className="text-sm font-medium text-muted-foreground">Total Revenue</h3>
-          <div className="text-3xl font-bold mt-2 text-green-600"><CurrencyDisplay amount={stats.revenue} /></div>
-          <p className="text-xs text-muted-foreground mt-1">From Paid Invoices</p>
-        </div>
-        
-        <div className="bg-card text-card-foreground p-6 rounded-lg shadow-sm border">
-          <h3 className="text-sm font-medium text-muted-foreground">Total Expenses</h3>
-          <div className="text-3xl font-bold mt-2 text-red-600"><CurrencyDisplay amount={stats.totalExpenses} /></div>
-          <p className="text-xs text-muted-foreground mt-1">Approved Expenses</p>
-        </div>
-
-        <div className="bg-card text-card-foreground p-6 rounded-lg shadow-sm border">
-          <h3 className="text-sm font-medium text-muted-foreground">Net Profit</h3>
-          <div className="text-3xl font-bold mt-2 text-blue-600"><CurrencyDisplay amount={stats.netProfit} /></div>
-          <p className="text-xs text-muted-foreground mt-1">Revenue - Expenses</p>
-        </div>
-
-        <div className="bg-card text-card-foreground p-6 rounded-lg shadow-sm border">
-          <h3 className="text-sm font-medium text-muted-foreground">Outstanding Receivables</h3>
-          <div className="text-3xl font-bold mt-2"><CurrencyDisplay amount={stats.outstanding} /></div>
-          <p className="text-xs text-muted-foreground mt-1">Awaiting Payment</p>
-        </div>
-
-        <div className="bg-card text-card-foreground p-6 rounded-lg shadow-sm border">
-          <h3 className="text-sm font-medium text-muted-foreground">Overdue Invoices</h3>
-          <div className="text-3xl font-bold mt-2 text-orange-600"><CurrencyDisplay amount={stats.overdueTotal} /></div>
-          <p className="text-xs text-muted-foreground mt-1">{stats.overdueCount} Invoices</p>
-        </div>
-
-        <div className="bg-card text-card-foreground p-6 rounded-lg shadow-sm border">
-          <h3 className="text-sm font-medium text-muted-foreground">Total MRR</h3>
-          <div className="text-3xl font-bold mt-2 text-purple-600"><CurrencyDisplay amount={stats.mrr} /></div>
-          <p className="text-xs text-muted-foreground mt-1">Active Subscriptions</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-card text-card-foreground p-6 rounded-lg shadow-sm border">
-          <h2 className="text-xl font-heading font-semibold mb-4 text-primary">Accounts Receivable Aging</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-muted text-muted-foreground font-semibold">
-                <tr>
-                  <th className="px-4 py-3">Current</th>
-                  <th className="px-4 py-3">1 - 30 Days</th>
-                  <th className="px-4 py-3">31 - 60 Days</th>
-                  <th className="px-4 py-3">61 - 90 Days</th>
-                  <th className="px-4 py-3 text-destructive">90+ Days</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b last:border-0 hover:bg-muted/50">
-                  <td className="px-4 py-3 font-medium"><CurrencyDisplay amount={stats.aging.current} /></td>
-                  <td className="px-4 py-3"><CurrencyDisplay amount={stats.aging.days30} /></td>
-                  <td className="px-4 py-3"><CurrencyDisplay amount={stats.aging.days60} /></td>
-                  <td className="px-4 py-3 text-orange-600"><CurrencyDisplay amount={stats.aging.days90} /></td>
-                  <td className="px-4 py-3 font-bold text-destructive"><CurrencyDisplay amount={stats.aging.days90Plus} /></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="bg-card text-card-foreground p-6 rounded-lg shadow-sm border">
-          <h2 className="text-xl font-heading font-semibold mb-4 text-primary">Project Receivables</h2>
-          <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
-            {stats.activeProjectReceivables.length > 0 ? (
-              stats.activeProjectReceivables.map((proj, idx) => (
-                <div key={idx} className="bg-muted/50 rounded-md p-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium text-sm text-primary">{proj.name}</span>
-                    <span className="font-bold text-sm"><CurrencyDisplay amount={proj.outstanding} /></span>
-                  </div>
-                  {proj.milestones.length > 0 && (
-                    <div className="space-y-1 mt-2 border-t pt-2">
-                      {proj.milestones.map((ms, msIdx) => (
-                        <div key={msIdx} className="flex justify-between items-center text-xs">
-                          <span className="text-muted-foreground">{ms.name}</span>
-                          <span className="font-medium text-muted-foreground"><CurrencyDisplay amount={ms.outstanding} /></span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+    <FinancePageShell
+      pretitle="Finance"
+      title="Finance Overview"
+      description="Monitor revenue, expenses, receivables, and project cash flow at a glance."
+      stats={
+        <>
+          {/* Hero: Net Profit */}
+          <FinanceStatCard
+            label="Net Profit"
+            value={<CurrencyDisplay amount={stats.netProfit} />}
+            hint={`Revenue ${formatCurrency(stats.revenue)} − Expenses ${formatCurrency(stats.totalExpenses)}`}
+            tone={stats.netProfit >= 0 ? 'positive' : 'negative'}
+            icon={stats.netProfit >= 0 ? <TrendingUp /> : <TrendingDown />}
+            hero
+          />
+          <FinanceStatCard
+            label="Total Revenue"
+            value={<CurrencyDisplay amount={stats.revenue} />}
+            hint="From paid invoices"
+            tone="positive"
+            icon={<TrendingUp />}
+          />
+          <FinanceStatCard
+            label="Total Expenses"
+            value={<CurrencyDisplay amount={stats.totalExpenses} />}
+            hint="Approved expenses"
+            tone="negative"
+            icon={<TrendingDown />}
+          />
+          <FinanceStatCard
+            label="Outstanding"
+            value={<CurrencyDisplay amount={stats.outstanding} />}
+            hint="Sent + overdue receivables"
+            tone="warning"
+            icon={<AlertTriangle />}
+          />
+          <FinanceStatCard
+            label="Overdue"
+            value={<CurrencyDisplay amount={stats.overdueTotal} />}
+            hint={`${stats.overdueCount} invoice${stats.overdueCount === 1 ? '' : 's'}`}
+            tone="negative"
+            icon={<AlertTriangle />}
+          />
+          <FinanceStatCard
+            label="MRR"
+            value={<CurrencyDisplay amount={stats.mrr} />}
+            hint="Active subscriptions"
+            tone="positive"
+            icon={<PiggyBank />}
+          />
+        </>
+      }
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Aging */}
+        <FinanceSection
+          title="Accounts Receivable Aging"
+          description="Open invoices bucketed by days past due."
+          actions={
+            <span className="text-xs text-gray-500">
+              Total <span className="font-semibold text-gray-900 tabular-nums">{formatCurrency(stats.outstanding)}</span>
+            </span>
+          }
+        >
+          <AgingBar buckets={agingBuckets} />
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {agingBuckets.map((b) => (
+              <div key={b.label} className="rounded-xl bg-gray-50/60 border border-gray-100 p-2.5">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={
+                      'w-1.5 h-1.5 rounded-full ' +
+                      (b.tone === 'negative' ? 'bg-rose-500'
+                        : b.tone === 'warning' ? 'bg-amber-500'
+                          : 'bg-emerald-500')
+                    }
+                  />
+                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-gray-500">{b.label}</p>
                 </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">No outstanding invoices linked to projects.</p>
-            )}
+                <p className="mt-1 text-sm font-bold font-heading text-gray-900 tabular-nums truncate">
+                  {formatCurrency(b.amount)}
+                </p>
+              </div>
+            ))}
           </div>
-        </div>
+        </FinanceSection>
+
+        {/* Cash flow breakdown (uses the existing data, only displayed in a new way) */}
+        <FinanceSection
+          title="Cash Flow Snapshot"
+          description="Derived from approved invoices, expenses and active subscriptions."
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <FlowTile
+              label="Inflows (Paid)"
+              amount={stats.revenue}
+              tone="positive"
+              icon={<Wallet />}
+            />
+            <FlowTile
+              label="Outflows (Approved)"
+              amount={stats.totalExpenses}
+              tone="negative"
+              icon={<Receipt />}
+            />
+            <FlowTile
+              label="Outstanding"
+              amount={stats.outstanding}
+              tone="warning"
+              icon={<Banknote />}
+            />
+            <FlowTile
+              label="Recurring MRR"
+              amount={stats.mrr}
+              tone="info"
+              icon={<CircleDollarSign />}
+            />
+          </div>
+        </FinanceSection>
+
+        {/* Project receivables */}
+        <FinanceSection
+          title="Project Receivables"
+          description="Open amounts grouped by project and milestone."
+          className="lg:col-span-2"
+          actions={
+            <span className="text-xs text-gray-500">
+              {stats.activeProjectReceivables.length} project{stats.activeProjectReceivables.length === 1 ? '' : 's'}
+            </span>
+          }
+        >
+          {stats.activeProjectReceivables.length === 0 ? (
+            <FinanceEmptyState
+              icon={<Receipt />}
+              title="No outstanding project receivables"
+              description="All invoices are paid or no invoices are linked to projects yet."
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              {stats.activeProjectReceivables.map((proj, idx) => (
+                <ProjectReceivableCard
+                  key={idx}
+                  name={proj.name}
+                  amount={proj.outstanding}
+                  milestones={proj.milestones.map(m => ({ name: m.name, amount: m.outstanding }))}
+                />
+              ))}
+            </div>
+          )}
+        </FinanceSection>
+      </div>
+    </FinancePageShell>
+  );
+}
+
+function formatCurrency(v: number) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v);
+}
+
+function FlowTile({
+  label,
+  amount,
+  tone,
+  icon,
+}: {
+  label: string;
+  amount: number;
+  tone: 'positive' | 'negative' | 'warning' | 'info';
+  icon?: React.ReactNode;
+}) {
+  const toneClass =
+    tone === 'positive' ? 'text-emerald-700' :
+      tone === 'negative' ? 'text-rose-700' :
+        tone === 'warning' ? 'text-amber-700' :
+          'text-sky-700';
+  return (
+    <div className="rounded-xl border border-gray-100 bg-gray-50/40 p-3.5 flex items-center gap-3">
+      <div className={
+        'w-9 h-9 rounded-xl flex items-center justify-center [&_svg]:w-4 [&_svg]:h-4 ' +
+        (tone === 'positive' ? 'bg-emerald-50 text-emerald-600' :
+          tone === 'negative' ? 'bg-rose-50 text-rose-600' :
+            tone === 'warning' ? 'bg-amber-50 text-amber-600' :
+              'bg-sky-50 text-sky-600')
+      }>
+        {icon}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500 truncate">{label}</p>
+        <FinanceAmount amount={amount} tone={tone} className="!text-base" />
       </div>
     </div>
   );

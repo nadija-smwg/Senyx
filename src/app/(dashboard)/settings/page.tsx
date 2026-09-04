@@ -1,35 +1,76 @@
 export const dynamic = 'force-dynamic';
-import { PageHeader } from '../../../components/layout/page-header';
-import { Card, CardHeader, CardTitle, CardDescription } from '../../../components/ui/card';
 import Link from 'next/link';
-import { Shield, Settings } from 'lucide-react';
+import { ArrowRight, Building2, KeyRound, ShieldCheck, UserCog } from 'lucide-react';
+import {
+  SettingsPageShell,
+  SettingsNav,
+  SettingsGridLayout,
+  SETTINGS_SECTIONS,
+} from '@/components/settings/settings-shell';
 
 export default function SettingsOverviewPage() {
   return (
-    <div className="space-y-6">
-      <PageHeader title="Settings" description="Manage platform configurations and access controls." />
-      
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Link href="/settings/roles">
-          <Card className="hover:border-primary transition-colors cursor-pointer h-full">
-            <CardHeader>
-              <Shield className="w-8 h-8 mb-2 text-primary" />
-              <CardTitle>Roles & Permissions</CardTitle>
-              <CardDescription>Manage user roles and define access control matrices.</CardDescription>
-            </CardHeader>
-          </Card>
-        </Link>
-        
-        <Link href="/settings/general">
-          <Card className="hover:border-primary transition-colors cursor-pointer h-full">
-            <CardHeader>
-              <Settings className="w-8 h-8 mb-2 text-primary" />
-              <CardTitle>General Settings</CardTitle>
-              <CardDescription>Company information, regional settings, and defaults.</CardDescription>
-            </CardHeader>
-          </Card>
-        </Link>
-      </div>
-    </div>
+    <SettingsPageShell
+      pretitle="Workspace"
+      title="Settings"
+      description="Manage your workspace configuration, profile, authentication, and access control."
+    >
+      <SettingsGridLayout nav={<SettingsNav />}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {SETTINGS_SECTIONS.map(s => {
+            const Icon = s.icon;
+            return (
+              <Link
+                key={s.id}
+                href={s.href}
+                className="group bg-white rounded-2xl border border-gray-100 shadow-[0_1px_2px_rgba(0,0,0,0.03)] p-4 hover:border-[#D9C7E5] hover:shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition-colors"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="h-10 w-10 rounded-xl bg-[#F3EEF8] text-[#7F4D9F] flex items-center justify-center shrink-0 [&_svg]:w-[18px] [&_svg]:h-[18px]">
+                    <Icon />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{s.label}</p>
+                      <ArrowRight className="w-3 h-3 text-gray-300 group-hover:text-[#7F4D9F] transition-colors" />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{s.description}</p>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+
+        <section className="bg-white rounded-2xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500">Tip</p>
+            <p className="text-sm text-gray-700 mt-1">
+              Changes to <span className="font-semibold">Roles & Permissions</span> and
+              <span className="font-semibold"> General</span> settings apply workspace-wide immediately.
+              Use the sidebar to jump to any section.
+            </p>
+          </div>
+          <div className="px-5 py-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-gray-500">
+            <div className="flex items-center gap-2">
+              <Building2 className="w-3.5 h-3.5 text-[#7F4D9F]" />
+              <span>Company, currency and reminders</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <UserCog className="w-3.5 h-3.5 text-[#7F4D9F]" />
+              <span>Your profile and password</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#7F4D9F]" />
+              <span>Authentication and sessions</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <KeyRound className="w-3.5 h-3.5 text-[#7F4D9F]" />
+              <span>Roles & permission matrices</span>
+            </div>
+          </div>
+        </section>
+      </SettingsGridLayout>
+    </SettingsPageShell>
   );
 }

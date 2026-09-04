@@ -1,15 +1,25 @@
 'use client';
 import { useState } from 'react';
-import { useAuth } from '../../../hooks/use-auth';
-import { Input } from '../../../components/ui/input';
-import { Button } from '../../../components/ui/button';
-import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '../../../hooks/use-auth';
+import {
+  AuthLayout,
+  AuthCard,
+  AuthHeader,
+  AuthField,
+  AuthInput,
+  AuthSubmitButton,
+  AuthBanner,
+  AuthAside,
+  Lock,
+  Mail,
+} from '../../../components/auth/auth-shell';
 
 export default function LoginPage() {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -26,47 +36,100 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
-      <div className="flex justify-center mb-7 group cursor-default">
-        <div className="flex items-center gap-3">
-          <img src="/logo-transparent.png" alt="Senyx Icon" className="w-8 h-8 object-contain group-hover:scale-105 transition-transform duration-300" />
-          <div className="flex flex-col justify-center mt-1">
-            <img src="/name-transparent.png" alt="SENYX" className="h-6 object-contain object-left" />
-            <div className="text-[10px] font-bold tracking-[0.2em] uppercase mt-0.5 text-center" style={{ color: '#1A6DB6' }}>
-              Command Center
+    <AuthLayout aside={<AuthAside />}>
+      <AuthCard>
+        <AuthHeader
+          title="Welcome back"
+          subtitle="Sign in to your Senyx workspace to continue."
+        />
+
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          {error && (
+            <AuthBanner tone="error">{error}</AuthBanner>
+          )}
+
+          <AuthField htmlFor="email" label="Email address">
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <AuthInput
+                id="email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="name@company.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+                className="pl-10"
+              />
             </div>
+          </AuthField>
+
+          <AuthField htmlFor="password" label="Password">
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <AuthInput
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                disabled={isLoading}
+                className="pl-10 pr-16"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(s => !s)}
+                disabled={isLoading}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center h-8 w-8 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
+              >
+                {showPassword ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </AuthField>
+
+          <div className="flex items-center justify-between pt-0.5">
+            <label className="inline-flex items-center gap-2 text-xs text-gray-500 select-none">
+              <input
+                type="checkbox"
+                className="h-3.5 w-3.5 rounded border-gray-300 text-[#C1172C] focus:ring-[#C1172C]/30"
+                disabled={isLoading}
+              />
+              <span>Remember this device</span>
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-xs font-semibold text-[#C1172C] hover:text-[#9B1022] transition-colors"
+            >
+              Forgot password?
+            </Link>
           </div>
-        </div>
-      </div>
 
-      <div className="text-center mb-7">
-        <h1 className="text-xl font-bold font-heading text-gray-900">Welcome back</h1>
-        <p className="text-gray-500 text-sm mt-1">Sign in to your workspace</p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {error && (
-          <div className="rounded-lg px-4 py-3 text-sm font-medium text-red-700 bg-red-50 border border-red-100">
-            {error}
+          <div className="pt-2">
+            <AuthSubmitButton isLoading={isLoading}>Sign in</AuthSubmitButton>
           </div>
-        )}
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-widest text-gray-400">Email</label>
-          <Input id="email" type="email" placeholder="name@company.com" value={email} onChange={e => setEmail(e.target.value)} required />
-        </div>
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-semibold uppercase tracking-widest text-gray-400">Password</label>
-            <Link href="/forgot-password" className="text-xs font-medium text-[#1A6DB6] hover:text-[#155a96]">Forgot password?</Link>
-          </div>
-          <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
-        </div>
-        <Button type="submit" className="w-full h-9 mt-1" disabled={isLoading}>
-          {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Signing in...</> : 'Sign in'}
-        </Button>
-      </form>
+        </form>
 
-
-    </div>
+        <p className="mt-6 text-center text-[11px] text-gray-400">
+          By signing in you agree to your workspace's{' '}
+          <span className="font-semibold text-gray-600">acceptable-use policy</span>.
+        </p>
+      </AuthCard>
+    </AuthLayout>
   );
 }

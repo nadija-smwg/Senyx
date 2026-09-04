@@ -21,7 +21,7 @@ function LightTooltip({ active, payload }: any) {
       <div className="flex items-center gap-2">
         <span className="w-2 h-2 rounded-full" style={{ background: payload[0].payload.fill || payload[0].fill }} />
         <span className="text-gray-500">{payload[0].name}:</span>
-        <span className="text-gray-900 font-semibold">{Number(payload[0].value || 0).toLocaleString()}</span>
+        <span className="text-gray-900 font-semibold tabular-nums">{Number(payload[0].value || 0).toLocaleString()}</span>
       </div>
     </div>
   );
@@ -29,11 +29,11 @@ function LightTooltip({ active, payload }: any) {
 
 function LightLegend({ data, nameKey, colors }: { data: any[], nameKey: string, colors: string[] }) {
   return (
-    <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-2">
+    <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-1 px-1">
       {data.map((entry, i) => (
         <div key={i} className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full" style={{ background: colors[i % colors.length] }} />
-          <span className="text-xs text-gray-500">{entry[nameKey]}</span>
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: colors[i % colors.length] }} />
+          <span className="text-[11px] text-gray-500 truncate">{entry[nameKey]}</span>
         </div>
       ))}
     </div>
@@ -49,20 +49,22 @@ export function PieChartWidget({ title, data, nameKey, dataKey, colors = DEFAULT
     );
   }
   return (
-    <div className={`bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden ${className}`}>
-      <div className="px-6 py-4 border-b border-gray-50">
+    <div className={`bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden h-full flex flex-col ${className}`}>
+      <div className="px-5 py-4 border-b border-gray-50">
         <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
       </div>
-      <div className="p-4" style={{ height: height - 60 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Tooltip content={<LightTooltip />} />
-            <Pie data={data} nameKey={nameKey} dataKey={dataKey} cx="50%" cy="50%"
-              innerRadius={innerRadius} outerRadius={75} paddingAngle={3} stroke="none">
-              {data.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
+      <div className="p-4 flex-1 flex flex-col" style={{ height: height - 60 }}>
+        <div className="flex-1 min-h-0">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Tooltip content={<LightTooltip />} />
+              <Pie data={data} nameKey={nameKey} dataKey={dataKey} cx="50%" cy="50%"
+                innerRadius={innerRadius} outerRadius="78%" paddingAngle={3} stroke="none">
+                {data.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
         <LightLegend data={data} nameKey={nameKey} colors={colors} />
       </div>
     </div>

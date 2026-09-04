@@ -1,135 +1,100 @@
 'use client';
+
 import Link from 'next/link';
 import { useAuth } from '../../hooks/use-auth';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard, Users, Briefcase, FolderKanban, Settings, Activity,
-  Shield, HelpCircle, Contact2, HandshakeIcon, Wallet, CreditCard,
-  BarChart3, Building2, FileText, DollarSign, ClipboardList, CheckSquare
-} from 'lucide-react';
-import { Logo } from '../ui/logo';
 import { useMemo } from 'react';
+import { cn } from '@/lib/utils';
+import { getNavGroups, isItemActive } from './nav-config';
 
 export function Sidebar() {
   const { roles } = useAuth();
   const pathname = usePathname();
 
   const isAdminOrHR = roles.includes('Admin') || roles.includes('HR Manager');
-
-  const navGroups = useMemo(() => [
-    {
-      label: 'Core',
-      color: '#1A6DB6', // Blue
-      bg: '#F0F9FF',
-      items: [
-        { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-        { href: '/help', label: 'Help Center', icon: HelpCircle },
-      ]
-    },
-    {
-      label: 'HR & People',
-      color: '#7F4D9F', // Purple
-      bg: '#F2E8FA',
-      items: [
-        { href: '/hr/employees', label: 'Employees', icon: Users },
-        { href: '/hr/leave', label: 'Leave', icon: ClipboardList },
-        ...(isAdminOrHR ? [{ href: '/hr/approval', label: 'Approval', icon: CheckSquare }] : []),
-      ]
-    },
-    {
-      label: 'CRM & Sales',
-      color: '#F15A22', // Orange
-      bg: '#FEF0EB',
-      items: [
-        { href: '/crm/accounts', label: 'Accounts', icon: Building2 },
-        { href: '/crm/contacts', label: 'Contacts', icon: Contact2 },
-      ]
-    },
-    {
-      label: 'Projects',
-      color: '#059669', // Emerald
-      bg: '#ECFDF5',
-      items: [
-        { href: '/projects', label: 'Projects', icon: FolderKanban },
-      ]
-    },
-    {
-      label: 'Finance',
-      color: '#C1172C', // Red
-      bg: '#FCECEC',
-      items: [
-        { href: '/finance', label: 'Overview', icon: DollarSign },
-        { href: '/finance/invoices', label: 'Invoices', icon: FileText },
-        { href: '/finance/expenses', label: 'Expenses', icon: Wallet },
-        { href: '/finance/payments', label: 'Payments', icon: CreditCard },
-        { href: '/sales/deals', label: 'Deals', icon: HandshakeIcon },
-      ]
-    },
-    {
-      label: 'System',
-      color: '#3B3B3B', // Ash
-      bg: '#F3F4F6',
-      items: [
-        { href: '/settings', label: 'Settings', icon: Settings },
-        { href: '/audit', label: 'Audit Logs', icon: Shield },
-      ]
-    }
-  ], [isAdminOrHR]);
+  const navGroups = useMemo(() => getNavGroups(isAdminOrHR), [isAdminOrHR]);
 
   return (
-    <aside className="w-60 h-screen flex flex-col hidden md:flex shrink-0 z-20" style={{
-      backgroundColor: '#FFFFFF',
-      borderRight: '1px solid #E5E7EB',
-    }}>
-      {/* Logo */}
-      <div className="h-[64px] flex items-center px-5 shrink-0 group cursor-pointer" style={{ borderBottom: '1px solid #E5E7EB' }}>
-        <div className="flex items-center gap-3">
-          <img src="/logo-transparent.png" alt="Senyx Icon" className="w-8 h-8 object-contain group-hover:scale-105 transition-transform duration-300" />
-          <div className="flex flex-col justify-center mt-1">
-            <img src="/name-transparent.png" alt="SENYX" className="h-5 object-contain object-left" />
-            <div className="text-[9px] font-bold tracking-[0.15em] uppercase mt-0.5" style={{ color: '#1A6DB6' }}>
-              Command Center
-            </div>
+    <aside
+      className="hidden md:flex w-[256px] h-screen flex-col shrink-0 z-20 bg-white border-r border-[#E5E7EB]"
+    >
+      {/* Brand — original Senyx logo (icon + wordmark) */}
+      <div className="h-[80px] flex items-center px-4 shrink-0 border-b border-[#E5E7EB]">
+        <Link href="/" className="flex items-center gap-3 group">
+          <img
+            src="/logo-icon-transparent.png"
+            alt="Senyx Icon"
+            className="h-14 w-14 object-contain transition-transform duration-300 group-hover:scale-105"
+          />
+          <div className="flex flex-col justify-center leading-tight">
+            <img
+              src="/name-transparent.png"
+              alt="SENYX"
+              className="h-9 object-contain object-left"
+            />
+            <span className="text-[11px] font-bold tracking-[0.22em] uppercase text-[#1A6DB6] mt-0.5">
+              ERP Platform
+            </span>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
-        {navGroups.map((group) => (
-          <div key={group.label}>
-            <h3 className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-gray-400">
-              {group.label}
+      <nav className="flex-1 overflow-y-auto px-3 py-5">
+        {navGroups.map((group, groupIndex) => (
+          <div key={group.label} className={cn('space-y-1', groupIndex > 0 && 'mt-6')}>
+            <h3 className="px-3 mb-1.5 flex items-center gap-2">
+              <span
+                className="inline-block w-1.5 h-1.5 rounded-full shrink-0"
+                style={{ backgroundColor: group.color }}
+                aria-hidden
+              />
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">
+                {group.label}
+              </span>
             </h3>
             <div className="space-y-0.5">
-              {group.items.map(item => {
-                const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+              {group.items.map((item) => {
+                const active = isItemActive(pathname, item.href);
                 const Icon = item.icon;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] font-medium transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22BFE8]/30 ${
-                      isActive
-                        ? 'font-bold shadow-sm'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
-                    style={isActive ? { 
-                      backgroundColor: group.bg, 
-                      color: group.color,
-                      borderLeft: `3px solid ${group.color}`,
-                      borderTopLeftRadius: 0,
-                      borderBottomLeftRadius: 0,
-                    } : {
-                      borderLeft: '3px solid transparent'
-                    }}
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      'group relative flex items-center gap-2.5 h-9 pl-3 pr-2.5 rounded-lg text-[13px] font-medium',
+                      'transition-all duration-150 ease-out outline-none',
+                      'focus-visible:ring-2 focus-visible:ring-[#22BFE8]/40 focus-visible:ring-offset-1',
+                      !active && 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    )}
+                    style={
+                      active
+                        ? {
+                          backgroundColor: group.bg,
+                          color: group.color,
+                          boxShadow: `inset 3px 0 0 ${group.color}`,
+                        }
+                        : undefined
+                    }
                   >
-                    <Icon className="w-4 h-4 shrink-0 transition-all duration-200" style={{ 
-                      color: isActive ? group.color : group.color,
-                      opacity: isActive ? 1 : 0.6
-                    }} />
-                    <span>{item.label}</span>
+                    <Icon
+                      className={cn(
+                        'h-[18px] w-[18px] shrink-0 transition-all duration-150',
+                        active ? 'opacity-100' : 'opacity-65 group-hover:opacity-100'
+                      )}
+                      style={{ color: group.color }}
+                    />
+                    <span className={cn('flex-1 truncate', active && 'font-semibold')}>
+                      {item.label}
+                    </span>
+                    {active && (
+                      <span
+                        className="ml-auto w-1.5 h-1.5 rounded-full shrink-0"
+                        style={{ backgroundColor: group.color }}
+                        aria-hidden
+                      />
+                    )}
                   </Link>
                 );
               })}
@@ -139,11 +104,16 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-4 py-3 shrink-0 flex items-center justify-between" style={{ borderTop: '1px solid #E5E7EB' }}>
-        <div className="text-[10px] font-mono text-gray-400">Senyx v1.0</div>
+      <div className="px-4 py-3 shrink-0 flex items-center justify-between border-t border-[#E5E7EB]">
+        <div className="text-[10px] font-mono text-gray-400 tracking-wide">Senyx v1.0</div>
         <div className="flex items-center gap-1.5">
-           <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]"></div>
-           <span className="text-[9px] uppercase tracking-wider font-semibold text-gray-400">All systems operational</span>
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60 animate-ping" />
+            <span className="relative inline-flex w-2 h-2 rounded-full bg-emerald-500" />
+          </span>
+          <span className="text-[9px] uppercase tracking-[0.15em] font-semibold text-gray-500">
+            Operational
+          </span>
         </div>
       </div>
     </aside>

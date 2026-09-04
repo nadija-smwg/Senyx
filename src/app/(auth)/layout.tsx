@@ -1,9 +1,8 @@
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F8F9FC] p-4">
-      <div className="w-full max-w-md relative z-10">
-        {children}
-      </div>
-    </div>
-  );
+// The new auth pages render their own <AuthLayout> wrapper so they can
+// own the gradient hero, aside panel, and responsive behaviour. This
+// layout file is kept as a passthrough so the existing routing still
+// works unchanged.
+
+export default function AuthGroupLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }

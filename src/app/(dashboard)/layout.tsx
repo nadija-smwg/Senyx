@@ -19,7 +19,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F9FC]">
         <div className="flex flex-col items-center gap-4">
-          <img src="/logo-transparent.png" alt="Loading..." className="w-10 h-10 object-contain animate-pulse" />
+          <img src="/logo-transparent.png" alt="Loading..." className="w-16 h-16 object-contain animate-pulse" />
           <Spinner className="w-5 h-5 text-[#1A6DB6]" />
         </div>
       </div>
@@ -30,12 +30,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <CurrencyProvider>
-      <div className="flex h-screen overflow-hidden font-sans" style={{ backgroundColor: '#F8F9FC' }}>
+      <div className="flex h-screen overflow-hidden font-sans bg-[#F8F9FC] text-gray-900">
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar />
-          <main className="flex-1 overflow-auto p-6">
-            {children}
+          {/* Content region: 1440px max-width, centered, consistent padding */}
+          <main className="flex-1 overflow-auto">
+            <div className="mx-auto w-full max-w-[1440px] px-4 py-5 md:px-6 md:py-6">
+              {children}
+            </div>
           </main>
         </div>
       </div>

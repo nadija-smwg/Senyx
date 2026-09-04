@@ -8,18 +8,38 @@ import Link from 'next/link';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { InvoiceForm } from '@/components/finance/invoice-form';
 import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/layout/page-header';
+import {
+  FinancePageShell,
+  FinanceStatCard,
+  FinanceTable,
+  FinanceAmount,
+  FinanceStatusBadge,
+  FinanceEmptyState,
+  FinanceFilterBar,
+  formatFinanceDate,
+  daysOverdue,
+  type FinanceTableColumn,
+} from '@/components/finance/finance-shell';
+import {
+  AlertTriangle,
+  Building2,
+  CalendarClock,
+  CircleDollarSign,
+  FileText,
+  Plus,
+} from 'lucide-react';
 
-function getStatusBadgeClass(status: string) {
-  switch (status) {
-    case 'draft': return 'bg-gray-100 text-gray-800 border-gray-200';
-    case 'sent': return 'bg-blue-100 text-blue-800 border-blue-200';
-    case 'paid': return 'bg-green-100 text-green-800 border-green-200';
-    case 'overdue': return 'bg-red-100 text-red-800 border-red-200';
-    case 'void': return 'bg-stone-800 text-stone-100 border-stone-900';
-    default: return 'bg-gray-100 text-gray-800 border-gray-200';
-  }
-}
+type InvoiceRow = {
+  id: string;
+  invoiceNumber: string;
+  status: string | null;
+  total: string | null;
+  currency: string;
+  dueDate: string | null;
+  createdAt: string;
+  accountName: string | null;
+  projectName: string | null;
+};
 
 export default async function InvoicesPage({
   searchParams,
@@ -46,7 +66,7 @@ export default async function InvoicesPage({
   if (minAmount) conditions.push(gte(invoices.total, minAmount));
   if (maxAmount) conditions.push(lte(invoices.total, maxAmount));
 
-  const invoiceList = await db.select({
+  const invoiceList = (await db.select({
     id: invoices.id,
     invoiceNumber: invoices.invoiceNumber,
     status: invoices.status,
@@ -57,14 +77,17 @@ export default async function InvoicesPage({
     accountName: accounts.name,
     projectName: projects.name
   })
-  .from(invoices)
-  .leftJoin(accounts, eq(invoices.accountId, accounts.id))
-  .leftJoin(projects, eq(invoices.projectId, projects.id))
-  .where(and(...conditions))
-  .orderBy(desc(invoices.createdAt));
+    .from(invoices)
+    .leftJoin(accounts, eq(invoices.accountId, accounts.id))
+    .leftJoin(projects, eq(invoices.projectId, projects.id))
+    .where(and(...conditions))
+    .orderBy(desc(invoices.createdAt))) as unknown as InvoiceRow[];
 
+  // Preserve original aggregations
   let totalOutstanding = 0;
   let totalOverdue = 0;
+  let totalPaid = 0;
+  const totalCount = invoiceList.length;
   invoiceList.forEach(inv => {
     const val = parseFloat(inv.total || '0');
     if (inv.status === 'sent') totalOutstanding += val;
@@ -72,56 +95,201 @@ export default async function InvoicesPage({
       totalOutstanding += val;
       totalOverdue += val;
     }
+    if (inv.status === 'paid') totalPaid += val;
   });
-
-  const formatCurrency = (val: string | number | null, currency: string = 'USD') => {
-    const num = typeof val === 'string' ? parseFloat(val || '0') : (val || 0);
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(num);
-  };
 
   const accountList = await db.select({ id: accounts.id, name: accounts.name }).from(accounts).orderBy(accounts.name);
 
-  return (
-    <div className="space-y-6">
-      <PageHeader 
-        pretitle="Finance"
-        title="Invoices"
-        description="Manage your incoming and outgoing invoices, track payments, and stay on top of your financials."
-        actions={
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button className="gap-2 shadow-lg shadow-[#1A6DB6]/20 bg-gradient-to-r from-[#1A6DB6] to-[#22BFE8] hover:from-[#155a96] hover:to-[#1ca2c5] border-0 text-white font-semibold transition-all hover:scale-105">
-                Create Invoice
-              </Button>
-            </SheetTrigger>
-            <SheetContent className="w-full sm:max-w-[700px] overflow-hidden flex flex-col p-0">
-              <SheetHeader className="px-6 py-6 border-b shrink-0">
-                <SheetTitle className="text-2xl font-bold font-heading">Create New Invoice</SheetTitle>
-              </SheetHeader>
-              <div className="flex-1 overflow-y-auto px-6 relative h-full">
-                <InvoiceForm />
+  const columns: FinanceTableColumn<InvoiceRow>[] = [
+    {
+      id: 'invoiceNumber',
+      header: 'Invoice #',
+      width: 'w-[140px]',
+      cell: (inv: InvoiceRow) => (
+        <Link
+          href={`/finance/invoices/${inv.id}`}
+          className="text-sm font-semibold text-gray-900 hover:text-[#C1172C] truncate font-mono"
+        >
+          {inv.invoiceNumber}
+        </Link>
+      ),
+    },
+    {
+      id: 'customer',
+      header: 'Customer',
+      cell: (inv: InvoiceRow) =>
+        inv.accountName ? (
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="h-8 w-8 rounded-lg bg-[#FCECEC] text-[#C1172C] flex items-center justify-center border border-[#F4BFC4] shrink-0 [&_svg]:w-4 [&_svg]:h-4">
+              <Building2 className="w-4 h-4" />
+            </span>
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-gray-900 truncate max-w-[200px]">
+                {inv.accountName}
               </div>
-            </SheetContent>
-          </Sheet>
-        }
-      />
-
-      {/* Totals Summary */}
-      <div className="flex gap-6 mb-2">
-        <div className="bg-blue-50 border border-blue-100 px-4 py-3 rounded-md">
-          <p className="text-xs text-blue-600 font-semibold uppercase">Total Outstanding</p>
-          <p className="text-xl font-bold text-blue-900">{formatCurrency(totalOutstanding)}</p>
+              {inv.projectName && (
+                <div className="text-[11px] text-gray-400 truncate max-w-[200px]">{inv.projectName}</div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <span className="text-xs text-gray-400">Unknown</span>
+        ),
+    },
+    {
+      id: 'project',
+      header: 'Project',
+      hideOn: 'sm',
+      cell: (inv: InvoiceRow) =>
+        inv.projectName ? (
+          <span className="text-sm text-gray-600 truncate max-w-[200px] block">{inv.projectName}</span>
+        ) : (
+          <span className="text-xs text-gray-400">—</span>
+        ),
+    },
+    {
+      id: 'amount',
+      header: 'Amount',
+      align: 'right',
+      width: 'w-[160px]',
+      cell: (inv: InvoiceRow) => (
+        <FinanceAmount
+          amount={parseFloat(inv.total || '0')}
+          currency={inv.currency}
+          tone={
+            inv.status === 'paid'
+              ? 'positive'
+              : inv.status === 'overdue'
+                ? 'negative'
+                : inv.status === 'sent'
+                  ? 'warning'
+                  : 'neutral'
+          }
+        />
+      ),
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      width: 'w-[130px]',
+      cell: (inv: InvoiceRow) => <FinanceStatusBadge status={inv.status} />,
+    },
+    {
+      id: 'dueDate',
+      header: 'Due Date',
+      width: 'w-[160px]',
+      cell: (inv: InvoiceRow) => {
+        if (!inv.dueDate) return <span className="text-xs text-gray-400">—</span>;
+        const overdueDays = daysOverdue(inv.dueDate);
+        const isOverdue = overdueDays !== null && overdueDays > 0 && inv.status !== 'paid' && inv.status !== 'void';
+        return (
+          <div className="inline-flex items-center gap-1.5">
+            <CalendarClock className={`w-3.5 h-3.5 ${isOverdue ? 'text-rose-500' : 'text-gray-400'} shrink-0`} />
+            <span
+              className={
+                'text-sm tabular-nums ' +
+                (isOverdue ? 'text-rose-700 font-semibold' : 'text-gray-700')
+              }
+            >
+              {formatFinanceDate(inv.dueDate)}
+            </span>
+            {isOverdue && (
+              <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">
+                {overdueDays}d
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      id: 'actions',
+      header: <span className="sr-only">Actions</span>,
+      align: 'right',
+      width: 'w-[140px]',
+      cell: (inv: InvoiceRow) => (
+        <div className="flex items-center justify-end gap-1.5">
+          <Link
+            href={`/finance/invoices/${inv.id}`}
+            className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md text-xs font-semibold text-gray-600 hover:text-[#C1172C] hover:bg-[#FCECEC] border border-gray-200 hover:border-[#F4BFC4] transition-colors"
+          >
+            View
+          </Link>
+          {inv.status === 'draft' && (
+            <Link
+              href={`/finance/invoices/${inv.id}/edit`}
+              className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md text-xs font-semibold text-gray-600 hover:text-[#C1172C] hover:bg-[#FCECEC] border border-gray-200 hover:border-[#F4BFC4] transition-colors"
+            >
+              Edit
+            </Link>
+          )}
         </div>
-        <div className="bg-red-50 border border-red-100 px-4 py-3 rounded-md">
-          <p className="text-xs text-red-600 font-semibold uppercase">Total Overdue</p>
-          <p className="text-xl font-bold text-red-900">{formatCurrency(totalOverdue)}</p>
-        </div>
-      </div>
+      ),
+    },
+  ];
 
-      <div className="bg-card text-card-foreground p-6 rounded-lg shadow-sm border">
-        {/* Simple Server-Side Filter */}
-        <form method="GET" className="flex flex-wrap gap-3 mb-4 items-center print:hidden">
-          <select name="status" defaultValue={(params.status as string) || ''} className="p-2 text-sm border rounded-md bg-background text-muted-foreground">
+  return (
+    <FinancePageShell
+      pretitle="Finance"
+      title="Invoices"
+      description="Manage customer invoices, track statuses, and stay on top of receivables."
+      actions={
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button className="gap-1.5 bg-[#C1172C] hover:bg-[#9B1022] text-white shadow-sm">
+              <Plus className="w-4 h-4" />
+              Create Invoice
+            </Button>
+          </SheetTrigger>
+          <SheetContent className="w-full sm:max-w-[700px] overflow-hidden flex flex-col p-0">
+            <SheetHeader className="px-6 py-6 border-b shrink-0">
+              <SheetTitle>Create New Invoice</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-6 relative h-full">
+              <InvoiceForm />
+            </div>
+          </SheetContent>
+        </Sheet>
+      }
+      stats={
+        <>
+          <FinanceStatCard
+            label="Total Invoices"
+            value={<span className="text-2xl font-bold font-heading text-gray-900">{totalCount}</span>}
+            hint="In this filter set"
+            tone="neutral"
+            icon={<FileText />}
+          />
+          <FinanceStatCard
+            label="Outstanding"
+            value={<FinanceAmount amount={totalOutstanding} tone="warning" bold={false} className="!text-2xl !font-bold !text-amber-700" />}
+            hint="Sent invoices"
+            tone="warning"
+            icon={<CircleDollarSign />}
+          />
+          <FinanceStatCard
+            label="Overdue"
+            value={<FinanceAmount amount={totalOverdue} tone="negative" bold={false} className="!text-2xl !font-bold !text-rose-700" />}
+            hint="Needs collection"
+            tone="negative"
+            icon={<AlertTriangle />}
+          />
+          <FinanceStatCard
+            label="Paid"
+            value={<FinanceAmount amount={totalPaid} tone="positive" bold={false} className="!text-2xl !font-bold !text-emerald-700" />}
+            hint="Collected"
+            tone="positive"
+            icon={<CircleDollarSign />}
+          />
+        </>
+      }
+      toolbar={
+        <FinanceFilterBar>
+          <select
+            name="status"
+            defaultValue={(params.status as string) || ''}
+            className="h-8 px-2.5 text-xs rounded-md border border-gray-200 bg-white text-gray-700 focus:outline-none focus:border-[#C1172C] focus:ring-2 focus:ring-[#C1172C]/20"
+          >
             <option value="">Status: All</option>
             <option value="draft">Draft</option>
             <option value="sent">Sent</option>
@@ -129,76 +297,75 @@ export default async function InvoicesPage({
             <option value="overdue">Overdue</option>
             <option value="void">Void</option>
           </select>
-          <select name="accountId" defaultValue={(params.accountId as string) || ''} className="p-2 text-sm border rounded-md bg-background text-muted-foreground">
+          <select
+            name="accountId"
+            defaultValue={(params.accountId as string) || ''}
+            className="h-8 px-2.5 text-xs rounded-md border border-gray-200 bg-white text-gray-700 focus:outline-none focus:border-[#C1172C] focus:ring-2 focus:ring-[#C1172C]/20"
+          >
             <option value="">Client: All</option>
             {accountList.map(a => (
               <option key={a.id} value={a.id}>{a.name}</option>
             ))}
           </select>
-          <input type="date" name="startDate" defaultValue={(params.startDate as string) || ''} className="p-2 text-sm border rounded-md bg-background text-muted-foreground" title="Start Date" />
-          <input type="date" name="endDate" defaultValue={(params.endDate as string) || ''} className="p-2 text-sm border rounded-md bg-background text-muted-foreground" title="End Date" />
-          <input type="number" name="minAmount" defaultValue={(params.minAmount as string) || ''} placeholder="Min $" className="p-2 w-24 text-sm border rounded-md bg-background text-muted-foreground" min="0" />
-          <input type="number" name="maxAmount" defaultValue={(params.maxAmount as string) || ''} placeholder="Max $" className="p-2 w-24 text-sm border rounded-md bg-background text-muted-foreground" min="0" />
-          
-          <button type="submit" className="px-3 py-2 bg-secondary text-secondary-foreground rounded-md text-sm hover:bg-secondary/80">Filter</button>
+          <input
+            type="date"
+            name="startDate"
+            defaultValue={(params.startDate as string) || ''}
+            className="h-8 px-2.5 text-xs rounded-md border border-gray-200 bg-white text-gray-700 focus:outline-none focus:border-[#C1172C] focus:ring-2 focus:ring-[#C1172C]/20"
+            title="Start Date"
+          />
+          <input
+            type="date"
+            name="endDate"
+            defaultValue={(params.endDate as string) || ''}
+            className="h-8 px-2.5 text-xs rounded-md border border-gray-200 bg-white text-gray-700 focus:outline-none focus:border-[#C1172C] focus:ring-2 focus:ring-[#C1172C]/20"
+            title="End Date"
+          />
+          <input
+            type="number"
+            name="minAmount"
+            defaultValue={(params.minAmount as string) || ''}
+            placeholder="Min $"
+            min="0"
+            className="h-8 px-2.5 w-24 text-xs rounded-md border border-gray-200 bg-white text-gray-700 focus:outline-none focus:border-[#C1172C] focus:ring-2 focus:ring-[#C1172C]/20"
+          />
+          <input
+            type="number"
+            name="maxAmount"
+            defaultValue={(params.maxAmount as string) || ''}
+            placeholder="Max $"
+            min="0"
+            className="h-8 px-2.5 w-24 text-xs rounded-md border border-gray-200 bg-white text-gray-700 focus:outline-none focus:border-[#C1172C] focus:ring-2 focus:ring-[#C1172C]/20"
+          />
+          <button
+            type="submit"
+            className="h-8 px-3 rounded-md text-xs font-semibold bg-[#C1172C] text-white hover:bg-[#9B1022] transition-colors"
+          >
+            Filter
+          </button>
           {Object.keys(params).length > 0 && (
-            <Link href="/finance/invoices" className="text-sm text-muted-foreground hover:underline">Clear</Link>
+            <Link
+              href="/finance/invoices"
+              className="h-8 px-3 inline-flex items-center text-xs font-semibold text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Clear
+            </Link>
           )}
-        </form>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-muted text-muted-foreground font-semibold">
-              <tr>
-                <th className="px-4 py-3">Invoice #</th>
-                <th className="px-4 py-3">Client</th>
-                <th className="px-4 py-3">Project</th>
-                <th className="px-4 py-3 font-medium">Amount</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Due Date</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoiceList.map((inv) => (
-                <tr key={inv.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-primary">
-                    <Link href={`/finance/invoices/${inv.id}`} className="hover:underline">
-                      {inv.invoiceNumber}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">{inv.accountName || 'Unknown'}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{inv.projectName || '-'}</td>
-                  <td className="px-4 py-3 font-bold">{formatCurrency(inv.total, inv.currency)}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadgeClass(inv.status)}`}>
-                      {inv.status?.toUpperCase() || 'DRAFT'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : '-'}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Link 
-                      href={`/finance/invoices/${inv.id}`}
-                      className="text-primary hover:underline text-sm font-medium"
-                    >
-                      View
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-              {invoiceList.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                    No invoices found. Create one to get started.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+        </FinanceFilterBar>
+      }
+    >
+      <FinanceTable
+        columns={columns}
+        rows={invoiceList}
+        rowKey={r => r.id}
+        emptyState={
+          <FinanceEmptyState
+            icon={<FileText />}
+            title="No invoices found"
+            description="Create your first invoice to start tracking receivables."
+          />
+        }
+      />
+    </FinancePageShell>
   );
 }

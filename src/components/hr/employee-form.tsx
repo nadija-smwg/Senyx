@@ -7,7 +7,23 @@ import * as z from "zod"
 import { useRouter } from "next/navigation"
 import { ContextualHelp } from "@/components/ui/contextual-help"
 import { toast } from "sonner"
-import { Eye, EyeOff, KeyRound, ShieldCheck } from "lucide-react"
+import {
+  Eye,
+  EyeOff,
+  KeyRound,
+  ShieldCheck,
+  User,
+  Briefcase,
+  Lock,
+  AlertCircle,
+  CheckCircle2,
+  Calendar,
+  Building2,
+  Mail,
+  Phone,
+  IdCard,
+  Wallet,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -28,6 +44,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { Spinner } from "@/components/ui/spinner"
+import { cn } from "@/lib/utils"
 
 // ── Zod schemas ──────────────────────────────────────────────────────────────
 
@@ -74,6 +92,22 @@ interface EmployeeFormProps {
   onCancel?: () => void
 }
 
+// ── Section Header helper ────────────────────────────────────────────────────
+
+function SectionHeader({ icon, title, description }: { icon: React.ReactNode; title: string; description?: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br from-[#22BFE8]/15 to-[#1A6DB6]/10 flex items-center justify-center ring-1 ring-[#22BFE8]/20">
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <h3 className="text-sm font-bold text-slate-800 tracking-tight">{title}</h3>
+        {description && <p className="text-xs text-slate-500 mt-0.5">{description}</p>}
+      </div>
+    </div>
+  )
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormProps) {
@@ -84,6 +118,7 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
   const [roles, setRoles] = useState<any[]>([])
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [referenceError, setReferenceError] = useState<string | null>(null)
 
   const isEdit = !!initialData?.id
 
@@ -94,18 +129,18 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
     defaultValues: isEdit
       ? (initialData as any)
       : {
-          firstName: "",
-          lastName: "",
-          email: "",
-          phone: "",
-          employmentType: "full_time",
-          startDate: new Date().toISOString().split('T')[0],
-          salary: "",
-          nationalId: "",
-          roleId: "",
-          initialPassword: "",
-          confirmPassword: "",
-        },
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        employmentType: "full_time",
+        startDate: new Date().toISOString().split('T')[0],
+        salary: "",
+        nationalId: "",
+        roleId: "",
+        initialPassword: "",
+        confirmPassword: "",
+      },
   })
 
   useEffect(() => {
@@ -123,6 +158,7 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
   }, [])
 
   async function onSubmit(values: CreateFormValues) {
+    setReferenceError(null)
     try {
       setIsSubmitting(true)
       const endpoint = isEdit ? `/api/employees/${initialData!.id}` : "/api/employees"
@@ -131,9 +167,9 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
       // For edit, strip auth-only fields
       const payload = isEdit
         ? (() => {
-            const { initialPassword, confirmPassword, roleId, ...rest } = values as any
-            return rest
-          })()
+          const { initialPassword, confirmPassword, roleId, ...rest } = values as any
+          return rest
+        })()
         : values
 
       const res = await fetch(endpoint, {
@@ -144,12 +180,16 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
 
       if (!res.ok) {
         const errorData = await res.json()
-        throw new Error(errorData.error?.message || `Failed to ${isEdit ? 'update' : 'create'} employee`)
+        const msg = errorData.error?.message || `Failed to ${isEdit ? 'update' : 'create'} employee`
+        setReferenceError(msg)
+        throw new Error(msg)
       }
 
       const result = await res.json()
-      const msg = result.message || `Employee ${isEdit ? 'updated' : 'created'} successfully`
-      toast.success(msg)
+      const okMsg = result.message || `Employee ${isEdit ? 'updated' : 'created'} successfully`
+      toast.success(okMsg, {
+        icon: <CheckCircle2 className="h-4 w-4 text-emerald-600" />,
+      })
 
       if (onSuccess) {
         onSuccess()
@@ -157,7 +197,9 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
         router.refresh()
       }
     } catch (error: any) {
-      toast.error(error.message)
+      toast.error(error.message || "Something went wrong", {
+        icon: <AlertCircle className="h-4 w-4 text-rose-600" />,
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -165,171 +207,226 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit as any)} className="flex flex-col">
 
-        {/* ── Personal Info ──────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First Name *</FormLabel>
-                <FormControl>
-                  <Input placeholder="John" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last Name *</FormLabel>
-                <FormControl>
-                  <Input placeholder="Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Work Email *</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="john.doe@company.com" disabled={isEdit} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone Number</FormLabel>
-                <FormControl>
-                  <Input placeholder="+1 234 567 890" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <div className="space-y-7">
 
-          <FormField
-            control={form.control}
-            name="employmentType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Employment Type *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="full_time">Full Time</SelectItem>
-                    <SelectItem value="part_time">Part Time</SelectItem>
-                    <SelectItem value="contract">Contract</SelectItem>
-                    <SelectItem value="intern">Intern</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* ── Top-level error banner ──────────────────────────────────────── */}
+          {referenceError && (
+            <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50/70 p-3 text-sm text-rose-800">
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+              <p className="font-medium">{referenceError}</p>
+            </div>
+          )}
 
-          <FormField
-            control={form.control}
-            name="departmentId"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Department</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a department" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {departments.map((d) => (
-                      <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* ── Personal Information ──────────────────────────────────────── */}
+          <section className="space-y-4">
+            <SectionHeader
+              icon={<User className="h-4 w-4 text-[#1A6DB6]" />}
+              title="Personal Information"
+              description="Basic identifying details for the employee."
+            />
 
-          <FormField
-            control={form.control}
-            name="designationId"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Designation *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a designation" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {designations.map((d) => (
-                      <SelectItem key={d.id} value={d.id}>{d.title}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="startDate"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Start Date *</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {/* ── Role & Access (create only) ────────────────────────────────── */}
-        {!isEdit && (
-          <div className="pt-4 border-t">
-            <div className="flex items-center gap-2 mb-4">
-              <ShieldCheck className="h-4 w-4 text-[#1A6DB6]" />
-              <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
-                Role & Login Access
-              </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-1.5">
+                      First Name <span className="text-rose-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="John" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-1.5">
+                      Last Name <span className="text-rose-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-4 mb-5">
-              <p className="text-xs text-blue-700 leading-relaxed">
-                <strong>A login account will be created automatically</strong> for this employee using the email and password below.
-                The employee can log in immediately and change their password using the "Forgot password?" link.
-              </p>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1.5">
+                    <Mail className="h-3 w-3 text-slate-400" />
+                    Work Email <span className="text-rose-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="john.doe@company.com"
+                      disabled={isEdit}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1.5">
+                    <Phone className="h-3 w-3 text-slate-400" />
+                    Phone Number
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="+1 234 567 890" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </section>
+
+          {/* ── Employment ───────────────────────────────────────────────── */}
+          <section className="space-y-4 pt-5 border-t border-slate-100">
+            <SectionHeader
+              icon={<Briefcase className="h-4 w-4 text-[#1A6DB6]" />}
+              title="Employment"
+              description="Role, department and contract details."
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="employmentType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-1.5">
+                      Employment Type <span className="text-rose-500">*</span>
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="full_time">Full Time</SelectItem>
+                        <SelectItem value="part_time">Part Time</SelectItem>
+                        <SelectItem value="contract">Contract</SelectItem>
+                        <SelectItem value="intern">Intern</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-1.5">
+                      <Calendar className="h-3 w-3 text-slate-400" />
+                      Start Date <span className="text-rose-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="departmentId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1.5">
+                    <Building2 className="h-3 w-3 text-slate-400" />
+                    Department
+                  </FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a department" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {departments.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="designationId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1.5">
+                    Designation <span className="text-rose-500">*</span>
+                  </FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a designation" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {designations.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>{d.title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </section>
+
+          {/* ── Role & Login Access (create only) ──────────────────────────── */}
+          {!isEdit && (
+            <section className="space-y-4 pt-5 border-t border-slate-100">
+              <SectionHeader
+                icon={<ShieldCheck className="h-4 w-4 text-[#1A6DB6]" />}
+                title="Role & Login Access"
+                description="Provision system access for this employee."
+              />
+
+              <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50/60 to-cyan-50/40 p-3.5">
+                <p className="text-xs leading-relaxed text-blue-800">
+                  <strong className="font-semibold">A login account will be created automatically</strong> for
+                  this employee using the email and password below. They can sign in immediately and
+                  change their password from the &ldquo;Forgot password?&rdquo; link.
+                </p>
+              </div>
+
               <FormField
                 control={form.control as any}
                 name="roleId"
                 render={({ field }) => (
-                  <FormItem className="md:col-span-2">
+                  <FormItem>
                     <FormLabel>System Role</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
                       <FormControl>
@@ -353,88 +450,98 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
                       </SelectContent>
                     </Select>
                     <FormDescription className="text-xs">
-                      Defaults to "Employee" if not selected.
+                      Defaults to &ldquo;Employee&rdquo; if not selected.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <FormField
-                control={form.control as any}
-                name="initialPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1.5">
-                      <KeyRound className="h-3.5 w-3.5" />
-                      Temporary Password *
-                    </FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Min. 8 characters"
-                          {...field}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(v => !v)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                          tabIndex={-1}
-                        >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control as any}
+                  name="initialPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1.5">
+                        <KeyRound className="h-3 w-3 text-slate-400" />
+                        Temporary Password <span className="text-rose-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Min. 8 characters"
+                            {...field}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(v => !v)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                            tabIndex={-1}
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control as any}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirm Password *</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type={showConfirmPassword ? "text" : "password"}
-                          placeholder="Re-enter password"
-                          {...field}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword(v => !v)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                          tabIndex={-1}
-                        >
-                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-        )}
+                <FormField
+                  control={form.control as any}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1.5">
+                        <Lock className="h-3 w-3 text-slate-400" />
+                        Confirm Password <span className="text-rose-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="Re-enter password"
+                            {...field}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(v => !v)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                            tabIndex={-1}
+                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                          >
+                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </section>
+          )}
 
-        {/* ── Sensitive Information ──────────────────────────────────────── */}
-        <div className="pt-4 border-t">
-          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-4">
-            Sensitive Information
-          </h3>
-          <div className="grid grid-cols-1 gap-6">
+          {/* ── Sensitive Information ──────────────────────────────────────── */}
+          <section className="space-y-4 pt-5 border-t border-slate-100">
+            <SectionHeader
+              icon={<Wallet className="h-4 w-4 text-[#1A6DB6]" />}
+              title="Compensation & Records"
+              description="Confidential payroll information (encrypted at rest)."
+            />
+
             <FormField
               control={form.control}
               name="salary"
               render={({ field }) => (
                 <FormItem>
                   <div className="flex items-center gap-2">
-                    <FormLabel>Annual Salary (USD)</FormLabel>
+                    <FormLabel className="flex items-center gap-1.5">
+                      Annual Salary (USD)
+                    </FormLabel>
                     <ContextualHelp tooltip="Enter the base annual salary in USD. Leave blank for hourly workers." href="/help/human-resources" />
                   </div>
                   <FormControl>
@@ -444,12 +551,16 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="nationalId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>National ID / SSN</FormLabel>
+                  <FormLabel className="flex items-center gap-1.5">
+                    <IdCard className="h-3 w-3 text-slate-400" />
+                    National ID / SSN
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="XXX-XX-XXXX" {...field} />
                   </FormControl>
@@ -457,19 +568,35 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
                 </FormItem>
               )}
             />
-          </div>
+          </section>
         </div>
 
-        {/* ── Actions ───────────────────────────────────────────────────── */}
-        <div className="flex justify-end space-x-4 pt-6">
-          <Button variant="outline" type="button" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting
-              ? (isEdit ? "Updating..." : "Creating employee...")
-              : (isEdit ? "Update Employee" : "Create Employee & Grant Access")}
-          </Button>
+        {/* ── Sticky Action Bar ───────────────────────────────────────────── */}
+        <div className="sticky bottom-0 -mx-6 mt-8 px-6 py-4 border-t border-slate-100 bg-white/80 backdrop-blur-sm">
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={onCancel}
+              disabled={isSubmitting}
+              className="sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className={cn(
+                "gap-2 shadow-sm shadow-[#1A6DB6]/20 bg-gradient-to-r from-[#1A6DB6] to-[#22BFE8] hover:from-[#155a96] hover:to-[#1ca2c5] border-0 text-white font-semibold transition-all",
+                isSubmitting && "opacity-90"
+              )}
+            >
+              {isSubmitting && <Spinner className="h-3.5 w-3.5" />}
+              {isSubmitting
+                ? (isEdit ? "Updating..." : "Creating employee...")
+                : (isEdit ? "Update Employee" : "Create Employee & Grant Access")}
+            </Button>
+          </div>
         </div>
       </form>
     </Form>
