@@ -53,7 +53,7 @@ interface DealFormProps {
   onCancel?: () => void;
 }
 
-// ── Section Header helper ────────────────────────────────────────────────────
+// Themed section header (Blue theme for deals)
 function SectionHeader({
   icon,
   title,
@@ -65,7 +65,7 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br from-[#22BFE8]/15 to-[#1A6DB6]/10 flex items-center justify-center ring-1 ring-[#22BFE8]/20">
+      <div className="h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br from-[#F87171]/15 to-[#DC2626]/10 flex items-center justify-center ring-1 ring-[#DC2626]/20 text-[#DC2626]">
         {icon}
       </div>
       <div className="min-w-0">
@@ -145,12 +145,15 @@ export function DealForm({ initialData, onSuccess, onCancel }: DealFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex flex-col animate-in slide-in-from-left-4 fade-in duration-300"
+      >
         <div className="space-y-7">
-          {/* ── Deal Summary ──────────────────────────────────────────────── */}
+          {/* Deal Summary */}
           <section className="space-y-4">
             <SectionHeader
-              icon={<Handshake className="h-4 w-4 text-[#1A6DB6]" />}
+              icon={<Handshake className="h-4 w-4" />}
               title="Deal Summary"
               description="Name and primary client account for this opportunity."
             />
@@ -200,10 +203,10 @@ export function DealForm({ initialData, onSuccess, onCancel }: DealFormProps) {
             />
           </section>
 
-          {/* ── Deal Value ────────────────────────────────────────────────── */}
+          {/* Deal Value */}
           <section className="space-y-4 pt-5 border-t border-slate-100">
             <SectionHeader
-              icon={<Wallet className="h-4 w-4 text-[#1A6DB6]" />}
+              icon={<Wallet className="h-4 w-4" />}
               title="Deal Value"
               description="Estimated amount and billing currency."
             />
@@ -258,10 +261,10 @@ export function DealForm({ initialData, onSuccess, onCancel }: DealFormProps) {
             </div>
           </section>
 
-          {/* ── Timeline & Source ──────────────────────────────────────────── */}
+          {/* Timeline & Source */}
           <section className="space-y-4 pt-5 border-t border-slate-100">
             <SectionHeader
-              icon={<Calendar className="h-4 w-4 text-[#1A6DB6]" />}
+              icon={<Calendar className="h-4 w-4" />}
               title="Timeline & Source"
               description="When this deal is expected to close and where it came from."
             />
@@ -320,7 +323,7 @@ export function DealForm({ initialData, onSuccess, onCancel }: DealFormProps) {
           </section>
         </div>
 
-        {/* ── Sticky Action Bar ─────────────────────────────────────────── */}
+        {/* Sticky Action Bar */}
         <div className="sticky bottom-0 -mx-6 mt-8 px-6 py-4 border-t border-slate-100 bg-white/80 backdrop-blur-sm">
           <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2">
             <Button
@@ -336,7 +339,7 @@ export function DealForm({ initialData, onSuccess, onCancel }: DealFormProps) {
               type="submit"
               disabled={loading}
               className={cn(
-                'gap-2 shadow-sm shadow-[#1A6DB6]/20 bg-gradient-to-r from-[#1A6DB6] to-[#22BFE8] hover:from-[#155a96] hover:to-[#1ca2c5] border-0 text-white font-semibold transition-all',
+                'gap-2 shadow-sm shadow-[#DC2626]/20 bg-gradient-to-r from-[#DC2626] to-[#EF4444] hover:from-[#B91C1C] hover:to-[#DC2626] border-0 text-white font-semibold transition-all',
                 loading && 'opacity-90'
               )}
             >

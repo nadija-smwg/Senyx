@@ -103,15 +103,7 @@ export default function LoginPage() {
             </div>
           </AuthField>
 
-          <div className="flex items-center justify-between pt-0.5">
-            <label className="inline-flex items-center gap-2 text-xs text-gray-500 select-none">
-              <input
-                type="checkbox"
-                className="h-3.5 w-3.5 rounded border-gray-300 text-[#C1172C] focus:ring-[#C1172C]/30"
-                disabled={isLoading}
-              />
-              <span>Remember this device</span>
-            </label>
+          <div className="flex items-center justify-end pt-0.5">
             <Link
               href="/forgot-password"
               className="text-xs font-semibold text-[#C1172C] hover:text-[#9B1022] transition-colors"

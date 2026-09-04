@@ -151,7 +151,7 @@ export function AuthLayout({ children, aside }: AuthLayoutProps) {
                         </div>
                         <div className="relative">{aside}</div>
                         <p className="relative text-[11px] text-white/70">
-                            Your business, unified — finance, CRM, projects, HR and analytics under one platform.
+                            Everything Senyx needs to run its operations, in one place.
                         </p>
                     </aside>
                 )}
@@ -332,18 +332,19 @@ export function AuthAside() {
     return (
         <div className="text-white max-w-lg space-auto">
             <h2 className="font-heading text-4xl xl:text-5xl font-extrabold tracking-tight leading-tight">
-                Run your entire operation from <span className="bg-gradient-to-r from-white via-[#F9A01B] to-white bg-clip-text text-transparent">one calm workspace</span>.
+                Manage  Senyx  from  one <span className="bg-gradient-to-r from-white via-[#F9A01B] to-white bg-clip-text text-transparent">central  workspace</span>.
             </h2>
             <p className="mt-5 text-base xl:text-lg text-white/85 leading-relaxed">
-                Senyx unifies finance, CRM, projects, HR, deals and analytics into a single
-                role-aware ERP — so every team works from the same source of truth.
+                A unified internal system for managing finance, HR, employees, projects, customers, sales,
+                and day to day operations - keeping everything your team needs in one secure place.
             </p>
             <ul className="mt-8 space-y-3 text-sm text-white/90">
                 {[
-                    'Real-time revenue, profit and cash flow dashboards',
-                    'Customer, deal and project records in one place',
-                    'Role-based permissions for HR, Finance and Operations',
-                    'Immutable audit logs on every write',
+                    'Real-time financial and business overview',
+                    'Manage employees, customers, projects and deals',
+                    'Department-based access and permissions',
+                    'Centralized company data and records',
+                    'Track activities and changes across the organization',
                 ].map(item => (
                     <li key={item} className="flex items-start gap-2">
                         <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#F9A01B]" />

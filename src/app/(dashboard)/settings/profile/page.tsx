@@ -20,6 +20,7 @@ type Me = { user: { firstName: string; lastName: string; email: string } };
 export default function ProfileSettingsPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -45,7 +46,7 @@ export default function ProfileSettingsPage() {
     loadProfile();
   }, []);
 
-  const isDirty = password.length > 0;
+  const isDirty = currentPassword.length > 0 || password.length > 0;
   const passwordStrength = password.length === 0 ? 0 : password.length < 8 ? 1 : password.length < 12 ? 2 : 3;
   const strengthLabel = ['Empty', 'Weak', 'Good', 'Strong'][passwordStrength];
   const strengthTone: 'negative' | 'warning' | 'positive' =
@@ -55,8 +56,12 @@ export default function ProfileSettingsPage() {
     e?.preventDefault();
     setError(null);
 
+    if (!currentPassword) {
+      setError('Enter your current password to authorize this change.');
+      return;
+    }
     if (!password) {
-      setError('Enter a new password or leave the field blank to keep your current password.');
+      setError('Enter a new password.');
       return;
     }
     if (password.length < 8) {
@@ -73,7 +78,7 @@ export default function ProfileSettingsPage() {
       const res = await fetch('/api/auth/password/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password })
+        body: JSON.stringify({ currentPassword, password })
       });
 
       if (!res.ok) {
@@ -82,6 +87,7 @@ export default function ProfileSettingsPage() {
       }
 
       toast.success('Password updated successfully');
+      setCurrentPassword('');
       setPassword('');
       setConfirmPassword('');
     } catch (e: any) {
@@ -162,6 +168,21 @@ export default function ProfileSettingsPage() {
               }
             >
               <form onSubmit={handleSave} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <SettingsField
+                    label="Current Password"
+                    required
+                    hint="Required to authorize the change."
+                  >
+                    <SettingsInput
+                      type="password"
+                      value={currentPassword}
+                      onChange={e => setCurrentPassword(e.target.value)}
+                      placeholder="••••••••"
+                      autoComplete="current-password"
+                    />
+                  </SettingsField>
+                </div>
                 <SettingsField
                   label="New Password"
                   required

@@ -186,38 +186,46 @@ export function DealTable({ deals }: { deals: Deal[] }) {
   );
 }
 
-function DealRowSheet({ deal }: { deal: Deal }) {
+function DealRowSheet({ deal, onSaved }: { deal: Deal; onSaved?: () => void }) {
+  const [open, setOpen] = useState(false);
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button
           type="button"
-          className="inline-flex items-center justify-center h-7 w-7 rounded-md text-gray-500 hover:text-[#F15A22] hover:bg-[#FEF0EB] border border-gray-200 hover:border-[#FBD9C9] transition-colors"
+          className="inline-flex items-center justify-center h-7 w-7 rounded-md text-gray-500 hover:text-[#DC2626] hover:bg-[#FEF2F2] border border-gray-200 hover:border-[#FECACA] transition-colors"
           aria-label="Edit deal"
         >
           <Pencil className="w-3.5 h-3.5" />
         </button>
       </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
-        <SheetHeader className="mb-4">
+      <SheetContent className="w-full sm:max-w-[480px] flex flex-col p-0">
+        <SheetHeader className="px-6 py-6 border-b shrink-0">
           <SheetTitle>Edit Deal</SheetTitle>
           <SheetDescription>
-            Update details for <span className="font-semibold">{deal.name}</span>.
+            Update details for {deal.name}.
           </SheetDescription>
         </SheetHeader>
-        <DealForm
-          initialData={{
-            id: deal.id,
-            name: deal.name,
-            accountId: deal.accountId,
-            amount: String(deal.amount ?? ''),
-            currency: deal.currency,
-            expectedCloseDate: deal.expectedCloseDate
-              ? new Date(deal.expectedCloseDate).toISOString().split('T')[0]
-              : '',
-            source: deal.source || '',
-          }}
-        />
+        <div className="flex-1 overflow-y-auto px-6 py-2 relative h-full">
+          <DealForm
+            initialData={{
+              id: deal.id,
+              name: deal.name,
+              accountId: deal.accountId,
+              amount: String(deal.amount ?? ''),
+              currency: deal.currency,
+              expectedCloseDate: deal.expectedCloseDate
+                ? new Date(deal.expectedCloseDate).toISOString().split('T')[0]
+                : '',
+              source: deal.source || '',
+            }}
+            onSuccess={() => {
+              setOpen(false);
+              onSaved?.();
+            }}
+            onCancel={() => setOpen(false)}
+          />
+        </div>
       </SheetContent>
     </Sheet>
   );

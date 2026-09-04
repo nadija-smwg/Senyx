@@ -53,6 +53,9 @@ export default function GeneralSettingsPage() {
           setSavedCurrency(parsed);
         }
       }
+    }).catch((err) => {
+      console.error('Failed to load settings', err);
+      toast.error('Failed to load settings. Please refresh the page.');
     }).finally(() => setLoading(false));
   }, []);
 

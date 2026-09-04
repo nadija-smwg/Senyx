@@ -116,11 +116,13 @@ export default function AccountDetailPage() {
                 <SheetTrigger asChild>
                   <Button size="sm" variant="outline">Add Contact</Button>
                 </SheetTrigger>
-                <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
-                  <SheetHeader className="mb-6">
+                <SheetContent className="w-full sm:max-w-[480px] flex flex-col p-0">
+                  <SheetHeader className="px-6 py-6 border-b shrink-0">
                     <SheetTitle className="text-2xl font-bold font-heading">Add Contact</SheetTitle>
                   </SheetHeader>
-                  <ContactForm onSuccess={refreshAccount} defaultAccountId={id} />
+                  <div className="flex-1 overflow-y-auto px-6 py-2 relative h-full">
+                    <ContactForm onSuccess={refreshAccount} defaultAccountId={id} />
+                  </div>
                 </SheetContent>
               </Sheet>
             </div>

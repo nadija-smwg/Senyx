@@ -298,34 +298,36 @@ function EmployeeActions({ employee, onRefresh }: EmployeeActionsProps) {
               View Details
             </DropdownMenuItem>
           </SheetTrigger>
-          <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
+          <SheetContent className="w-full sm:max-w-[480px] flex flex-col p-0">
             {isEditing ? (
               <>
-                <SheetHeader className="mb-6">
+                <SheetHeader className="px-6 py-6 border-b shrink-0">
                   <SheetTitle className="text-2xl font-bold font-heading">Edit Employee</SheetTitle>
                   <SheetDescription>Update information for {employee.firstName} {employee.lastName}</SheetDescription>
                 </SheetHeader>
-                <EmployeeForm
-                  initialData={{
-                    id: employee.id,
-                    firstName: employee.firstName,
-                    lastName: employee.lastName,
-                    email: employee.email,
-                    employmentType: "full_time",
-                    startDate: employee.startDate || new Date().toISOString().split("T")[0],
-                    designationId: "",
-                  } as any}
-                  onCancel={() => setIsEditing(false)}
-                  onSuccess={() => { setIsEditing(false); setIsOpen(false); onRefresh?.() }}
-                />
+                <div className="flex-1 overflow-y-auto px-6 py-2 relative h-full">
+                  <EmployeeForm
+                    initialData={{
+                      id: employee.id,
+                      firstName: employee.firstName,
+                      lastName: employee.lastName,
+                      email: employee.email,
+                      employmentType: "full_time",
+                      startDate: employee.startDate || new Date().toISOString().split("T")[0],
+                      designationId: "",
+                    } as any}
+                    onCancel={() => setIsEditing(false)}
+                    onSuccess={() => { setIsEditing(false); setIsOpen(false); onRefresh?.() }}
+                  />
+                </div>
               </>
             ) : (
               <>
-                <SheetHeader>
+                <SheetHeader className="px-6 py-6 border-b shrink-0">
                   <SheetTitle className="text-2xl font-bold font-heading">{employee.firstName} {employee.lastName}</SheetTitle>
                   <SheetDescription>Employee details and records</SheetDescription>
                 </SheetHeader>
-                <div className="py-6 space-y-5">
+                <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
                   <div className="flex items-center gap-4">
                     <Avatar className="h-14 w-14 ring-2 ring-white shadow-sm">
                       <AvatarFallback className="text-base font-bold">

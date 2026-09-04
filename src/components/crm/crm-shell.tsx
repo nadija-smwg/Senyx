@@ -39,11 +39,11 @@ import { Input } from '@/components/ui/input';
  * Used for the page-header gradient, focus rings, status pills, etc.
  */
 export const CRM_BRAND = {
-    primary: '#F15A22', // orange
-    primaryTint: '#FEF0EB',
-    deep: '#C9471A',
+    primary: '#DC2626', // red
+    primaryTint: '#FEF2F2',
+    deep: '#B91C1C',
     info: '#7F4D9F', // accent for kanban stages
-    border: '#FBD9C9',
+    border: '#FECACA',
 } as const;
 
 /* ------------------------------------------------------------------ */
@@ -79,12 +79,12 @@ export function CrmPageShell({
         <div className="space-y-6">
             {/* Header */}
             <div className="relative overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                <div className="absolute top-[-30%] right-[-10%] w-[55%] h-[180%] rounded-[100%] bg-gradient-to-br from-[#F15A22]/12 via-[#7F4D9F]/8 to-transparent blur-3xl pointer-events-none" />
-                <div className="absolute bottom-[-60%] left-[-10%] w-[40%] h-[180%] rounded-[100%] bg-gradient-to-tr from-[#F9A01B]/10 via-[#EC4C49]/8 to-transparent blur-3xl pointer-events-none" />
+                <div className="absolute top-[-30%] right-[-10%] w-[55%] h-[180%] rounded-[100%] bg-gradient-to-br from-[#DC2626]/12 via-[#7F4D9F]/8 to-transparent blur-3xl pointer-events-none" />
+                <div className="absolute bottom-[-60%] left-[-10%] w-[40%] h-[180%] rounded-[100%] bg-gradient-to-tr from-[#EF4444]/10 via-[#DC2626]/8 to-transparent blur-3xl pointer-events-none" />
                 <div className="relative px-5 sm:px-7 py-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div className="min-w-0">
                         {pretitle && (
-                            <p className="text-[10px] font-black tracking-[0.2em] uppercase bg-gradient-to-r from-[#F15A22] via-[#7F4D9F] to-[#1A6DB6] bg-clip-text text-transparent">
+                            <p className="text-[10px] font-black tracking-[0.2em] uppercase bg-gradient-to-r from-[#DC2626] via-[#7F4D9F] to-[#1A6DB6] bg-clip-text text-transparent">
                                 {pretitle}
                             </p>
                         )}
@@ -129,7 +129,7 @@ interface CrmStatCardProps {
 }
 
 const accentMap = {
-    neutral: { bg: 'bg-[#FEF0EB]', fg: 'text-[#F15A22]' },
+    neutral: { bg: 'bg-[#FEF2F2]', fg: 'text-[#DC2626]' },
     positive: { bg: 'bg-emerald-50', fg: 'text-emerald-600' },
     warning: { bg: 'bg-amber-50', fg: 'text-amber-600' },
     negative: { bg: 'bg-rose-50', fg: 'text-rose-600' },

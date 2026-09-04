@@ -44,6 +44,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface ProjectFormProps {
+  initialData?: any;
   fromDealId?: string | null;
   onSuccess?: () => void;
   onCancel?: () => void;
@@ -72,7 +73,7 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-// ── Themed Section Header helper ─────────────────────────────────────────────
+// Themed section header (Green theme for projects)
 type FormTheme = 'green' | 'blue' | 'orange';
 
 const themeStyles: Record<FormTheme, {
@@ -83,14 +84,9 @@ const themeStyles: Record<FormTheme, {
   calloutBg: string;
   calloutText: string;
   calloutIcon: string;
-  dashed: string;
-  dashedText: string;
-  dashedBg: string;
   btnGradient: string;
   btnGradientHover: string;
   btnShadow: string;
-  focusRing: string;
-  focusBorder: string;
 }> = {
   green: {
     gradient: 'from-[#34D399]/15 to-[#10B981]/10',
@@ -100,14 +96,9 @@ const themeStyles: Record<FormTheme, {
     calloutBg: 'bg-gradient-to-br from-emerald-50/60 to-green-50/40',
     calloutText: 'text-emerald-800',
     calloutIcon: 'text-[#047857]',
-    dashed: 'border-emerald-300/60',
-    dashedText: 'text-[#047857]',
-    dashedBg: 'hover:bg-emerald-50/40',
     btnGradient: 'from-[#059669] to-[#10B981]',
     btnGradientHover: 'hover:from-[#047857] hover:to-[#059669]',
     btnShadow: 'shadow-emerald-500/25',
-    focusRing: 'focus:ring-emerald-400/40',
-    focusBorder: 'focus:border-emerald-400',
   },
   blue: {
     gradient: 'from-[#22BFE8]/15 to-[#1A6DB6]/10',
@@ -117,14 +108,9 @@ const themeStyles: Record<FormTheme, {
     calloutBg: 'bg-gradient-to-br from-blue-50/60 to-cyan-50/40',
     calloutText: 'text-blue-800',
     calloutIcon: 'text-[#1A6DB6]',
-    dashed: 'border-[#22BFE8]/40',
-    dashedText: 'text-[#1A6DB6]',
-    dashedBg: 'hover:bg-[#22BFE8]/5',
     btnGradient: 'from-[#1A6DB6] to-[#22BFE8]',
     btnGradientHover: 'hover:from-[#155a96] hover:to-[#1ca2c5]',
     btnShadow: 'shadow-[#1A6DB6]/20',
-    focusRing: 'focus:ring-[#22BFE8]/40',
-    focusBorder: 'focus:border-[#22BFE8]',
   },
   orange: {
     gradient: 'from-[#FB923C]/15 to-[#F97316]/10',
@@ -134,14 +120,9 @@ const themeStyles: Record<FormTheme, {
     calloutBg: 'bg-gradient-to-br from-orange-50/60 to-amber-50/40',
     calloutText: 'text-orange-800',
     calloutIcon: 'text-[#C2410C]',
-    dashed: 'border-orange-300/60',
-    dashedText: 'text-[#C2410C]',
-    dashedBg: 'hover:bg-orange-50/40',
     btnGradient: 'from-[#EA580C] to-[#F97316]',
     btnGradientHover: 'hover:from-[#C2410C] hover:to-[#EA580C]',
     btnShadow: 'shadow-orange-500/25',
-    focusRing: 'focus:ring-orange-400/40',
-    focusBorder: 'focus:border-orange-400',
   },
 };
 
@@ -159,7 +140,7 @@ function SectionHeader({
   const t = themeStyles[theme];
   return (
     <div className="flex items-start gap-3">
-      <div className={`h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br ${t.gradient} flex items-center justify-center ring-1 ${t.ring}`}>
+      <div className={cn('h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br flex items-center justify-center ring-1', t.gradient, t.ring)}>
         <span className={t.icon}>{icon}</span>
       </div>
       <div className="min-w-0">
@@ -257,6 +238,7 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
       const payload = {
         ...values,
         accountId: values.accountId || null,
+        ownerId: values.ownerId || null,
         budget: values.budget ? Number(values.budget) : null,
       };
 
@@ -307,14 +289,18 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex flex-col animate-in slide-in-from-left-4 fade-in duration-300"
+      >
         <div className="space-y-7">
-          {/* ── Project Identity ─────────────────────────────────────────────── */}
+          {/* Project Identity */}
           <section className="space-y-4">
             <SectionHeader
-              icon={<FolderKanban className="h-4 w-4 text-[#1A6DB6]" />}
+              icon={<FolderKanban className="h-4 w-4" />}
               title="Project Identity"
               description="Basic details and classification."
+              theme={theme}
             />
 
             <FormField
@@ -457,12 +443,13 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
             />
           </section>
 
-          {/* ── Commercial Details ───────────────────────────────────────────── */}
+          {/* Commercial Details */}
           <section className="space-y-4 pt-5 border-t border-slate-100">
             <SectionHeader
-              icon={<Wallet className="h-4 w-4 text-[#1A6DB6]" />}
+              icon={<Wallet className="h-4 w-4" />}
               title="Commercial Details"
               description="Billing terms, budget and currency."
+              theme={theme}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -540,12 +527,13 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
             />
           </section>
 
-          {/* ── Schedule ────────────────────────────────────────────────────── */}
+          {/* Schedule */}
           <section className="space-y-4 pt-5 border-t border-slate-100">
             <SectionHeader
-              icon={<Calendar className="h-4 w-4 text-[#1A6DB6]" />}
+              icon={<Calendar className="h-4 w-4" />}
               title="Schedule"
               description="Project timeline and milestones."
+              theme={theme}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -585,12 +573,13 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
             </div>
           </section>
 
-          {/* ── Team & Ownership ────────────────────────────────────────────── */}
+          {/* Team & Ownership */}
           <section className="space-y-4 pt-5 border-t border-slate-100">
             <SectionHeader
-              icon={<Users className="h-4 w-4 text-[#1A6DB6]" />}
+              icon={<Users className="h-4 w-4" />}
               title="Team & Ownership"
               description="Assign accountable owner and developers."
+              theme={theme}
             />
 
             <FormField
@@ -634,6 +623,19 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
                           onChange={(e) => setOwnerSearch(e.target.value)}
                         />
                       </div>
+                      {field.value && (
+                        <div
+                          className="flex cursor-pointer items-center border-b border-red-100 bg-red-50/50 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                          onClick={() => {
+                            field.onChange("");
+                            setOwnerOpen(false);
+                            setOwnerSearch('');
+                          }}
+                        >
+                          <X className="mr-2 h-4 w-4" />
+                          Clear owner selection
+                        </div>
+                      )}
                       <div className="max-h-[200px] overflow-y-auto p-1">
                         {employees
                           .filter((emp) =>
@@ -791,7 +793,7 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
                         </span>
                         <div className="flex items-center gap-2 shrink-0">
                           <select
-                            className="h-8 text-xs rounded-md border border-slate-200 bg-white px-2 py-1 outline-none focus:ring-1 focus:ring-[#22BFE8]/40 focus:border-[#22BFE8]"
+                            className="h-8 text-xs rounded-md border border-slate-200 bg-white px-2 py-1 outline-none focus:ring-1 focus:ring-[#10B981]/40 focus:border-[#10B981]"
                             value={member.role}
                             onChange={(e) =>
                               setTeamMembers((prev) =>
@@ -832,12 +834,12 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
             </div>
           </section>
 
-          {/* ── Helpful callout ──────────────────────────────────────────────── */}
+          {/* Helpful callout */}
           {deal && (
-            <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50/60 to-cyan-50/40 p-3.5">
+            <div className={cn('rounded-xl border p-3.5', t.calloutBorder, t.calloutBg)}>
               <div className="flex items-start gap-2.5">
-                <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-[#1A6DB6]" />
-                <p className="text-xs leading-relaxed text-blue-800">
+                <Sparkles className={cn('h-4 w-4 mt-0.5 shrink-0', t.calloutIcon)} />
+                <p className={cn('text-xs leading-relaxed', t.calloutText)}>
                   <strong className="font-semibold">Pre-filled from deal:</strong>{' '}
                   This project was auto-populated from <strong>{deal.name}</strong>. Adjust
                   the details below and create the project to attach it.
@@ -847,7 +849,7 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
           )}
         </div>
 
-        {/* ── Sticky Action Bar ───────────────────────────────────────────── */}
+        {/* Sticky Action Bar */}
         <div className="sticky bottom-0 -mx-6 mt-8 px-6 py-4 border-t border-slate-100 bg-white/80 backdrop-blur-sm">
           <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2">
             <Button
@@ -863,7 +865,10 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
               type="submit"
               disabled={submitting}
               className={cn(
-                'gap-2 shadow-sm shadow-[#1A6DB6]/20 bg-gradient-to-r from-[#1A6DB6] to-[#22BFE8] hover:from-[#155a96] hover:to-[#1ca2c5] border-0 text-white font-semibold transition-all',
+                'gap-2 shadow-sm border-0 text-white font-semibold transition-all bg-gradient-to-r',
+                t.btnGradient,
+                t.btnGradientHover,
+                t.btnShadow,
                 submitting && 'opacity-90'
               )}
             >

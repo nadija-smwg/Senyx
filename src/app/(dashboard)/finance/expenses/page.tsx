@@ -1,4 +1,4 @@
-8export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 import { db } from '@/server/db/client';
 import { expenses } from '@/server/db/schema/finance';
 import { projects } from '@/server/db/schema/projects';

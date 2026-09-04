@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '../../hooks/use-auth';
 import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
@@ -21,16 +22,22 @@ export function Sidebar() {
       {/* Brand — original Senyx logo (icon + wordmark) */}
       <div className="h-[80px] flex items-center px-4 shrink-0 border-b border-[#E5E7EB]">
         <Link href="/" className="flex items-center gap-3 group">
-          <img
+          <Image
             src="/logo-icon-transparent.png"
             alt="Senyx Icon"
+            width={56}
+            height={56}
             className="h-14 w-14 object-contain transition-transform duration-300 group-hover:scale-105"
+            priority
           />
           <div className="flex flex-col justify-center leading-tight">
-            <img
+            <Image
               src="/name-transparent.png"
               alt="SENYX"
+              width={120}
+              height={36}
               className="h-9 object-contain object-left"
+              priority
             />
             <span className="text-[11px] font-bold tracking-[0.22em] uppercase text-[#1A6DB6] mt-0.5">
               ERP Platform

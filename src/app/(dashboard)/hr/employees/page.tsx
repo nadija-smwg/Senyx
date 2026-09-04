@@ -180,8 +180,8 @@ export default function EmployeesPage() {
                   Add Employee
                 </Button>
               </SheetTrigger>
-              <SheetContent className="w-full sm:max-w-[520px] overflow-y-auto p-0">
-                <SheetHeader className="p-6 pb-4 border-b border-slate-100">
+              <SheetContent className="w-full sm:max-w-[520px] flex flex-col p-0">
+                <SheetHeader className="p-6 pb-4 border-b border-slate-100 shrink-0">
                   <div className="flex items-center gap-2 text-[10px] font-black tracking-[0.2em] uppercase bg-gradient-to-r from-[#1A6DB6] via-[#7F4D9F] to-[#F15A22] bg-clip-text text-transparent">
                     <ShieldCheck className="h-3.5 w-3.5 text-[#1A6DB6]" />
                     <span>New Team Member</span>
@@ -191,7 +191,7 @@ export default function EmployeesPage() {
                     Create an employee record and provision their system login in one step.
                   </SheetDescription>
                 </SheetHeader>
-                <div className="p-6">
+                <div className="flex-1 overflow-y-auto px-6 py-2 relative h-full">
                   <EmployeeForm
                     onSuccess={() => {
                       setIsSheetOpen(false)

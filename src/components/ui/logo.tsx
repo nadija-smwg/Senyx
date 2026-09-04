@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface LogoProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -10,7 +11,7 @@ export function Logo({ className, showIcon = true, ...props }: LogoProps) {
     <div className={cn("flex items-center gap-2 select-none", className)} {...props}>
       {showIcon && (
         <div className="relative w-11 h-11 shrink-0 flex items-center justify-center -ml-1">
-          <img src="/logo-icon-transparent.png" alt="Senyx Logo" className="w-[130%] h-[130%] max-w-none object-contain drop-shadow-md" />
+          <Image src="/logo-icon-transparent.png" alt="Senyx Logo" width={57} height={57} className="w-[130%] h-[130%] max-w-none object-contain drop-shadow-md" priority />
         </div>
       )}
       <div className="font-heading font-bold text-2xl tracking-tighter flex items-center">

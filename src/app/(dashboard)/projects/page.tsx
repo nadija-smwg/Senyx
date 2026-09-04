@@ -74,14 +74,16 @@ export default function ProjectsPage() {
               Add Project
             </Button>
           </SheetTrigger>
-          <SheetContent className="w-full sm:max-w-[540px] overflow-y-auto">
-            <SheetHeader className="mb-4">
+          <SheetContent className="w-full sm:max-w-[540px] flex flex-col p-0">
+            <SheetHeader className="px-6 py-6 border-b shrink-0">
               <SheetTitle>Create Project</SheetTitle>
               <SheetDescription>
                 Add a new project. Default board columns and your assignment are added automatically.
               </SheetDescription>
             </SheetHeader>
-            <ProjectForm onSuccess={fetchAll} />
+            <div className="flex-1 overflow-y-auto px-6 py-2 relative h-full">
+              <ProjectForm onSuccess={fetchAll} />
+            </div>
           </SheetContent>
         </Sheet>
       }

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { CurrencySelector } from './currency-selector';
@@ -38,16 +39,22 @@ export function MobileNav() {
         {/* Brand — original Senyx logo (icon + wordmark) */}
         <div className="flex items-center justify-between p-4 border-b border-[#E5E7EB] shrink-0">
           <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-3 group">
-            <img
+            <Image
               src="/logo-icon-transparent.png"
               alt="Senyx Icon"
+              width={56}
+              height={56}
               className="h-14 w-14 object-contain transition-transform duration-300 group-hover:scale-105"
+              priority
             />
             <div className="flex flex-col justify-center leading-tight">
-              <img
+              <Image
                 src="/name-transparent.png"
                 alt="SENYX"
+                width={120}
+                height={36}
                 className="h-9 object-contain object-left"
+                priority
               />
               <span className="text-[11px] font-bold tracking-[0.22em] uppercase text-[#1A6DB6] mt-0.5">
                 ERP Platform

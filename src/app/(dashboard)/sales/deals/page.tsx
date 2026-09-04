@@ -229,7 +229,7 @@ export default function DealsPage() {
               className={
                 'h-7 px-3 rounded-md text-xs font-semibold transition-colors border ' +
                 (stageFilter === 'all'
-                  ? 'bg-[#FEF0EB] text-[#C9471A] border-[#FBD9C9]'
+                  ? 'bg-[#FEF2F2] text-[#B91C1C] border-[#FECACA]'
                   : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300')
               }
             >
@@ -321,24 +321,26 @@ function DealSheet({ onSaved }: { onSaved?: () => void }) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button className="gap-1.5 bg-[#F15A22] hover:bg-[#C9471A] text-white shadow-sm">
+        <Button className="gap-1.5 bg-[#DC2626] hover:bg-[#B91C1C] text-white shadow-sm">
           <Plus className="w-4 h-4" />
           Create Deal
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
-        <SheetHeader className="mb-4">
+      <SheetContent className="w-full sm:max-w-[480px] flex flex-col p-0">
+        <SheetHeader className="px-6 py-6 border-b shrink-0">
           <SheetTitle>Create Deal</SheetTitle>
           <SheetDescription>
             Add a new opportunity. Stage and probability will be set automatically.
           </SheetDescription>
         </SheetHeader>
-        <DealForm
-          onSuccess={() => {
-            setOpen(false);
-            onSaved?.();
-          }}
-        />
+        <div className="flex-1 overflow-y-auto px-6 py-2 relative h-full">
+          <DealForm
+            onSuccess={() => {
+              setOpen(false);
+              onSaved?.();
+            }}
+          />
+        </div>
       </SheetContent>
     </Sheet>
   );

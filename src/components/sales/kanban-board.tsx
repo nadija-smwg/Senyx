@@ -44,7 +44,8 @@ type Deal = {
   };
 };
 
-function DealCard({ deal }: { deal: Deal }) {
+function DealCard({ deal, onSaved }: { deal: Deal; onSaved?: () => void }) {
+  const [open, setOpen] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: deal.id,
     data: { type: 'Deal', deal },
@@ -72,7 +73,7 @@ function DealCard({ deal }: { deal: Deal }) {
           <div className="flex items-start gap-2">
             <GripVertical className="w-3.5 h-3.5 text-gray-300 mt-0.5 shrink-0 group-hover:text-[#F15A22] transition-colors" />
             <div className="min-w-0 flex-1">
-              <Sheet>
+              <Sheet open={open} onOpenChange={setOpen}>
                 <SheetTrigger asChild>
                   <button
                     className="text-sm font-semibold text-gray-900 hover:text-[#F15A22] text-left leading-snug w-full"
@@ -81,26 +82,33 @@ function DealCard({ deal }: { deal: Deal }) {
                     {deal.name}
                   </button>
                 </SheetTrigger>
-                <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto" onPointerDown={(e) => e.stopPropagation()}>
-                  <SheetHeader className="mb-4">
+                <SheetContent className="w-full sm:max-w-[480px] flex flex-col p-0" onPointerDown={(e) => e.stopPropagation()}>
+                  <SheetHeader className="px-6 py-6 border-b shrink-0">
                     <SheetTitle>Edit Deal</SheetTitle>
                     <SheetDescription>
                       Update details for <span className="font-semibold">{deal.name}</span>.
                     </SheetDescription>
                   </SheetHeader>
-                  <DealForm
-                    initialData={{
-                      id: deal.id,
-                      name: deal.name,
-                      accountId: deal.accountId,
-                      amount: String(deal.amount ?? ''),
-                      currency: deal.currency,
-                      expectedCloseDate: deal.expectedCloseDate
-                        ? new Date(deal.expectedCloseDate).toISOString().split('T')[0]
-                        : '',
-                      source: deal.source || '',
-                    }}
-                  />
+                  <div className="flex-1 overflow-y-auto px-6 py-2 relative h-full">
+                    <DealForm
+                      initialData={{
+                        id: deal.id,
+                        name: deal.name,
+                        accountId: deal.accountId,
+                        amount: String(deal.amount ?? ''),
+                        currency: deal.currency,
+                        expectedCloseDate: deal.expectedCloseDate
+                          ? new Date(deal.expectedCloseDate).toISOString().split('T')[0]
+                          : '',
+                        source: deal.source || '',
+                      }}
+                      onSuccess={() => {
+                        setOpen(false);
+                        onSaved?.();
+                      }}
+                      onCancel={() => setOpen(false)}
+                    />
+                  </div>
                 </SheetContent>
               </Sheet>
             </div>
@@ -147,7 +155,7 @@ function DealCard({ deal }: { deal: Deal }) {
   );
 }
 
-function Column({ stage, deals }: { stage: DealStage; deals: Deal[] }) {
+function Column({ stage, deals, onSaved }: { stage: DealStage; deals: Deal[]; onSaved?: () => void }) {
   const totalAmount = deals.reduce((sum, d) => sum + (parseFloat(String(d.amount)) || 0), 0);
   const meta = DEAL_STAGE_META[stage];
 
@@ -183,7 +191,7 @@ function Column({ stage, deals }: { stage: DealStage; deals: Deal[] }) {
               Drop deals here
             </div>
           ) : (
-            deals.map(deal => <DealCard key={deal.id} deal={deal} />)
+            deals.map(deal => <DealCard key={deal.id} deal={deal} onSaved={onSaved} />)
           )}
         </SortableContext>
       </div>
@@ -194,9 +202,11 @@ function Column({ stage, deals }: { stage: DealStage; deals: Deal[] }) {
 export function KanbanBoard({
   deals,
   onStageChange,
+  onSaved,
 }: {
   deals: Deal[];
   onStageChange: (dealId: string, newStage: string) => void;
+  onSaved?: () => void;
 }) {
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
 
@@ -253,7 +263,7 @@ export function KanbanBoard({
       <div className="flex gap-3 overflow-x-auto pb-4 snap-x">
         {columnsData.map(col => (
           <div key={col.stage} className="snap-start">
-            <Column stage={col.stage} deals={col.deals} />
+            <Column stage={col.stage} deals={col.deals} onSaved={onSaved} />
           </div>
         ))}
       </div>

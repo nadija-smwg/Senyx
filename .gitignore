@@ -39,3 +39,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# application logs (not suitable for git — use an external logging service)
+error.log
+tsout.txt
+*.log
+
+# root-level debug/fix scripts (development artifacts)
+cleanup.ts
+fix-constraint.ts
+fix-type-constraint.ts
+fix_balances.ts
+test-create.ts
+test-insert.ts
+test-insert2.ts
+test-query.ts
+test-query2.ts

@@ -333,8 +333,8 @@ function AccountEditSheet({
           </button>
         )}
       </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
-        <SheetHeader className="mb-4">
+      <SheetContent className="w-full sm:max-w-[480px] flex flex-col p-0">
+        <SheetHeader className="px-6 py-6 border-b shrink-0">
           <SheetTitle>{account ? 'Edit Account' : 'Add Account'}</SheetTitle>
           <SheetDescription>
             {account
@@ -342,24 +342,26 @@ function AccountEditSheet({
               : 'Create a new client account. You can also add a primary contact in one step.'}
           </SheetDescription>
         </SheetHeader>
-        <AccountForm
-          initialData={
-            account
-              ? {
-                id: account.id,
-                name: account.name,
-                industry: account.industry || '',
-                size: account.size || '',
-                website: account.website || '',
-                status: (account.status as 'prospect' | 'active' | 'inactive') || 'prospect',
-              }
-              : undefined
-          }
-          onSuccess={() => {
-            setOpen(false);
-            onSaved();
-          }}
-        />
+        <div className="flex-1 overflow-y-auto px-6 py-2 relative h-full">
+          <AccountForm
+            initialData={
+              account
+                ? {
+                  id: account.id,
+                  name: account.name,
+                  industry: account.industry || '',
+                  size: account.size || '',
+                  website: account.website || '',
+                  status: (account.status as 'prospect' | 'active' | 'inactive') || 'prospect',
+                }
+                : undefined
+            }
+            onSuccess={() => {
+              setOpen(false);
+              onSaved();
+            }}
+          />
+        </div>
       </SheetContent>
     </Sheet>
   );

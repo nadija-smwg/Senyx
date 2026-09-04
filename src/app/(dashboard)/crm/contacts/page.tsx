@@ -358,35 +358,37 @@ function ContactEditSheet({
           </button>
         )}
       </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
-        <SheetHeader className="mb-4">
+      <SheetContent className="w-full sm:max-w-[480px] flex flex-col p-0">
+        <SheetHeader className="px-6 py-6 border-b shrink-0">
           <SheetTitle>{contact ? 'Edit Contact' : 'Add Contact'}</SheetTitle>
           <SheetDescription>
             {contact
-              ? `Update details for ${contact.firstName} ${contact.lastName ?? ''}`.trim()
-              : 'Link a new person to one of your client accounts.'}
+              ? `Update details for ${contact.firstName} ${contact.lastName}.`
+              : 'Add a new person to your contacts list.'}
           </SheetDescription>
         </SheetHeader>
-        <ContactForm
-          initialData={
-            contact
-              ? {
-                id: contact.id,
-                accountId: contact.accountId,
-                firstName: contact.firstName,
-                lastName: contact.lastName || '',
-                email: contact.email || '',
-                phone: contact.phone || '',
-                title: contact.title || '',
-                isPrimary: !!contact.isPrimary,
-              }
-              : undefined
-          }
-          onSuccess={() => {
-            setOpen(false);
-            onSaved();
-          }}
-        />
+        <div className="flex-1 overflow-y-auto px-6 py-2 relative h-full">
+          <ContactForm
+            initialData={
+              contact
+                ? {
+                  id: contact.id,
+                  accountId: contact.accountId,
+                  firstName: contact.firstName,
+                  lastName: contact.lastName || '',
+                  email: contact.email || '',
+                  phone: contact.phone || '',
+                  title: contact.title || '',
+                  isPrimary: !!contact.isPrimary,
+                }
+                : undefined
+            }
+            onSuccess={() => {
+              setOpen(false);
+              onSaved();
+            }}
+          />
+        </div>
       </SheetContent>
     </Sheet>
   );

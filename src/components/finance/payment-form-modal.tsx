@@ -206,7 +206,7 @@ export function PaymentFormModal({
             <button 
               type="submit" 
               disabled={loading || !targetId}
-              className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+              className="bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-700 hover:to-rose-600 border-0 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
             >
               {loading ? 'Processing...' : 'Record Payment'}
             </button>

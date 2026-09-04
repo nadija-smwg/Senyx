@@ -58,20 +58,75 @@ interface AccountFormProps {
   onCancel?: () => void;
 }
 
-// ── Section Header helper ────────────────────────────────────────────────────
+// Themed section header (Orange theme for accounts/contacts)
+type FormTheme = 'green' | 'blue' | 'orange';
+
+const themeStyles: Record<FormTheme, {
+  gradient: string;
+  ring: string;
+  icon: string;
+  calloutBorder: string;
+  calloutBg: string;
+  calloutText: string;
+  calloutIcon: string;
+  btnGradient: string;
+  btnGradientHover: string;
+  btnShadow: string;
+}> = {
+  green: {
+    gradient: 'from-[#34D399]/15 to-[#10B981]/10',
+    ring: 'ring-[#10B981]/25',
+    icon: 'text-[#047857]',
+    calloutBorder: 'border-emerald-200',
+    calloutBg: 'bg-gradient-to-br from-emerald-50/60 to-green-50/40',
+    calloutText: 'text-emerald-800',
+    calloutIcon: 'text-[#047857]',
+    btnGradient: 'from-[#059669] to-[#10B981]',
+    btnGradientHover: 'hover:from-[#047857] hover:to-[#059669]',
+    btnShadow: 'shadow-emerald-500/25',
+  },
+  blue: {
+    gradient: 'from-[#22BFE8]/15 to-[#1A6DB6]/10',
+    ring: 'ring-[#22BFE8]/20',
+    icon: 'text-[#1A6DB6]',
+    calloutBorder: 'border-blue-100',
+    calloutBg: 'bg-gradient-to-br from-blue-50/60 to-cyan-50/40',
+    calloutText: 'text-blue-800',
+    calloutIcon: 'text-[#1A6DB6]',
+    btnGradient: 'from-[#1A6DB6] to-[#22BFE8]',
+    btnGradientHover: 'hover:from-[#155a96] hover:to-[#1ca2c5]',
+    btnShadow: 'shadow-[#1A6DB6]/20',
+  },
+  orange: {
+    gradient: 'from-[#FB923C]/15 to-[#F97316]/10',
+    ring: 'ring-[#F97316]/25',
+    icon: 'text-[#C2410C]',
+    calloutBorder: 'border-orange-200',
+    calloutBg: 'bg-gradient-to-br from-orange-50/60 to-amber-50/40',
+    calloutText: 'text-orange-800',
+    calloutIcon: 'text-[#C2410C]',
+    btnGradient: 'from-[#EA580C] to-[#F97316]',
+    btnGradientHover: 'hover:from-[#C2410C] hover:to-[#EA580C]',
+    btnShadow: 'shadow-orange-500/25',
+  },
+};
+
 function SectionHeader({
   icon,
   title,
   description,
+  theme = 'blue',
 }: {
   icon: React.ReactNode;
   title: string;
   description?: string;
+  theme?: FormTheme;
 }) {
+  const t = themeStyles[theme];
   return (
     <div className="flex items-start gap-3">
-      <div className="h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br from-[#22BFE8]/15 to-[#1A6DB6]/10 flex items-center justify-center ring-1 ring-[#22BFE8]/20">
-        {icon}
+      <div className={cn('h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br flex items-center justify-center ring-1', t.gradient, t.ring)}>
+        <span className={t.icon}>{icon}</span>
       </div>
       <div className="min-w-0">
         <h3 className="text-sm font-bold text-slate-800 tracking-tight">{title}</h3>
@@ -85,6 +140,8 @@ export function AccountForm({ initialData, onSuccess, onCancel }: AccountFormPro
   const [loading, setLoading] = useState(false);
   const [employees, setEmployees] = useState<any[]>([]);
   const isEdit = !!initialData?.id;
+  const theme: FormTheme = 'orange';
+  const t = themeStyles[theme];
 
   useEffect(() => {
     fetch('/api/employees?minimal=true')
@@ -175,14 +232,18 @@ export function AccountForm({ initialData, onSuccess, onCancel }: AccountFormPro
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex flex-col animate-in slide-in-from-left-4 fade-in duration-300"
+      >
         <div className="space-y-7">
-          {/* ── Company Profile ────────────────────────────────────────────── */}
+          {/* Company Profile */}
           <section className="space-y-4">
             <SectionHeader
-              icon={<Building2 className="h-4 w-4 text-[#1A6DB6]" />}
+              icon={<Building2 className="h-4 w-4" />}
               title="Company Profile"
               description="Basic identifying details for this account."
+              theme={theme}
             />
 
             <FormField
@@ -292,12 +353,13 @@ export function AccountForm({ initialData, onSuccess, onCancel }: AccountFormPro
             />
           </section>
 
-          {/* ── Ownership ─────────────────────────────────────────────────── */}
+          {/* Ownership */}
           <section className="space-y-4 pt-5 border-t border-slate-100">
             <SectionHeader
-              icon={<UserCog className="h-4 w-4 text-[#1A6DB6]" />}
+              icon={<UserCog className="h-4 w-4" />}
               title="Ownership"
               description="Assign an internal owner for this account."
+              theme={theme}
             />
 
             <FormField
@@ -329,19 +391,20 @@ export function AccountForm({ initialData, onSuccess, onCancel }: AccountFormPro
             />
           </section>
 
-          {/* ── Primary Contact (Create only) ─────────────────────────────── */}
+          {/* Primary Contact (Create only) */}
           {!isEdit && (
             <section className="space-y-4 pt-5 border-t border-slate-100">
               <SectionHeader
-                icon={<Contact className="h-4 w-4 text-[#1A6DB6]" />}
+                icon={<Contact className="h-4 w-4" />}
                 title="Primary Contact"
                 description="Optional — create the first contact alongside this account."
+                theme={theme}
               />
 
-              <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50/60 to-cyan-50/40 p-3.5">
+              <div className={cn('rounded-xl border p-3.5', t.calloutBorder, t.calloutBg)}>
                 <div className="flex items-start gap-2.5">
-                  <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-[#1A6DB6]" />
-                  <p className="text-xs leading-relaxed text-blue-800">
+                  <Sparkles className={cn('h-4 w-4 mt-0.5 shrink-0', t.calloutIcon)} />
+                  <p className={cn('text-xs leading-relaxed', t.calloutText)}>
                     <strong className="font-semibold">A contact record will be created</strong>{' '}
                     from the details below and linked to this new account.
                   </p>
@@ -389,7 +452,7 @@ export function AccountForm({ initialData, onSuccess, onCancel }: AccountFormPro
           )}
         </div>
 
-        {/* ── Sticky Action Bar ─────────────────────────────────────────── */}
+        {/* Sticky Action Bar */}
         <div className="sticky bottom-0 -mx-6 mt-8 px-6 py-4 border-t border-slate-100 bg-white/80 backdrop-blur-sm">
           <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2">
             <Button
@@ -405,7 +468,10 @@ export function AccountForm({ initialData, onSuccess, onCancel }: AccountFormPro
               type="submit"
               disabled={loading}
               className={cn(
-                'gap-2 shadow-sm shadow-[#1A6DB6]/20 bg-gradient-to-r from-[#1A6DB6] to-[#22BFE8] hover:from-[#155a96] hover:to-[#1ca2c5] border-0 text-white font-semibold transition-all',
+                'gap-2 shadow-sm border-0 text-white font-semibold transition-all bg-gradient-to-r',
+                t.btnGradient,
+                t.btnGradientHover,
+                t.btnShadow,
                 loading && 'opacity-90'
               )}
             >

@@ -66,6 +66,7 @@ interface InvoiceFormProps {
 }
 
 // ── Section Header helper ────────────────────────────────────────────────────
+// Themed section header (Blue theme for invoices)
 function SectionHeader({
   icon,
   title,
@@ -77,7 +78,7 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br from-[#22BFE8]/15 to-[#1A6DB6]/10 flex items-center justify-center ring-1 ring-[#22BFE8]/20">
+      <div className="h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br from-[#F87171]/15 to-[#DC2626]/10 flex items-center justify-center ring-1 ring-[#DC2626]/20 text-[#DC2626]">
         {icon}
       </div>
       <div className="min-w-0">
@@ -204,13 +205,13 @@ export function InvoiceForm({ onSuccess, onCancel }: InvoiceFormProps) {
         id="invoice-form"
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onSubmit={form.handleSubmit(onSubmit as any)}
-        className="flex flex-col"
+        className="flex flex-col animate-in slide-in-from-left-4 fade-in duration-300"
       >
         <div className="space-y-7">
           {/* ── Invoice Details ──────────────────────────────────────────── */}
           <section className="space-y-4">
             <SectionHeader
-              icon={<FileText className="h-4 w-4 text-[#1A6DB6]" />}
+              icon={<FileText className="h-4 w-4" />}
               title="Invoice Details"
               description="Client account, project and basic terms."
             />
@@ -338,7 +339,7 @@ export function InvoiceForm({ onSuccess, onCancel }: InvoiceFormProps) {
           {/* ── Line Items ───────────────────────────────────────────────── */}
           <section className="space-y-4 pt-5 border-t border-slate-100">
             <SectionHeader
-              icon={<ListChecks className="h-4 w-4 text-[#1A6DB6]" />}
+              icon={<ListChecks className="h-4 w-4" />}
               title="Line Items"
               description="What you're billing for."
             />
@@ -462,7 +463,7 @@ export function InvoiceForm({ onSuccess, onCancel }: InvoiceFormProps) {
                     unitPrice: '0',
                   })
                 }
-                className="gap-1.5 border-dashed border-[#22BFE8]/40 text-[#1A6DB6] hover:bg-[#22BFE8]/5"
+                className="gap-1.5 border-dashed border-[#DC2626]/40 text-[#DC2626] hover:bg-[#DC2626]/5"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Add Line Item
@@ -473,7 +474,7 @@ export function InvoiceForm({ onSuccess, onCancel }: InvoiceFormProps) {
           {/* ── Summary ──────────────────────────────────────────────────── */}
           <section className="space-y-4 pt-5 border-t border-slate-100">
             <SectionHeader
-              icon={<Calculator className="h-4 w-4 text-[#1A6DB6]" />}
+              icon={<Calculator className="h-4 w-4" />}
               title="Summary"
               description="Subtotal, tax and final total."
             />
@@ -522,10 +523,10 @@ export function InvoiceForm({ onSuccess, onCancel }: InvoiceFormProps) {
 
               <div className="flex items-center justify-between pt-2.5 mt-1 border-t border-slate-200">
                 <span className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
-                  <Receipt className="h-3.5 w-3.5 text-[#1A6DB6]" />
+                  <Receipt className="h-3.5 w-3.5 text-[#DC2626]" />
                   Total
                 </span>
-                <span className="text-lg font-bold bg-gradient-to-r from-[#1A6DB6] to-[#22BFE8] bg-clip-text text-transparent">
+                <span className="text-lg font-bold bg-gradient-to-r from-[#DC2626] to-[#EF4444] bg-clip-text text-transparent">
                   {formatMoney(total)}
                 </span>
               </div>
@@ -551,7 +552,7 @@ export function InvoiceForm({ onSuccess, onCancel }: InvoiceFormProps) {
               type="submit"
               disabled={form.formState.isSubmitting}
               className={cn(
-                'gap-2 shadow-sm shadow-[#1A6DB6]/20 bg-gradient-to-r from-[#1A6DB6] to-[#22BFE8] hover:from-[#155a96] hover:to-[#1ca2c5] border-0 text-white font-semibold transition-all',
+                'gap-2 shadow-sm shadow-[#DC2626]/20 bg-gradient-to-r from-[#DC2626] to-[#EF4444] hover:from-[#B91C1C] hover:to-[#DC2626] border-0 text-white font-semibold transition-all',
                 form.formState.isSubmitting && 'opacity-90'
               )}
             >

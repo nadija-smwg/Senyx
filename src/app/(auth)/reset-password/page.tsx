@@ -1,10 +1,17 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../../components/ui/card';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
-import { Button } from '../../../components/ui/button';
+import { useState } from 'react';
 import { fetchClient } from '../../../lib/api-client';
+import {
+  AuthLayout,
+  AuthCard,
+  AuthHeader,
+  AuthField,
+  AuthInput,
+  AuthSubmitButton,
+  AuthBanner,
+  AuthAside,
+  AuthBackLink,
+} from '../../../components/auth/auth-shell';
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
@@ -14,11 +21,17 @@ export default function ResetPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
     if (password !== confirm) {
       setErrorMsg('Passwords do not match');
+      setStatus('error');
       return;
     }
-    
+    if (password.length < 8) {
+      setErrorMsg('Password must be at least 8 characters');
+      setStatus('error');
+      return;
+    }
     setStatus('loading');
     try {
       await fetchClient('/api/auth/password/reset', {
@@ -33,51 +46,65 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <Card className="rounded-2xl backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-white/20 shadow-2xl border shadow-slate-200/50 dark:shadow-none">
-      <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-heading font-bold">Set New Password</CardTitle>
-        <CardDescription>
-          Please enter your new password below.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <AuthLayout aside={<AuthAside />}>
+      <AuthCard>
+        <AuthHeader
+          title="Set new password"
+          subtitle="Enter a strong password of at least 8 characters."
+        />
+
         {status === 'success' ? (
-          <div className="text-center space-y-4">
-            <p className="text-sm text-muted-foreground">Your password has been successfully reset.</p>
-            <Button className="w-full" onClick={() => window.location.href = '/login'}>
-              Go to Login
-            </Button>
+          <div className="space-y-4">
+            <AuthBanner tone="success">
+              Your password has been reset successfully. You can now sign in with your new password.
+            </AuthBanner>
+            <AuthBackLink href="/login">Back to sign in</AuthBackLink>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="password">New Password</Label>
-              <Input 
-                id="password" 
-                type="password" 
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            {status === 'error' && errorMsg && (
+              <AuthBanner tone="error">{errorMsg}</AuthBanner>
+            )}
+
+            <AuthField htmlFor="password" label="New password">
+              <AuthInput
+                id="password"
+                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
                 required
                 minLength={8}
+                autoComplete="new-password"
+                disabled={status === 'loading'}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm">Confirm Password</Label>
-              <Input 
-                id="confirm" 
-                type="password" 
+            </AuthField>
+
+            <AuthField htmlFor="confirm" label="Confirm password">
+              <AuthInput
+                id="confirm"
+                type="password"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                required 
+                placeholder="••••••••"
+                required
+                autoComplete="new-password"
+                disabled={status === 'loading'}
               />
+            </AuthField>
+
+            <div className="pt-1">
+              <AuthSubmitButton isLoading={status === 'loading'}>
+                Reset password
+              </AuthSubmitButton>
             </div>
-            {errorMsg && <p className="text-sm text-destructive">{errorMsg}</p>}
-            <Button type="submit" className="w-full" disabled={status === 'loading'}>
-              {status === 'loading' ? 'Saving...' : 'Reset Password'}
-            </Button>
+
+            <div className="pt-1 text-center">
+              <AuthBackLink href="/login">Back to sign in</AuthBackLink>
+            </div>
           </form>
         )}
-      </CardContent>
-    </Card>
+      </AuthCard>
+    </AuthLayout>
   );
 }
