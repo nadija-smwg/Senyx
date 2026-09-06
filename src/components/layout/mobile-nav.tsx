@@ -15,8 +15,7 @@ export function MobileNav() {
   const [open, setOpen] = useState(false);
   const { roles } = useAuth();
   const pathname = usePathname();
-  const isAdminOrHR = roles.includes('Admin') || roles.includes('HR Manager');
-  const navGroups = getNavGroups(isAdminOrHR);
+  const navGroups = getNavGroups(roles);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

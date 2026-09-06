@@ -11,10 +11,14 @@ import { toast } from 'sonner';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 
 export default function ProjectTeamPage() {
   const { id } = useParams() as { id: string };
   const [assignments, setAssignments] = React.useState<any[]>([]);
+  const [employees, setEmployees] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [addOpen, setAddOpen] = React.useState(false);
   const [form, setForm] = React.useState({ employeeId: '', roleOnProject: '', allocationPct: '' });
@@ -27,7 +31,13 @@ export default function ProjectTeamPage() {
       .finally(() => setLoading(false));
   };
 
-  React.useEffect(() => { fetchAssignments(); }, [id]);
+  React.useEffect(() => { 
+    fetchAssignments(); 
+    fetch('/api/employees')
+      .then(r => r.json())
+      .then(j => setEmployees(j.data || []))
+      .catch(e => console.error("Failed to fetch employees", e));
+  }, [id]);
 
   const handleAssign = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +94,7 @@ export default function ProjectTeamPage() {
         <table className="w-full text-sm">
           <thead className="bg-muted text-muted-foreground text-xs uppercase">
             <tr>
-              <th className="px-4 py-3 text-left">Employee ID</th>
+              <th className="px-4 py-3 text-left">Employee Name</th>
               <th className="px-4 py-3 text-left">Role on Project</th>
               <th className="px-4 py-3 text-left">Allocation</th>
               <th className="px-4 py-3 text-left">Assigned At</th>
@@ -98,7 +108,7 @@ export default function ProjectTeamPage() {
               </tr>
             ) : assignments.map(a => (
               <tr key={a.id} className="hover:bg-muted/40">
-                <td className="px-4 py-3 font-mono text-xs">{a.employeeId}</td>
+                <td className="px-4 py-3 font-medium">{a.employeeName || a.employeeId}</td>
                 <td className="px-4 py-3">
                   {a.roleOnProject
                     ? <Badge variant="outline">{a.roleOnProject}</Badge>
@@ -134,13 +144,23 @@ export default function ProjectTeamPage() {
           </DialogHeader>
           <form onSubmit={handleAssign} className="space-y-4 py-2">
             <div className="space-y-1">
-              <Label>Employee ID (UUID)</Label>
-              <Input
-                placeholder="e.g. 550e8400-..."
+              <Label>Employee</Label>
+              <Select
                 value={form.employeeId}
-                onChange={e => setForm({ ...form, employeeId: e.target.value })}
+                onValueChange={(val) => setForm({ ...form, employeeId: val })}
                 required
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an employee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.map(emp => (
+                    <SelectItem key={emp.id} value={emp.id}>
+                      {emp.firstName} {emp.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1">
               <Label>Role on Project</Label>

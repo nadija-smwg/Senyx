@@ -4,6 +4,7 @@ import { handleError } from '@/server/middleware/error-handler';
 import { db } from '@/server/db/client';
 import { projectLinks } from '@/server/db/schema/projects';
 import { eq, and } from 'drizzle-orm';
+import { requireAdmin } from '@/server/middleware/project-access';
 import { z } from 'zod';
 import { NotFoundError } from '@/server/types/errors';
 
@@ -13,13 +14,14 @@ const UpdateLinkSchema = z.object({
   description: z.string().max(500).nullable().optional(),
 });
 
-// PATCH /api/projects/[id]/links/[linkId] — update a link
+// PATCH /api/projects/[id]/links/[linkId] — update a link (admin only)
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; linkId: string }> }
 ) {
   try {
-    await withAuth(req);
+    const ctx = await withAuth(req);
+    requireAdmin(ctx);
     const { id, linkId } = await params;
 
     const body = await req.json();
@@ -44,13 +46,14 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/projects/[id]/links/[linkId] — delete a link
+// DELETE /api/projects/[id]/links/[linkId] — delete a link (admin only)
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; linkId: string }> }
 ) {
   try {
-    await withAuth(req);
+    const ctx = await withAuth(req);
+    requireAdmin(ctx);
     const { id, linkId } = await params;
 
     const [existing] = await db

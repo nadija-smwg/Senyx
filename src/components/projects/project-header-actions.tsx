@@ -7,9 +7,10 @@ import { useClock } from '@/hooks/use-clock';
 
 interface ProjectHeaderActionsProps {
   projectId: string;
+  isAdmin?: boolean;
 }
 
-export function ProjectHeaderActions({ projectId }: ProjectHeaderActionsProps) {
+export function ProjectHeaderActions({ projectId, isAdmin = false }: ProjectHeaderActionsProps) {
   const { clockIn, activeSession, loading, isProcessing } = useClock();
 
   const handleEdit = () => {
@@ -22,7 +23,7 @@ export function ProjectHeaderActions({ projectId }: ProjectHeaderActionsProps) {
 
   return (
     <div className="flex space-x-2">
-      <Button variant="outline" onClick={handleEdit}>Edit Project</Button>
+      {isAdmin && <Button variant="outline" onClick={handleEdit}>Edit Project</Button>}
       <Button onClick={handleClockIn} disabled={loading || isProcessing}>
         {loading || isProcessing ? 'Processing...' : (activeSession?.projectId === projectId ? 'Clocked In' : 'Clock In')}
       </Button>

@@ -52,9 +52,11 @@ type Account = { id: string; name: string };
 export function ProjectsTable({
   projects: initialProjects,
   accounts = [],
+  isAdmin = false,
 }: {
   projects?: Project[];
   accounts?: Account[];
+  isAdmin?: boolean;
 }) {
   const [fetchedProjects, setFetchedProjects] = React.useState<Project[] | null>(null);
   const [fetchedAccounts, setFetchedAccounts] = React.useState<Account[] | null>(null);
@@ -83,7 +85,8 @@ export function ProjectsTable({
     setError(null);
     try {
       const [pRes, aRes] = await Promise.all([
-        fetch('/api/projects?scope=all'),
+        // API enforces scope server-side — employees always get assigned projects
+        fetch('/api/projects'),
         fetch('/api/accounts'),
       ]);
       const pJson = await pRes.json();
@@ -126,7 +129,7 @@ export function ProjectsTable({
   const safePage = Math.min(page, totalPages);
   const pageRows = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
 
-  const columns: CrmTableColumn<Project>[] = [
+  const baseColumns: CrmTableColumn<Project>[] = [
     {
       id: 'project',
       header: 'Project',
@@ -174,10 +177,11 @@ export function ProjectsTable({
         ),
       hideOn: 'md',
     },
-    {
+    // Budget column — admin only
+    ...(isAdmin ? [{
       id: 'budget',
       header: 'Budget',
-      align: 'right',
+      align: 'right' as const,
       cell: (p: Project) =>
         p.budget ? (
           <CurrencyDisplay
@@ -187,8 +191,8 @@ export function ProjectsTable({
         ) : (
           <span className="text-xs text-gray-400">—</span>
         ),
-      hideOn: 'sm',
-    },
+      hideOn: 'sm' as const,
+    }] : []),
     {
       id: 'timeline',
       header: 'Timeline',
@@ -226,18 +230,21 @@ export function ProjectsTable({
       width: 'w-[170px]',
       hideOn: 'sm',
     },
-    {
+    // Edit/Actions column — admin only
+    ...(isAdmin ? [{
       id: 'actions',
-      header: <span className="sr-only">Actions</span>,
-      align: 'right',
+      header: <span className="sr-only">Actions</span> as React.ReactNode,
+      align: 'right' as const,
       width: 'w-[80px]',
       cell: (p: Project) => (
         <div className="flex items-center justify-end gap-1.5">
           <ProjectEditSheet project={p} onSaved={refetch} />
         </div>
       ),
-    },
+    }] : []),
   ];
+
+  const columns = baseColumns;
 
   if (error) {
     return <CrmErrorState title="Couldn't load projects" message={error} onRetry={refetch} />;

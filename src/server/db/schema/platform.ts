@@ -1,6 +1,7 @@
 import { pgTable, uuid, varchar, text, jsonb, timestamp, check, unique, index, boolean } from 'drizzle-orm/pg-core';
 import { baseColumns } from './base';
 import { users, sessions } from './identity';
+import { employees } from './hr';
 import { sql } from 'drizzle-orm';
 
 export const auditLogs = pgTable('audit_logs', {
@@ -65,3 +66,18 @@ export const reminderSchedules = pgTable('reminder_schedules', {
   index('reminder_schedules_type_active_idx').on(table.type, table.isActive),
 ]);
 
+export const changeRequests = pgTable('change_requests', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  employeeId: uuid('employee_id').notNull().references(() => employees.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 160 }).notNull(),
+  description: text('description').notNull(),
+  status: varchar('status', { length: 20 }).default('pending').notNull(),
+  adminComment: text('admin_comment'),
+  reviewedBy: uuid('reviewed_by').references(() => users.id),
+  reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+  ...baseColumns,
+}, (table) => [
+  check('status_check', sql`${table.status} IN ('pending', 'in_review', 'approved', 'rejected', 'completed')`),
+  index('change_requests_emp_idx').on(table.employeeId),
+  index('change_requests_status_idx').on(table.status),
+]);

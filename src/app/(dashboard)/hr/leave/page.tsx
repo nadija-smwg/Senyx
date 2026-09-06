@@ -70,6 +70,7 @@ type LeaveRequest = {
 type LeaveBalance = {
   id: string
   leaveTypeId: string
+  leaveTypeName?: string
   year: number
   balanceDays: string
 }
@@ -869,6 +870,9 @@ function BalancesPanel({
                 key={b.id}
                 className="rounded-xl border border-slate-200 bg-white p-4 text-center transition-colors hover:border-slate-300"
               >
+                <p className="text-sm font-semibold text-slate-700 mb-2">
+                  {b.leaveTypeName || "Leave"}
+                </p>
                 <p className="font-heading text-3xl font-bold tabular-nums text-slate-900">
                   {numeric}
                 </p>

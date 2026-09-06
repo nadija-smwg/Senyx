@@ -25,6 +25,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { EmployeeForm } from "@/components/hr/employee-form"
+import { CredentialDialog } from "@/components/hr/credential-dialog"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -49,6 +50,14 @@ export function EmployeesClient({ initialData }: { initialData: Employee[] }) {
   const [search, setSearch] = useState("")
   const [department, setDepartment] = useState<string>(ALL)
   const [status, setStatus] = useState<string>(ALL)
+
+  // Credential Dialog state for new employee creation
+  const [credentialDialog, setCredentialDialog] = useState<{
+    open: boolean;
+    employeeName: string;
+    email: string;
+    tempPassword: string;
+  }>({ open: false, employeeName: '', email: '', tempPassword: '' })
 
   useEffect(() => {
     setData(initialData)
@@ -176,9 +185,22 @@ export function EmployeesClient({ initialData }: { initialData: Employee[] }) {
                 </SheetHeader>
                 <div className="flex-1 overflow-y-auto px-6 py-2 relative h-full">
                   <EmployeeForm
-                    onSuccess={() => {
+                    onSuccess={(result) => {
                       setIsSheetOpen(false)
-                      startTransition(() => router.refresh())
+                      
+                      // If it's a creation and temp password was returned, show dialog
+                      if (result && result.tempPassword) {
+                        setTimeout(() => {
+                          setCredentialDialog({
+                            open: true,
+                            employeeName: `${result.data.firstName} ${result.data.lastName}`,
+                            email: result.data.email,
+                            tempPassword: result.tempPassword,
+                          })
+                        }, 150)
+                      } else {
+                        startTransition(() => router.refresh())
+                      }
                     }}
                     onCancel={() => setIsSheetOpen(false)}
                   />
@@ -291,6 +313,18 @@ export function EmployeesClient({ initialData }: { initialData: Employee[] }) {
           </div>
         )}
       </div>
+
+      {/* Credential dialog — safely rendered at the page root, outside of any Sheets */}
+      <CredentialDialog
+        open={credentialDialog.open}
+        onClose={() => {
+          setCredentialDialog(prev => ({ ...prev, open: false }))
+          startTransition(() => router.refresh())
+        }}
+        employeeName={credentialDialog.employeeName}
+        email={credentialDialog.email}
+        tempPassword={credentialDialog.tempPassword}
+      />
     </div>
   )
 }

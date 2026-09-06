@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/server/middleware/auth';
 import { handleError } from '@/server/middleware/error-handler';
 import { listProjects, createProject } from '@/server/services/project.service';
+import { isAdminUser, requireAdmin } from '@/server/middleware/project-access';
 import { z } from 'zod';
 
 const schema = z.object({
@@ -24,48 +25,19 @@ const schema = z.object({
   return true;
 }, { message: "End date cannot be before start date", path: ["endDate"] });
 
-/**
- * @swagger
- * /api/projects:
- *   get:
- *     summary: List projects
- *     description: Returns a list of projects based on user permissions and provided filters.
- *     tags: [Projects]
- *     parameters:
- *       - in: query
- *         name: scope
- *         schema:
- *           type: string
- *           enum: [all, own, assigned]
- *         description: Scope of projects to retrieve
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *         description: Filter by status
- *     responses:
- *       200:
- *         description: A list of projects
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   name:
- *                     type: string
- *                   status:
- *                     type: string
- *       401:
- *         description: Unauthorized
- */
 export async function GET(req: NextRequest) {
   try {
     const ctx = await withAuth(req);
-    const scope = (req.nextUrl.searchParams.get('scope') as 'all' | 'own' | 'assigned') || 'assigned';
+    const admin = isAdminUser(ctx);
+
+    // Admins may request any scope. Employees are always forced to 'assigned'.
+    let scope: 'all' | 'own' | 'assigned';
+    if (admin) {
+      scope = (req.nextUrl.searchParams.get('scope') as 'all' | 'own' | 'assigned') || 'all';
+    } else {
+      scope = 'assigned';
+    }
+
     const data = await listProjects(scope, ctx.employeeId || null);
     return NextResponse.json({ data });
   } catch (error) {
@@ -73,44 +45,15 @@ export async function GET(req: NextRequest) {
   }
 }
 
-/**
- * @swagger
- * /api/projects:
- *   post:
- *     summary: Create a new project
- *     description: Creates a new project. User must have employee access.
- *     tags: [Projects]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *             properties:
- *               name:
- *                 type: string
- *               type:
- *                 type: string
- *                 enum: [solution, product, internal]
- *               status:
- *                 type: string
- *                 enum: [planning, active, on_hold, completed, cancelled]
- *     responses:
- *       201:
- *         description: Project created successfully
- *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized
- */
 export async function POST(req: NextRequest) {
   try {
     const ctx = await withAuth(req);
+    // Only Admins can create projects
+    requireAdmin(ctx);
+
     const body = await req.json();
     const validatedData = schema.parse(body);
-    if (!ctx.employeeId) throw new Error('You must be an employee to create projects');
+    if (!ctx.employeeId) throw new Error('You must have an employee profile to create projects');
     const data = await createProject(validatedData, ctx.userId, ctx.employeeId);
     return NextResponse.json({ data }, { status: 201 });
   } catch (error) {

@@ -8,13 +8,9 @@ import { useRouter } from "next/navigation"
 import { ContextualHelp } from "@/components/ui/contextual-help"
 import { toast } from "sonner"
 import {
-  Eye,
-  EyeOff,
-  KeyRound,
   ShieldCheck,
   User,
   Briefcase,
-  Lock,
   AlertCircle,
   CheckCircle2,
   Calendar,
@@ -23,6 +19,7 @@ import {
   Phone,
   IdCard,
   Wallet,
+  KeyRound,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -45,6 +42,7 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Spinner } from "@/components/ui/spinner"
+import { CredentialDialog } from "@/components/hr/credential-dialog"
 import { cn } from "@/lib/utils"
 
 // ── Zod schemas ──────────────────────────────────────────────────────────────
@@ -61,11 +59,7 @@ const createSchema = z.object({
   salary: z.string().optional(),
   nationalId: z.string().optional(),
   roleId: z.string().optional(),
-  initialPassword: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string().min(8, "Please confirm the password"),
-}).refine(data => data.initialPassword === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
+  // No password fields — generated server-side
 })
 
 const editSchema = z.object({
@@ -88,7 +82,7 @@ type EditFormValues = z.infer<typeof editSchema>
 
 interface EmployeeFormProps {
   initialData?: EditFormValues & { id?: string }
-  onSuccess?: () => void
+  onSuccess?: (result?: any) => void
   onCancel?: () => void
 }
 
@@ -116,8 +110,6 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
   const [departments, setDepartments] = useState<any[]>([])
   const [designations, setDesignations] = useState<any[]>([])
   const [roles, setRoles] = useState<any[]>([])
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [referenceError, setReferenceError] = useState<string | null>(null)
 
   const isEdit = !!initialData?.id
@@ -138,8 +130,6 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
         salary: "",
         nationalId: "",
         roleId: "",
-        initialPassword: "",
-        confirmPassword: "",
       },
   })
 
@@ -164,13 +154,11 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
       const endpoint = isEdit ? `/api/employees/${initialData!.id}` : "/api/employees"
       const method = isEdit ? "PATCH" : "POST"
 
-      // For edit, strip auth-only fields
-      const payload = isEdit
-        ? (() => {
-          const { initialPassword, confirmPassword, roleId, ...rest } = values as any
-          return rest
-        })()
-        : values
+      // Clean up empty string values for optional UUID fields to prevent Zod .uuid() validation errors
+      const payload = { ...values } as any
+      if (!payload.roleId) delete payload.roleId
+      if (!payload.departmentId) delete payload.departmentId
+      if (isEdit) delete payload.roleId
 
       const res = await fetch(endpoint, {
         method,
@@ -186,13 +174,15 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
       }
 
       const result = await res.json()
-      const okMsg = result.message || `Employee ${isEdit ? 'updated' : 'created'} successfully`
-      toast.success(okMsg, {
-        icon: <CheckCircle2 className="h-4 w-4 text-emerald-600" />,
-      })
 
+      if (isEdit) {
+        toast.success(result.message || 'Employee updated successfully', {
+          icon: <CheckCircle2 className="h-4 w-4 text-emerald-600" />,
+        })
+      }
+      
       if (onSuccess) {
-        onSuccess()
+        onSuccess(result)
       } else {
         router.refresh()
       }
@@ -206,8 +196,9 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit as any)} className="flex flex-col">
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit as any)} className="flex flex-col">
 
         <div className="space-y-7">
 
@@ -415,11 +406,15 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
               />
 
               <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50/60 to-cyan-50/40 p-3.5">
-                <p className="text-xs leading-relaxed text-blue-800">
-                  <strong className="font-semibold">A login account will be created automatically</strong> for
-                  this employee using the email and password below. They can sign in immediately and
-                  change their password from the &ldquo;Forgot password?&rdquo; link.
-                </p>
+                <div className="flex items-start gap-2.5">
+                  <KeyRound className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                  <div className="text-xs leading-relaxed text-blue-800">
+                    <strong className="font-semibold">Login credentials will be generated automatically.</strong>
+                    <br />
+                    A secure temporary password will be created for this employee. They will be
+                    required to set a new permanent password when signing in for the first time.
+                  </div>
+                </div>
               </div>
 
               <FormField
@@ -456,72 +451,6 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
                   </FormItem>
                 )}
               />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control as any}
-                  name="initialPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-1.5">
-                        <KeyRound className="h-3 w-3 text-slate-400" />
-                        Temporary Password <span className="text-rose-500">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            type={showPassword ? "text" : "password"}
-                            placeholder="Min. 8 characters"
-                            {...field}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(v => !v)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                            tabIndex={-1}
-                            aria-label={showPassword ? "Hide password" : "Show password"}
-                          >
-                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control as any}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-1.5">
-                        <Lock className="h-3 w-3 text-slate-400" />
-                        Confirm Password <span className="text-rose-500">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            type={showConfirmPassword ? "text" : "password"}
-                            placeholder="Re-enter password"
-                            {...field}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(v => !v)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                            tabIndex={-1}
-                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                          >
-                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
             </section>
           )}
 
@@ -598,7 +527,8 @@ export function EmployeeForm({ initialData, onSuccess, onCancel }: EmployeeFormP
             </Button>
           </div>
         </div>
-      </form>
-    </Form>
+        </form>
+      </Form>
+    </>
   )
 }

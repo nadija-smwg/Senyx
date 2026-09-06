@@ -1,9 +1,11 @@
 import { db } from '../db/client';
 import { projectAssignments, projectRisks } from '../db/schema/projects';
 import { auditLogs } from '../db/schema/platform';
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, sql } from 'drizzle-orm';
 import { sendNotification } from './notification.service';
 import { users } from '../db/schema/identity';
+
+import { employees } from '../db/schema/hr';
 
 // Utility for auditing
 async function auditAction(data: any) {
@@ -24,7 +26,19 @@ async function auditAction(data: any) {
 }
 
 export async function listAssignments(projectId: string) {
-  return await db.select().from(projectAssignments).where(and(eq(projectAssignments.projectId, projectId), isNull(projectAssignments.unassignedAt)));
+  return await db
+    .select({
+      id: projectAssignments.id,
+      projectId: projectAssignments.projectId,
+      employeeId: projectAssignments.employeeId,
+      roleOnProject: projectAssignments.roleOnProject,
+      allocationPct: projectAssignments.allocationPct,
+      assignedAt: projectAssignments.assignedAt,
+      employeeName: sql<string>`${employees.firstName} || ' ' || ${employees.lastName}`,
+    })
+    .from(projectAssignments)
+    .leftJoin(employees, eq(projectAssignments.employeeId, employees.id))
+    .where(and(eq(projectAssignments.projectId, projectId), isNull(projectAssignments.unassignedAt)));
 }
 
 export async function assign(projectId: string, input: any, actorUserId: string) {

@@ -61,6 +61,7 @@ export default function ProjectOverviewPage() {
     project: Project;
     accounts: Account[];
     employees: Employee[];
+    isAdmin: boolean;
   } | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -68,20 +69,34 @@ export default function ProjectOverviewPage() {
   React.useEffect(() => {
     async function fetchData() {
       try {
-        const [projRes, accRes, empRes] = await Promise.all([
-          fetch(`/api/projects/${id}`),
-          fetch('/api/accounts'),
-          fetch('/api/employees?minimal=true'),
-        ]);
-        if (!projRes.ok) throw new Error('Failed to load project');
+        // First fetch auth info to determine what to show
+        const meRes = await fetch('/api/auth/me');
+        const meData = meRes.ok ? await meRes.json() : null;
+        const isAdmin = meData?.roles?.includes('Admin') || meData?.roles?.includes('HR Manager') || false;
+
+        const fetches: Promise<Response>[] = [fetch(`/api/projects/${id}`)];
+        if (isAdmin) {
+          fetches.push(fetch('/api/accounts'));
+          fetches.push(fetch('/api/employees?minimal=true'));
+        }
+
+        const results = await Promise.all(fetches);
+        const [projRes] = results;
+        if (!projRes || !projRes.ok) throw new Error('Failed to load project');
         const projData = await projRes.json();
-        const accData = await accRes.json();
-        const empData = await empRes.json();
+
+        let accData = { data: [] };
+        let empData = { data: [] };
+        if (isAdmin && results[1] && results[2]) {
+          accData = await results[1].json();
+          empData = await results[2].json();
+        }
 
         setData({
           project: projData.data,
           accounts: accData.data || [],
           employees: empData.data || [],
+          isAdmin,
         });
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to load project');
@@ -99,7 +114,7 @@ export default function ProjectOverviewPage() {
     return <CrmErrorState title="Project not found" message="The requested project could not be loaded." />;
   }
 
-  const { project, accounts, employees } = data;
+  const { project, accounts, employees, isAdmin } = data;
 
   const accountName = (accId?: string | null) =>
     accId ? accounts.find(a => a.id === accId)?.name || 'Unknown account' : '—';
@@ -156,13 +171,15 @@ export default function ProjectOverviewPage() {
             <ProjectDetailRow label="Schedule" icon={<Calendar className="w-3.5 h-3.5" />}>
               {formatProjectDateRange(project.startDate, project.endDate)}
             </ProjectDetailRow>
-            <ProjectDetailRow label="Budget" icon={<DollarSign className="w-3.5 h-3.5" />}>
-              {project.budget ? (
-                <CurrencyDisplay amount={parseFloat(String(project.budget)) || 0} className="!text-[15px]" />
-              ) : (
-                <span className="text-gray-400">—</span>
-              )}
-            </ProjectDetailRow>
+            {isAdmin && (
+              <ProjectDetailRow label="Budget" icon={<DollarSign className="w-3.5 h-3.5" />}>
+                {project.budget ? (
+                  <CurrencyDisplay amount={parseFloat(String(project.budget)) || 0} className="!text-[15px]" />
+                ) : (
+                  <span className="text-gray-400">—</span>
+                )}
+              </ProjectDetailRow>
+            )}
           </div>
 
           {/* Progress */}
@@ -233,45 +250,47 @@ export default function ProjectOverviewPage() {
           )}
         </CrmSection>
 
-        <CrmSection
-          title="Team & Assignments"
-          description={`${teamAssignments.length} active member${teamAssignments.length === 1 ? '' : 's'}`}
-        >
-          {teamAssignments.length === 0 ? (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <Users className="w-4 h-4 text-gray-400" />
-              No team members assigned.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {Object.entries(groupedTeam).map(([role, members]) => (
-                <div key={role}>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500 mb-1.5">
-                    {role} <span className="text-gray-400">({members.length})</span>
-                  </p>
-                  <ul className="space-y-1.5">
-                    {members.map(m => (
-                      <li
-                        key={m.id}
-                        className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50/40 px-2.5 py-2"
-                      >
-                        <ProjectAvatar name={employeeName(m.employeeId)} className="h-6 w-6" />
-                        <span className="text-sm text-gray-800 truncate flex-1">
-                          {employeeName(m.employeeId)}
-                        </span>
-                        {m.allocationPct && (
-                          <span className="text-[10px] tabular-nums text-gray-500 font-semibold">
-                            {String(m.allocationPct)}%
+        {isAdmin && (
+          <CrmSection
+            title="Team & Assignments"
+            description={`${teamAssignments.length} active member${teamAssignments.length === 1 ? '' : 's'}`}
+          >
+            {teamAssignments.length === 0 ? (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Users className="w-4 h-4 text-gray-400" />
+                No team members assigned.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {Object.entries(groupedTeam).map(([role, members]) => (
+                  <div key={role}>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500 mb-1.5">
+                      {role} <span className="text-gray-400">({members.length})</span>
+                    </p>
+                    <ul className="space-y-1.5">
+                      {members.map(m => (
+                        <li
+                          key={m.id}
+                          className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50/40 px-2.5 py-2"
+                        >
+                          <ProjectAvatar name={employeeName(m.employeeId)} className="h-6 w-6" />
+                          <span className="text-sm text-gray-800 truncate flex-1">
+                            {employeeName(m.employeeId)}
                           </span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          )}
-        </CrmSection>
+                          {m.allocationPct && (
+                            <span className="text-[10px] tabular-nums text-gray-500 font-semibold">
+                              {String(m.allocationPct)}%
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CrmSection>
+        )}
       </div>
     </div>
   );

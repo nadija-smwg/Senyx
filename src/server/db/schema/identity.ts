@@ -8,6 +8,8 @@ export const users = pgTable('users', {
   employeeId: uuid('employee_id').notNull().references(() => employees.id), // FK to employees
   email: text('email').notNull(), // Using text for citext equivalent in ORM without custom types
   isActive: boolean('is_active').default(true).notNull(),
+  mustChangePassword: boolean('must_change_password').default(false).notNull(),
+  passwordChangedAt: timestamp('password_changed_at', { withTimezone: true }),
   twoFactorEnabled: boolean('two_factor_enabled').default(false).notNull(),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
   ...baseColumns,

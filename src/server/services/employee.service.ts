@@ -1,11 +1,12 @@
 import { db } from '../db/client';
 import { employees, employeeSkills, leaveBalances, leaveTypes, departments, designations } from '../db/schema/hr';
-import { users, userRoles, roles } from '../db/schema/identity';
+import { users, userRoles, roles, sessions } from '../db/schema/identity';
 import { eq, and, desc } from 'drizzle-orm';
 import { auditLogs } from '../db/schema/platform';
 import { encrypt, decrypt } from '../lib/crypto';
 import { getSupabaseAdmin } from '../lib/supabase-admin';
 import { generateEmployeeCode } from '../lib/code-generator';
+import { generateTempPassword } from '../lib/password-generator';
 import { AppError, ConflictError, NotFoundError } from '../types/errors';
 
 async function auditAction(data: any) {
@@ -70,17 +71,11 @@ export async function createEmployee(input: any, actorUserId: string) {
     throw new ConflictError('An employee with this email already exists.');
   }
 
-  // ── 2. Duplicate check in Supabase auth (via admin API) ────────────────────
-  // We use listUsers + filter since Supabase admin doesn't expose getUserByEmail directly
-  const { data: existingAuthUsers } = await supabaseAdmin.auth.admin.listUsers({
-    page: 1,
-    perPage: 1,
-  });
-  // Quick check via getUserByEmail equivalent — try to sign up and handle conflict
-  // Instead we rely on Supabase returning error code 'email_exists' on createUser below.
-
-  // ── 3. Generate employee code ──────────────────────────────────────────────
+  // ── 2. Generate employee code ──────────────────────────────────────────────
   const code = await generateEmployeeCode();
+
+  // ── 3. Generate secure temporary password (server-side, cryptographic) ─────
+  const tempPassword = generateTempPassword(14);
 
   // ── 4. Encrypt sensitive fields ────────────────────────────────────────────
   const encSalary = input.salary ? encrypt(input.salary) : null;
@@ -105,17 +100,15 @@ export async function createEmployee(input: any, actorUserId: string) {
     nationalId: encNationalId,
   }).returning();
 
-  // ── 6. Create Supabase Auth User ──────────────────────────────────────────
+  // ── 6. Create Supabase Auth User (password hashed by Supabase/bcrypt) ─────
   const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
     email: input.email,
-    password: input.initialPassword,
+    password: tempPassword,
     email_confirm: true, // Skip email verification — admin-provisioned account
     user_metadata: {
       firstName: input.firstName,
       lastName: input.lastName,
       employeeCode: code,
-      // Flag so the employee knows to change their password on first login
-      mustChangePassword: true,
     },
   });
 
@@ -133,12 +126,13 @@ export async function createEmployee(input: any, actorUserId: string) {
 
   const supabaseUserId = authUser.user.id;
 
-  // ── 7. Insert users table row (links Supabase auth ↔ employee) ─────────────
+  // ── 7. Insert users table row with mustChangePassword = true ───────────────
   const [newUser] = await db.insert(users).values({
     id: supabaseUserId,
     employeeId: newEmp!.id,
     email: input.email,
     isActive: true,
+    mustChangePassword: true,
   }).returning();
 
   // ── 8. Assign role ─────────────────────────────────────────────────────────
@@ -179,17 +173,67 @@ export async function createEmployee(input: any, actorUserId: string) {
     await db.insert(leaveBalances).values(balancesToInsert);
   }
 
-  // ── 10. Audit ──────────────────────────────────────────────────────────────
+  // ── 10. Audit (NEVER log password) ─────────────────────────────────────────
   await auditAction({
     userId: actorUserId,
-    action: 'employee.create',
+    action: 'employee.account_provisioned',
     module: 'hr',
     targetId: newEmp!.id,
     ipAddress: '127.0.0.1',
     details: { employeeCode: code, email: input.email },
   });
 
-  return { ...newEmp, employeeCode: code };
+  // Return employee data + tempPassword (shown once to admin, never stored)
+  return { ...newEmp, employeeCode: code, tempPassword };
+}
+
+/**
+ * Admin-triggered password reset for an employee.
+ * Generates a new temp password, updates Supabase Auth, sets mustChangePassword = true.
+ * Returns the plaintext temp password (shown once to admin).
+ */
+export async function resetEmployeePassword(employeeId: string, actorUserId: string) {
+  const supabaseAdmin = getSupabaseAdmin();
+
+  // 1. Find employee and linked user
+  const [emp] = await db.select().from(employees).where(eq(employees.id, employeeId));
+  if (!emp) throw new NotFoundError('Employee not found');
+
+  const [user] = await db.select().from(users).where(eq(users.employeeId, employeeId));
+  if (!user) throw new NotFoundError('No login account found for this employee');
+
+  // 2. Generate new temp password
+  const tempPassword = generateTempPassword(14);
+
+  // 3. Update password in Supabase Auth
+  const { error } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
+    password: tempPassword,
+  });
+  if (error) {
+    throw new AppError('Failed to reset password', 500, 'PASSWORD_RESET_FAILED');
+  }
+
+  // 4. Set mustChangePassword = true
+  await db.update(users).set({
+    mustChangePassword: true,
+    passwordChangedAt: null,
+  }).where(eq(users.id, user.id));
+
+  // 5. Invalidate existing sessions
+  await db.update(sessions).set({ isActive: false, endedAt: new Date() })
+    .where(eq(sessions.userId, user.id));
+
+  // 6. Audit (NEVER log password)
+  await auditAction({
+    userId: actorUserId,
+    action: 'employee.password_reset',
+    module: 'hr',
+    targetId: employeeId,
+    ipAddress: '127.0.0.1',
+    details: { email: emp.email },
+  });
+
+  return { tempPassword, employeeName: `${emp.firstName} ${emp.lastName}`, email: emp.email };
 }
 
 export async function getEmployeeById(id: string, scope: 'all' | 'own', currentEmployeeId?: string) {

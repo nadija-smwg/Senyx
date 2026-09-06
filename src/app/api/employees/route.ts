@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '../../../server/middleware/auth';
+import { withAuth, enforcePasswordChanged } from '../../../server/middleware/auth';
 import { handleError } from '../../../server/middleware/error-handler';
 import { listEmployees, createEmployee } from '../../../server/services/employee.service';
 import { z } from 'zod';
@@ -18,8 +18,7 @@ const CreateEmployeeSchema = z.object({
   salary: z.string().optional(),
   bankDetails: z.any().optional(),
   nationalId: z.string().optional(),
-  // Auth account fields
-  initialPassword: z.string().min(8, 'Password must be at least 8 characters'),
+  // No password field — generated server-side
   roleId: z.string().uuid().optional(), // If omitted, defaults to "Employee" role
 });
 
@@ -52,11 +51,19 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const validatedData = CreateEmployeeSchema.parse(body);
 
-    const newEmployee = await createEmployee(validatedData, ctx.userId);
+    const result = await createEmployee(validatedData, ctx.userId);
 
+    // Return employee data + tempPassword (shown once to admin)
     return NextResponse.json(
       {
-        data: newEmployee,
+        data: {
+          id: result.id,
+          employeeCode: result.employeeCode,
+          firstName: result.firstName,
+          lastName: result.lastName,
+          email: result.email,
+        },
+        tempPassword: result.tempPassword,
         message: 'Employee created successfully. Login access has been created.',
       },
       { status: 201 }

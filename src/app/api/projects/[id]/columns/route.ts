@@ -4,6 +4,7 @@ import { handleError } from '@/server/middleware/error-handler';
 import { db } from '@/server/db/client';
 import { boardColumns } from '@/server/db/schema/projects';
 import { eq, and, isNull, max } from 'drizzle-orm';
+import { enforceProjectAccess, requireAdmin } from '@/server/middleware/project-access';
 import { z } from 'zod';
 
 const schema = z.object({
@@ -15,6 +16,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const ctx = await withAuth(req);
     const projectId = (await params).id;
+    // Only admins can add board columns
+    requireAdmin(ctx);
+
     const body = await req.json();
     const { name, wipLimit } = schema.parse(body);
 

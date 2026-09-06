@@ -10,6 +10,7 @@ export interface AuthContext {
   employeeId?: string;
   roles: string[];
   permissions: { module: string; action: string; scope: string }[];
+  mustChangePassword: boolean;
   sessionId: string;
   deviceInfo: DeviceInfo;
   ip: string | null;

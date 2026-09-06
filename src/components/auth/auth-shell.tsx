@@ -3,13 +3,14 @@
 /**
  * Shared visual shell for the public authentication pages.
  *
- * Pure presentation — wraps the auth forms in a Senyx-branded layout
- * that matches the rest of the ERP (Dashboard, Finance, Settings).
+ * Light, calm design — consistent with the dashboard aesthetic.
+ * Uses Senyx company logos from /public.
  * No authentication logic is changed by this file.
  */
 
 import * as React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
     AlertCircle,
     ArrowLeft,
@@ -26,9 +27,9 @@ import { cn } from '@/lib/utils';
 /* ------------------------------------------------------------------ */
 
 export const AUTH_BRAND = {
-    primary: '#C1172C',     // Finance / brand red
-    primaryTint: '#FCECEC',
-    deep: '#9B1022',
+    primary: '#1A6DB6',     // Blue — matches the calm dashboard
+    primaryTint: '#F0F9FF',
+    deep: '#155A96',
     accent: '#22BFE8',
     accent2: '#7F4D9F',
     accent3: '#F9A01B',
@@ -41,24 +42,24 @@ export const AUTH_BRAND = {
 export function AuthBackground() {
     return (
         <>
-            {/* Gradient + blurred blobs that match the PageHeader hero */}
+            {/* Subtle gradient blobs — light and calm */}
             <div
                 aria-hidden
                 className="pointer-events-none absolute inset-0 overflow-hidden"
             >
-                <div className="absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full bg-[#C1172C]/15 blur-[120px]" />
-                <div className="absolute -top-20 right-[-10%] h-[480px] w-[480px] rounded-full bg-[#7F4D9F]/15 blur-[120px]" />
-                <div className="absolute bottom-[-20%] right-[-10%] h-[520px] w-[520px] rounded-full bg-[#22BFE8]/15 blur-[140px]" />
-                <div className="absolute bottom-[-10%] left-[-15%] h-[480px] w-[480px] rounded-full bg-[#F9A01B]/15 blur-[140px]" />
+                <div className="absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full bg-[#22BFE8]/6 blur-[140px]" />
+                <div className="absolute -top-20 right-[-10%] h-[480px] w-[480px] rounded-full bg-[#7F4D9F]/5 blur-[140px]" />
+                <div className="absolute bottom-[-20%] right-[-10%] h-[520px] w-[520px] rounded-full bg-[#1A6DB6]/5 blur-[160px]" />
+                <div className="absolute bottom-[-10%] left-[-15%] h-[480px] w-[480px] rounded-full bg-[#F9A01B]/4 blur-[160px]" />
             </div>
             {/* Subtle dotted grid texture */}
             <div
                 aria-hidden
-                className="pointer-events-none absolute inset-0 opacity-[0.18]"
+                className="pointer-events-none absolute inset-0 opacity-[0.12]"
                 style={{
                     backgroundImage:
-                        'radial-gradient(circle at 1px 1px, rgba(15,23,42,0.18) 1px, transparent 0)',
-                    backgroundSize: '22px 22px',
+                        'radial-gradient(circle at 1px 1px, rgba(15,23,42,0.12) 1px, transparent 0)',
+                    backgroundSize: '28px 28px',
                 }}
             />
         </>
@@ -66,7 +67,7 @@ export function AuthBackground() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Brand mark                                                            */
+/* Brand mark — uses Senyx company logos                                 */
 /* ------------------------------------------------------------------ */
 
 export function AuthBrand({
@@ -79,29 +80,31 @@ export function AuthBrand({
     const isCompact = size === 'compact';
     return (
         <Link href="/login" className="inline-flex items-center gap-3 group" aria-label="Senyx ERP">
-            <span
+            <Image
+                src="/logo-icon-transparent.png"
+                alt="Senyx"
+                width={isCompact ? 44 : 56}
+                height={isCompact ? 44 : 56}
                 className={cn(
-                    'rounded-2xl bg-gradient-to-br from-[#C1172C] via-[#9B1022] to-[#7F4D9F] flex items-center justify-center shadow-[0_8px_24px_-8px_rgba(193,23,44,0.45)] group-hover:scale-105 transition-transform',
-                    isCompact ? 'h-10 w-10' : 'h-12 w-12'
+                    'object-contain transition-transform duration-300 group-hover:scale-105',
+                    isCompact ? 'h-11 w-11' : 'h-14 w-14'
                 )}
-            >
-                <svg viewBox="0 0 24 24" className={cn(isCompact ? 'h-5 w-5' : 'h-6 w-6')} fill="none" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                    <path d="M3 17l4-9 4 9" />
-                    <path d="M9 17l4-9 4 9" />
-                    <path d="M15 17l4-9" />
-                </svg>
-            </span>
-            <div className="flex flex-col">
-                <span
+                priority
+            />
+            <div className="flex flex-col justify-center leading-tight">
+                <Image
+                    src="/name-transparent.png"
+                    alt="SENYX"
+                    width={isCompact ? 100 : 120}
+                    height={isCompact ? 30 : 36}
                     className={cn(
-                        'font-heading font-extrabold tracking-tight text-gray-900 leading-none',
-                        isCompact ? 'text-lg' : 'text-2xl'
+                        'object-contain object-left',
+                        isCompact ? 'h-7' : 'h-9'
                     )}
-                >
-                    SENYX
-                </span>
+                    priority
+                />
                 {showTagline && (
-                    <span className="text-[10px] font-bold tracking-[0.2em] uppercase mt-1 bg-gradient-to-r from-[#C1172C] via-[#7F4D9F] to-[#22BFE8] bg-clip-text text-transparent">
+                    <span className="text-[10px] font-bold tracking-[0.2em] uppercase mt-0.5 text-[#1A6DB6]">
                         ERP Platform
                     </span>
                 )}
@@ -122,13 +125,13 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ children, aside }: AuthLayoutProps) {
     return (
-        <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#F4F6FB] via-white to-[#FBF7F4] text-gray-900">
+        <div className="relative min-h-screen w-full overflow-hidden bg-[#F8F9FC] text-gray-900">
             <AuthBackground />
             <div className="relative z-10 grid min-h-screen w-full grid-cols-1 lg:grid-cols-2">
                 {/* Form column */}
                 <div className="flex flex-col items-center justify-center px-4 py-10 sm:px-8 sm:py-12">
                     <div className="w-full max-w-md">
-                        <div className="mb-7 flex justify-center lg:justify-start">
+                        <div className="mb-8 flex justify-center lg:justify-start">
                             <AuthBrand />
                         </div>
                         {children}
@@ -137,22 +140,38 @@ export function AuthLayout({ children, aside }: AuthLayoutProps) {
                         </p>
                     </div>
                 </div>
-                {/* Marketing aside (lg+) */}
+                {/* Aside panel (lg+) */}
                 {aside && (
                     <aside className="relative hidden lg:flex flex-col justify-between p-10 xl:p-16 overflow-hidden">
-                        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#C1172C] via-[#9B1022] to-[#7F4D9F]" />
-                        <div className="absolute inset-0 -z-10 opacity-30 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.25),transparent_55%)]" />
-                        <div className="absolute inset-0 -z-10 opacity-25 bg-[radial-gradient(circle_at_bottom_left,rgba(34,191,232,0.45),transparent_55%)]" />
-                        <div className="relative text-white">
-                            <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[10px] font-bold tracking-[0.2em] uppercase backdrop-blur">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#F9A01B]" />
+                        {/* Light gradient background instead of heavy red/purple */}
+                        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#F0F9FF] via-white to-[#F2E8FA]/30" />
+                        {/* Decorative subtle blobs */}
+                        <div aria-hidden className="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
+                            <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-gradient-to-br from-[#22BFE8]/8 via-[#1A6DB6]/5 to-transparent" />
+                            <div className="absolute -bottom-32 -left-16 w-80 h-80 rounded-full bg-gradient-to-tr from-[#7F4D9F]/6 via-[#3E308E]/3 to-transparent" />
+                        </div>
+                        {/* Senyx badge */}
+                        <div className="relative">
+                            <span className="inline-flex items-center gap-2 rounded-full bg-white/70 border border-gray-100 px-3 py-1 text-[10px] font-bold tracking-[0.2em] uppercase text-gray-500 backdrop-blur-sm">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#1A6DB6]" />
                                 Senyx ERP
                             </span>
                         </div>
+                        {/* Content */}
                         <div className="relative">{aside}</div>
-                        <p className="relative text-[11px] text-white/70">
-                            Everything Senyx needs to run its operations, in one place.
-                        </p>
+                        {/* Footer */}
+                        <div className="relative flex items-center gap-3 opacity-50">
+                            <Image
+                                src="/logo-icon-transparent.png"
+                                alt="Senyx"
+                                width={20}
+                                height={20}
+                                className="object-contain"
+                            />
+                            <p className="text-[11px] text-gray-500">
+                                Everything your team needs, in one place.
+                            </p>
+                        </div>
                     </aside>
                 )}
             </div>
@@ -166,7 +185,7 @@ export function AuthLayout({ children, aside }: AuthLayoutProps) {
 
 export function AuthCard({ children }: { children: React.ReactNode }) {
     return (
-        <div className="relative bg-white/95 backdrop-blur rounded-2xl border border-white/60 shadow-[0_18px_60px_-15px_rgba(15,23,42,0.18)] p-6 sm:p-8">
+        <div className="relative bg-white rounded-2xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_12px_40px_-12px_rgba(0,0,0,0.08)] p-6 sm:p-8">
             {children}
         </div>
     );
@@ -185,7 +204,7 @@ export function AuthHeader({
 }) {
     return (
         <div className="mb-7">
-            <h1 className="font-heading text-2xl font-extrabold text-gray-900 tracking-tight">
+            <h1 className="font-heading text-2xl font-bold text-gray-900 tracking-tight">
                 {title}
             </h1>
             {subtitle && (
@@ -234,7 +253,7 @@ export function AuthField({ htmlFor, label, hint, error, children }: AuthFieldPr
 /* ------------------------------------------------------------------ */
 
 export const authInputClass =
-    'block w-full h-11 px-3.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 transition-all outline-none focus:border-[#C1172C] focus:ring-2 focus:ring-[#C1172C]/20 disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-gray-50';
+    'block w-full h-11 px-3.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 transition-all outline-none focus:border-[#1A6DB6] focus:ring-2 focus:ring-[#22BFE8]/20 disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-gray-50';
 
 export function AuthInput({
     invalid,
@@ -269,9 +288,10 @@ export function AuthSubmitButton({
             type="submit"
             disabled={isLoading}
             className={cn(
-                'group relative w-full h-11 rounded-xl text-sm font-semibold text-white shadow-[0_10px_30px_-10px_rgba(193,23,44,0.6)]',
-                'bg-gradient-to-r from-[#C1172C] via-[#9B1022] to-[#7F4D9F] hover:from-[#9B1022] hover:via-[#7F4D9F] hover:to-[#C1172C]',
-                'transition-all focus:outline-none focus:ring-2 focus:ring-[#C1172C]/40 focus:ring-offset-2',
+                'group relative w-full h-11 rounded-xl text-sm font-semibold text-white',
+                'bg-[#1A6DB6] hover:bg-[#155A96]',
+                'shadow-[0_4px_16px_-4px_rgba(26,109,182,0.4)]',
+                'transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#22BFE8]/40 focus:ring-offset-2',
                 'disabled:opacity-70 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2'
             )}
         >
@@ -330,28 +350,48 @@ export function AuthBanner({
 
 export function AuthAside() {
     return (
-        <div className="text-white max-w-lg space-auto">
-            <h2 className="font-heading text-4xl xl:text-5xl font-extrabold tracking-tight leading-tight">
-                Manage Senyx from  one <span className="bg-gradient-to-r from-white via-[#F9A01B] to-white bg-clip-text text-transparent">central  workspace</span>.
+        <div className="max-w-lg space-auto">
+            <h2 className="font-heading text-4xl xl:text-5xl font-bold tracking-tight leading-tight text-gray-900">
+                Your business,{' '}
+                <span className="bg-gradient-to-r from-[#1A6DB6] via-[#22BFE8] to-[#7F4D9F] bg-clip-text text-transparent">
+                    streamlined
+                </span>
+                .
             </h2>
-            <p className="mt-5 text-base xl:text-lg text-white/85 leading-relaxed">
-                A unified internal system for managing finance, HR, employees, projects, customers, sales,
-                and day to day operations - keeping everything your team needs in one secure place.
+            <p className="mt-5 text-base xl:text-lg text-gray-500 leading-relaxed">
+                A unified internal system for managing HR, employees, projects, customers,
+                and day-to-day operations — keeping everything your team needs in one secure place.
             </p>
-            <ul className="mt-8 space-y-3 text-sm text-white/90">
+            <ul className="mt-8 space-y-3 text-sm text-gray-600">
                 {[
-                    'Real-time financial and business overview',
                     'Manage employees, customers, projects and deals',
                     'Department-based access and permissions',
                     'Centralized company data and records',
                     'Track activities and changes across the organization',
                 ].map(item => (
-                    <li key={item} className="flex items-start gap-2">
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#F9A01B]" />
+                    <li key={item} className="flex items-start gap-2.5">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#1A6DB6]" />
                         <span>{item}</span>
                     </li>
                 ))}
             </ul>
+
+            {/* Logo showcase */}
+            <div className="mt-10 flex items-center gap-4">
+                <Image
+                    src="/logo-icon-transparent.png"
+                    alt="Senyx"
+                    width={48}
+                    height={48}
+                    className="h-12 w-12 object-contain opacity-80"
+                />
+                <div className="h-8 w-px bg-gray-200" />
+                <div className="text-[11px] text-gray-400 leading-relaxed">
+                    <span className="font-semibold text-gray-500">Trusted by your team</span>
+                    <br />
+                    Secure · Fast · Reliable
+                </div>
+            </div>
         </div>
     );
 }

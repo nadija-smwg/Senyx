@@ -25,7 +25,7 @@ interface PageMeta {
 
 function getPageMeta(pathname: string): PageMeta {
   const map: Record<string, { title: string; module: string; moduleColor: string }> = {
-    '/': { title: 'Dashboard', module: 'Core', moduleColor: '#1A6DB6' },
+    '/': { title: 'Welcome', module: 'Senyx', moduleColor: '#1A6DB6' },
     '/analytics': { title: 'Analytics', module: 'Core', moduleColor: '#1A6DB6' },
     '/analytics/reports': { title: 'Reports', module: 'Analytics', moduleColor: '#1A6DB6' },
     '/crm/accounts': { title: 'Accounts', module: 'CRM & Sales', moduleColor: '#F15A22' },

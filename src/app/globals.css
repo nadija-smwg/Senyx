@@ -471,8 +471,7 @@
   .senyx-bg-blob {
     position: absolute;
     border-radius: 9999px;
-    /* Larger blur = softer edges, less perceptual motion */
-    filter: blur(160px);
+    /* Removed heavy filter: blur(160px); for performance, relying on radial-gradient for soft edges */
     opacity: 0.32;
     /* Promote each blob to its own compositor layer */
     will-change: transform;

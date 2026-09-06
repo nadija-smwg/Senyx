@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       user: result.user,
       token: result.token,
+      mustChangePassword: result.mustChangePassword,
     });
   } catch (error) {
     return handleError(error);

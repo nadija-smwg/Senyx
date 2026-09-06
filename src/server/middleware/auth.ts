@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { AuthContext } from '../types/context';
 import { parseUserAgent } from '../lib/user-agent-parser';
-import { UnauthorizedError } from '../types/errors';
+import { UnauthorizedError, ForbiddenError } from '../types/errors';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { db } from '../db/client';
@@ -86,14 +86,45 @@ export async function withAuth(request: NextRequest): Promise<AuthContext> {
     .orderBy(desc(sessions.startedAt))
     .limit(1);
 
-  return {
+  const ctx = {
     userId: dbUser.id,
     employeeId: dbUser.employeeId,
     roles: roleNames,
     permissions: perms,
+    mustChangePassword: dbUser.mustChangePassword,
     sessionId: activeSession ? activeSession.id : crypto.randomUUID(),
     deviceInfo,
     ip,
     apiRoute,
   };
+
+  enforcePasswordChanged(ctx);
+
+  return ctx;
+}
+
+/**
+ * Routes that are allowed even when `mustChangePassword` is true.
+ * Everything else is blocked until the user changes their password.
+ */
+const PASSWORD_CHANGE_WHITELIST = new Set([
+  '/api/auth/force-change-password',
+  '/api/auth/me',
+  '/api/auth/logout',
+]);
+
+/**
+ * Call this after `withAuth()` in every API handler that should be
+ * blocked when the user still needs to change their temporary password.
+ * Throws ForbiddenError if the user hasn't changed their password yet
+ * and the current route is not whitelisted.
+ */
+export function enforcePasswordChanged(ctx: AuthContext): void {
+  if (!ctx.mustChangePassword) return; // Already changed — nothing to do
+
+  if (PASSWORD_CHANGE_WHITELIST.has(ctx.apiRoute)) return; // Whitelisted route
+
+  throw new ForbiddenError(
+    'You must change your temporary password before accessing this resource.'
+  );
 }

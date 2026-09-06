@@ -51,6 +51,7 @@ export interface SettingsSection {
     description: string;
     href: string;
     icon: LucideIcon;
+    visibleTo?: string[];
 }
 
 export const SETTINGS_SECTIONS: SettingsSection[] = [
@@ -60,6 +61,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         description: 'Company info, defaults and reminders.',
         href: '/settings/general',
         icon: Building2,
+        visibleTo: ['Admin', 'HR Manager'],
     },
     {
         id: 'profile',
@@ -81,6 +83,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         description: 'Manage user roles and access control matrices.',
         href: '/settings/roles',
         icon: KeyRound,
+        visibleTo: ['Admin', 'HR Manager'],
     },
 ];
 

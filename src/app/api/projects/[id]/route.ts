@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/server/middleware/auth';
 import { handleError } from '@/server/middleware/error-handler';
 import { getProjectById, updateProject, deleteProject } from '@/server/services/project.service';
+import { enforceProjectAccess, isAdminUser, requireAdmin } from '@/server/middleware/project-access';
 import { z } from 'zod';
 
 const schema = z.object({
@@ -25,9 +26,21 @@ const schema = z.object({
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await withAuth(req);
-    const data = await getProjectById((await params).id);
+    const ctx = await withAuth(req);
+    const { id } = await params;
+
+    // Check the user is allowed to access this project
+    await enforceProjectAccess(ctx, id);
+
+    const data = await getProjectById(id);
     if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+    // Strip sensitive financial data for non-admin users
+    if (!isAdminUser(ctx)) {
+      const { budget, billingType, paymentMilestones, ...safeData } = data as any;
+      return NextResponse.json({ data: safeData });
+    }
+
     return NextResponse.json({ data });
   } catch (error) {
     return handleError(error);
@@ -37,9 +50,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const ctx = await withAuth(req);
+    const { id } = await params;
+    // Only admins can edit projects
+    requireAdmin(ctx);
+
     const body = await req.json();
     const validatedData = schema.parse(body);
-    const data = await updateProject((await params).id, validatedData, ctx.userId);
+    const data = await updateProject(id, validatedData, ctx.userId);
     return NextResponse.json({ data });
   } catch (error) {
     return handleError(error);
@@ -49,6 +66,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const ctx = await withAuth(req);
+    // Only admins can delete projects
+    requireAdmin(ctx);
+
     await deleteProject((await params).id, ctx.userId);
     return NextResponse.json({ data: { success: true } });
   } catch (error) {

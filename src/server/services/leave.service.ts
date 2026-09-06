@@ -181,5 +181,17 @@ export async function decideLeaveRequest(id: string, decision: 'approved' | 'rej
 }
 
 export async function getLeaveBalances(employeeId: string) {
-  return await db.select().from(leaveBalances).where(eq(leaveBalances.employeeId, employeeId));
+  const result = await db
+    .select({
+      id: leaveBalances.id,
+      leaveTypeId: leaveBalances.leaveTypeId,
+      year: leaveBalances.year,
+      balanceDays: leaveBalances.balanceDays,
+      leaveTypeName: leaveTypes.name,
+    })
+    .from(leaveBalances)
+    .innerJoin(leaveTypes, eq(leaveBalances.leaveTypeId, leaveTypes.id))
+    .where(eq(leaveBalances.employeeId, employeeId));
+    
+  return result;
 }

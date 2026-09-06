@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/server/middleware/auth';
 import { handleError } from '@/server/middleware/error-handler';
 import { listTasks, createTask } from '@/server/services/task.service';
+import { enforceProjectAccess } from '@/server/middleware/project-access';
 import { z } from 'zod';
 
 const schema = z.object({
@@ -17,8 +18,10 @@ const schema = z.object({
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await withAuth(req);
-    const data = await listTasks((await params).id);
+    const ctx = await withAuth(req);
+    const { id } = await params;
+    await enforceProjectAccess(ctx, id);
+    const data = await listTasks(id);
     return NextResponse.json({ data });
   } catch (error) {
     return handleError(error);
@@ -28,9 +31,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const ctx = await withAuth(req);
+    const { id } = await params;
+    // Assigned employees can create tasks on their projects
+    await enforceProjectAccess(ctx, id);
     const body = await req.json();
     const validatedData = schema.parse(body);
-    const data = await createTask((await params).id, validatedData, ctx.userId);
+    const data = await createTask(id, validatedData, ctx.userId);
     return NextResponse.json({ data }, { status: 201 });
   } catch (error) {
     return handleError(error);

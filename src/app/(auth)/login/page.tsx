@@ -106,7 +106,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-end pt-0.5">
             <Link
               href="/forgot-password"
-              className="text-xs font-semibold text-[#C1172C] hover:text-[#9B1022] transition-colors"
+              className="text-xs font-semibold text-[#1A6DB6] hover:text-[#155A96] transition-colors"
             >
               Forgot password?
             </Link>

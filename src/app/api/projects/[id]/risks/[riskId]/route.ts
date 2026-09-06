@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/server/middleware/auth';
 import { handleError } from '@/server/middleware/error-handler';
 import { updateRisk } from '@/server/services/assignment.service';
+import { requireAdmin } from '@/server/middleware/project-access';
 import { z } from 'zod';
 
 const schema = z.object({
@@ -18,6 +19,7 @@ export async function PATCH(
 ) {
   try {
     const ctx = await withAuth(req);
+    requireAdmin(ctx);
     const { riskId } = await params;
     const body = await req.json();
     const validatedData = schema.parse(body);

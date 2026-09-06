@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { SETTINGS_SECTIONS, type SettingsSection } from './settings-shell';
+import { useAuth } from '@/hooks/use-auth';
 
 export interface SettingsNavProps {
     /** Override the default sections (mostly used to hide items not yet implemented). */
@@ -20,6 +21,15 @@ export interface SettingsNavProps {
 
 export function SettingsNav({ sections = SETTINGS_SECTIONS }: SettingsNavProps) {
     const pathname = usePathname();
+    const { roles } = useAuth();
+    const isAdmin = roles.includes('Admin');
+
+    const visibleSections = sections.filter(s => {
+        if (!s.visibleTo) return true;
+        if (isAdmin) return true;
+        return s.visibleTo.some(r => roles.includes(r));
+    });
+
     return (
         <nav className="bg-white rounded-2xl border border-gray-100 shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100">
@@ -27,7 +37,7 @@ export function SettingsNav({ sections = SETTINGS_SECTIONS }: SettingsNavProps) 
                 <p className="text-sm font-semibold text-gray-900 mt-0.5">Manage your workspace</p>
             </div>
             <ul className="p-1.5">
-                {sections.map(s => {
+                {visibleSections.map(s => {
                     const active = pathname === s.href || pathname?.startsWith(s.href + '/');
                     const Icon = s.icon;
                     return (

@@ -12,8 +12,7 @@ export function Sidebar() {
   const { roles } = useAuth();
   const pathname = usePathname();
 
-  const isAdminOrHR = roles.includes('Admin') || roles.includes('HR Manager');
-  const navGroups = useMemo(() => getNavGroups(isAdminOrHR), [isAdminOrHR]);
+  const navGroups = useMemo(() => getNavGroups(roles), [roles]);
 
   return (
     <aside
