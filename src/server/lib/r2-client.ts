@@ -53,7 +53,9 @@ export async function uploadDocumentToR2(fileBuffer: Buffer, key: string, mimeTy
 export async function getSignedDownloadUrl(key: string, expiresIn: number = 3600): Promise<string> {
   if (!isR2Configured) {
     console.warn('[Storage] R2 is not configured. Mocking download url for:', key);
-    return `http://localhost:3000/api/mock-download?key=${encodeURIComponent(key)}`;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL 
+      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    return `${baseUrl}/api/mock-download?key=${encodeURIComponent(key)}`;
   }
 
   const command = new GetObjectCommand({

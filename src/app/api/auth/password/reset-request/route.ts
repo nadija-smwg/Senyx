@@ -24,8 +24,11 @@ export async function POST(req: NextRequest) {
       }
     );
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL 
+      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+
     await supabase.auth.resetPasswordForEmail(body.email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`,
+      redirectTo: `${appUrl}/reset-password`,
     });
 
     // Always return success to prevent email enumeration
