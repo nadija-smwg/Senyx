@@ -17,7 +17,7 @@ const ALLOWED_MIME_TYPES = [
   'image/png',
   'image/gif',
   'image/webp',
-  'image/svg+xml',
+  // SVG intentionally excluded — can contain embedded JavaScript (XSS risk)
   'application/zip',
 ];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -117,8 +117,22 @@ export async function deleteDocument(ctx: AuthContext, documentId: string) {
 }
 
 export async function listByOwner(ctx: AuthContext, ownerType: string, ownerId: string) {
-  return await db.select().from(documents).where(and(
-    eq(documents.ownerType, ownerType),
-    eq(documents.ownerId, ownerId)
-  ));
+  // Authorization: Admins and HR Managers can list documents for any entity.
+  // Other users can only list documents for entities they have view permission on,
+  // or documents they uploaded themselves.
+  const isAdminOrHR = ctx.roles.includes('Admin') || ctx.roles.includes('HR Manager');
+
+  if (!isAdminOrHR) {
+    const moduleName = ownerType.toLowerCase();
+    const hasViewPerm = ctx.permissions.some(
+      (p) => p.module === moduleName && (p.action === 'view' || p.action === 'edit')
+    );
+    if (!hasViewPerm) {
+      throw new Error('Unauthorized to list documents for this entity');
+    }
+  }
+
+  return await db.select().from(documents).where(
+    and(eq(documents.ownerType, ownerType), eq(documents.ownerId, ownerId))
+  );
 }

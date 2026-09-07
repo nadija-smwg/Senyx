@@ -1,7 +1,20 @@
 import swaggerJsdoc from 'swagger-jsdoc';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/server/middleware/auth';
+import { handleError } from '@/server/middleware/error-handler';
+import { ForbiddenError } from '@/server/types/errors';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  try {
+    const ctx = await withAuth(req);
+    // Only Admins can view the API documentation
+    if (!ctx.roles.includes('Admin')) {
+      throw new ForbiddenError('API documentation is restricted to administrators.');
+    }
+  } catch (error) {
+    return handleError(error);
+  }
+
   const options = {
     definition: {
       openapi: '3.0.0',

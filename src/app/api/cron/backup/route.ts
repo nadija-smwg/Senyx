@@ -3,14 +3,11 @@ import { verifyAndLogBackup } from '@/server/scripts/backup-db';
 
 export async function POST(request: NextRequest) {
   try {
-    // Basic authorization for cron endpoints (e.g. Vercel Cron uses Bearer tokens or custom headers)
+    // Unconditional authorization — CRON_SECRET must always be set
+    const cronSecret = process.env.CRON_SECRET;
     const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET || 'dev-secret'}`) {
-      // return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      // In dev, we might allow it without a secret just for testing, but let's be strict in prod:
-      if (process.env.NODE_ENV === 'production') {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const result = await verifyAndLogBackup();

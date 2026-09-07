@@ -23,7 +23,9 @@ export function parseFilter(filterNode: FilterNode, allowedColumns: Record<strin
     case 'neq':
       return ne(column, filterNode.value);
     case 'contains':
-      return like(column, `%${filterNode.value}%`);
+      // Escape SQL LIKE wildcards to prevent wildcard injection
+      const escapedValue = String(filterNode.value).replace(/[%_\\]/g, (c) => `\\${c}`);
+      return like(column, `%${escapedValue}%`);
     case 'in':
       return inArray(column, Array.isArray(filterNode.value) ? filterNode.value : [filterNode.value]);
     case 'gt':

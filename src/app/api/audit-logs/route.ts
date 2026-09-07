@@ -64,9 +64,11 @@ export async function POST(req: NextRequest) {
         }
 
         if (col) {
+          // Escape SQL LIKE wildcards in user-supplied values to prevent wildcard injection
+          const escapedValue = String(rule.value).replace(/[%_\\]/g, (c) => `\\${c}`);
           switch (rule.operator) {
             case 'equals': ruleConditions.push(eq(col, rule.value)); break;
-            case 'contains': ruleConditions.push(ilike(col, `%${rule.value}%`)); break;
+            case 'contains': ruleConditions.push(ilike(col, `%${escapedValue}%`)); break;
             case 'after': ruleConditions.push(gt(col, new Date(rule.value))); break;
             case 'before': ruleConditions.push(lt(col, new Date(rule.value))); break;
           }

@@ -9,9 +9,10 @@ import { emailProvider } from '@/server/lib/email-provider';
 
 export async function GET(req: NextRequest) {
   try {
-    // 1. Verify authorization using a secret
+    // 1. Verify authorization using a secret — unconditional, CRON_SECRET must always be set
+    const cronSecret = process.env.CRON_SECRET;
     const authHeader = req.headers.get('authorization');
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

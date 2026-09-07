@@ -61,8 +61,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       user: result.user,
-      token: result.token,
       mustChangePassword: result.mustChangePassword,
+      // Note: The Supabase session token is managed via HttpOnly cookies automatically.
+      // We do NOT return the raw access_token in the response body to avoid JS-accessible exposure.
     });
   } catch (error) {
     return handleError(error);
