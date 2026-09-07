@@ -1,10 +1,11 @@
 import crypto from 'crypto';
 
 const ALGORITHM = 'aes-256-gcm';
-function getKey(): Buffer {
+function getKey(): Buffer | null {
   const KEY_HEX = (process.env.ENCRYPTION_KEY as string) || '';
   if (!KEY_HEX || KEY_HEX.length !== 64) {
-    throw new Error('ENCRYPTION_KEY environment variable is missing or invalid (must be 64-char hex string)');
+    // Return null instead of throwing — callers handle missing key gracefully
+    return null;
   }
   return Buffer.from(KEY_HEX, 'hex');
 }
@@ -12,9 +13,14 @@ function getKey(): Buffer {
 export function encrypt(plaintext: string | number | null | undefined): string | null {
   if (plaintext === null || plaintext === undefined) return null;
   
+  const key = getKey();
+  if (!key) {
+    console.warn('[crypto] ENCRYPTION_KEY is not configured — sensitive field will not be encrypted.');
+    return null;
+  }
+
   const text = String(plaintext);
   const iv = crypto.randomBytes(12);
-  const key = getKey();
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
   
   let encrypted = cipher.update(text, 'utf8', 'base64');
@@ -28,6 +34,12 @@ export function encrypt(plaintext: string | number | null | undefined): string |
 
 export function decrypt(ciphertext: string | null | undefined): string | null {
   if (!ciphertext) return null;
+
+  const key = getKey();
+  if (!key) {
+    console.warn('[crypto] ENCRYPTION_KEY is not configured — cannot decrypt sensitive field.');
+    return null;
+  }
   
   const parts = ciphertext.split(':');
   
@@ -40,16 +52,17 @@ export function decrypt(ciphertext: string | null | undefined): string | null {
     // Versioned format
     [, ivBase64, authTagBase64, encryptedBase64] = parts;
   } else {
-    throw new Error('Invalid encrypted string format');
+    console.warn('[crypto] Invalid encrypted string format — returning null');
+    return null;
   }
   
   if (!ivBase64 || !authTagBase64 || !encryptedBase64) {
-    throw new Error('Missing parts in encrypted string');
+    console.warn('[crypto] Missing parts in encrypted string — returning null');
+    return null;
   }
 
   const iv = Buffer.from(ivBase64, 'base64');
   const authTag = Buffer.from(authTagBase64, 'base64');
-  const key = getKey();
   
   const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
   decipher.setAuthTag(authTag);
