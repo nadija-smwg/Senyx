@@ -42,9 +42,10 @@ import { Search, Check, ChevronsUpDown, ChevronUp, ChevronDown, X } from 'lucide
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import type { Project } from '@/components/projects/projects-table';
 
 interface ProjectFormProps {
-  initialData?: any;
+  initialData?: Project | any;
   fromDealId?: string | null;
   onSuccess?: () => void;
   onCancel?: () => void;
@@ -58,7 +59,7 @@ const schema = z.object({
   accountId: z.string().optional(),
   ownerId: z.string().optional(),
   type: z.enum(['solution', 'product', 'internal']),
-  billingType: z.enum(['fixed', 'hourly', 'milestone']),
+  billingType: z.enum(['fixed', 'time_materials', 'retainer']),
   budget: z.string().optional(),
   currency: z.string(),
   startDate: z.string().optional(),
@@ -151,10 +152,11 @@ function SectionHeader({
   );
 }
 
-export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProps) {
+export function ProjectForm({ initialData, fromDealId, onSuccess, onCancel }: ProjectFormProps) {
   const router = useRouter();
   const theme: FormTheme = 'green';
   const t = themeStyles[theme];
+  const isEditing = !!initialData;
 
   const [loading, setLoading] = React.useState(true);
   const [submitting, setSubmitting] = React.useState(false);
@@ -182,16 +184,16 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: '',
-      companyName: '',
-      accountId: '',
-      ownerId: '',
-      type: 'internal',
-      billingType: 'fixed',
-      budget: '',
-      currency: 'USD',
-      startDate: '',
-      endDate: '',
+      name: initialData?.name || '',
+      companyName: initialData?.companyName || '',
+      accountId: initialData?.accountId || '',
+      ownerId: initialData?.ownerId || '',
+      type: initialData?.type || 'internal',
+      billingType: initialData?.billingType || 'fixed',
+      budget: initialData?.budget?.toString() || '',
+      currency: initialData?.currency || 'USD',
+      startDate: initialData?.startDate || '',
+      endDate: initialData?.endDate || '',
     },
   });
 
@@ -242,30 +244,35 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
         budget: values.budget ? Number(values.budget) : null,
       };
 
-      const res = await fetch('/api/projects', {
-        method: 'POST',
+      const url = isEditing ? `/api/projects/${initialData.id}` : '/api/projects';
+      const method = isEditing ? 'PATCH' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       const json = await res.json();
 
-      if (!res.ok) throw new Error(json.error?.message || json.error || 'Failed to create project');
+      if (!res.ok) throw new Error(json.error?.message || json.error || (isEditing ? 'Failed to update project' : 'Failed to create project'));
 
-      toast.success('Project created successfully!', {
+      toast.success(isEditing ? 'Project updated successfully!' : 'Project created successfully!', {
         icon: <CheckCircle2 className="h-4 w-4 text-emerald-600" />,
       });
 
-      // Assign developers
-      for (const member of teamMembers) {
-        await fetch(`/api/projects/${json.data.id}/assignments`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            employeeId: member.id,
-            roleOnProject: member.role,
-            allocationPct: 100,
-          }),
-        }).catch(console.error); // Best effort
+      if (!isEditing) {
+        // Assign developers on create only
+        for (const member of teamMembers) {
+          await fetch(`/api/projects/${json.data.id}/assignments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              employeeId: member.id,
+              roleOnProject: member.role,
+              allocationPct: 100,
+            }),
+          }).catch(console.error);
+        }
       }
 
       if (onSuccess) {
@@ -273,7 +280,9 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
       } else {
         router.refresh();
       }
-      router.push(`/projects/${json.data.id}`);
+      if (!isEditing) {
+        router.push(`/projects/${json.data.id}`);
+      }
     } catch (err: any) {
       toast.error(err.message || 'Something went wrong', {
         icon: <AlertCircle className="h-4 w-4 text-rose-600" />,
@@ -474,8 +483,8 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="fixed">Fixed Price</SelectItem>
-                        <SelectItem value="hourly">Hourly</SelectItem>
-                        <SelectItem value="milestone">Milestone</SelectItem>
+                        <SelectItem value="time_materials">Time &amp; Materials</SelectItem>
+                        <SelectItem value="retainer">Retainer</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -877,7 +886,7 @@ export function ProjectForm({ fromDealId, onSuccess, onCancel }: ProjectFormProp
               )}
             >
               {submitting && <Spinner className="h-3.5 w-3.5" />}
-              {submitting ? 'Creating project...' : 'Create Project'}
+              {submitting ? (isEditing ? 'Saving...' : 'Creating project...') : (isEditing ? 'Save Changes' : 'Create Project')}
             </Button>
           </div>
         </div>

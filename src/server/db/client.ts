@@ -5,10 +5,11 @@ import * as platform from './schema/platform';
 import * as hr from './schema/hr';
 import * as crm from './schema/crm';
 import * as sales from './schema/sales';
+import * as projects from './schema/projects';
 
 // Create postgres connection
 const connectionString = process.env.DATABASE_URL!;
 const client = postgres(connectionString, { prepare: false, ssl: 'require' });
 
 // Export drizzle db instance with all schemas
-export const db = drizzle(client, { schema: { ...identity, ...platform, ...hr, ...crm, ...sales } });
+export const db = drizzle(client, { schema: { ...identity, ...platform, ...hr, ...crm, ...sales, ...projects } });
