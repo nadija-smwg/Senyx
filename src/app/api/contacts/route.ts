@@ -5,7 +5,8 @@ import { listContacts, createContact } from '@/server/services/crm.service';
 import { ForbiddenError } from '@/server/types/errors';
 import { z } from 'zod';
 
-const CRM_ROLES = ['Admin', 'Sales Lead', 'Project Owner', 'Finance'];
+const CRM_WRITE_ROLES = ['Admin', 'Sales Lead', 'Project Owner', 'Finance'];
+const CRM_READ_ROLES = [...CRM_WRITE_ROLES, 'Employee'];
 
 const schema = z.object({
   accountId: z.string().uuid(),
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest) {
   try {
     const ctx = await withAuth(req);
 
-    const canView = ctx.roles.some((r) => CRM_ROLES.includes(r));
+    const canView = ctx.roles.some((r) => CRM_READ_ROLES.includes(r));
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view contacts.');
     }
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
   try {
     const ctx = await withAuth(req);
 
-    const canCreate = ctx.roles.some((r) => CRM_ROLES.includes(r));
+    const canCreate = ctx.roles.some((r) => CRM_WRITE_ROLES.includes(r));
     if (!canCreate) {
       throw new ForbiddenError('You do not have permission to create contacts.');
     }

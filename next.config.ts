@@ -30,7 +30,7 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       // Supabase API and realtime
-      `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://*.supabase.co'} wss://*.supabase.co https://api.resend.com`,
+      `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://*.supabase.co'} wss://*.supabase.co https://api.resend.com https://open.er-api.com`,
       // Scripts — allow Next.js inline scripts and eval in dev
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       // Styles — allow inline styles (required by Tailwind)

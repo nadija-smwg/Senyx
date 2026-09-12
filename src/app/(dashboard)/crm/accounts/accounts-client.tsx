@@ -26,6 +26,9 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { AccountForm } from '@/components/crm/account-form';
+import { useAuth } from '@/hooks/use-auth';
+
+const CRM_WRITE_ROLES = ['Admin', 'Sales Lead', 'Project Owner', 'Finance'];
 
 type Account = {
   id: string;
@@ -48,6 +51,8 @@ export function AccountsClient({ initialAccounts }: { initialAccounts: Account[]
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'prospect' | 'inactive'>('all');
   const [page, setPage] = useState(1);
   const pageSize = 10;
+  const { roles } = useAuth();
+  const canWrite = roles.some(r => CRM_WRITE_ROLES.includes(r));
 
   useEffect(() => {
     setData(initialAccounts);
@@ -142,7 +147,7 @@ export function AccountsClient({ initialAccounts }: { initialAccounts: Account[]
       width: 'w-[120px]',
       cell: a => (
         <div className="flex items-center justify-end gap-2">
-          {a.website && (
+          {canWrite && a.website && (
             <a
               href={a.website.startsWith('http') ? a.website : `https://${a.website}`}
               target="_blank"
@@ -154,7 +159,7 @@ export function AccountsClient({ initialAccounts }: { initialAccounts: Account[]
               <Globe className="w-3.5 h-3.5" />
             </a>
           )}
-          <AccountEditSheet account={a} onSaved={() => startTransition(() => router.refresh())} />
+          {canWrite && <AccountEditSheet account={a} onSaved={() => startTransition(() => router.refresh())} />}
         </div>
       ),
     },
@@ -166,6 +171,7 @@ export function AccountsClient({ initialAccounts }: { initialAccounts: Account[]
       title="Accounts"
       description="Manage your client companies and prospects. Track owners, industry, and lifecycle status."
       actions={
+        canWrite ? (
               <AccountEditSheet
                 trigger={
                   <Button className="gap-1.5 bg-[#F15A22] hover:bg-[#C9471A] text-white shadow-sm">
@@ -175,6 +181,7 @@ export function AccountsClient({ initialAccounts }: { initialAccounts: Account[]
                 }
                 onSaved={() => startTransition(() => router.refresh())}
               />
+        ) : undefined
       }
       stats={
         <>
@@ -258,7 +265,7 @@ export function AccountsClient({ initialAccounts }: { initialAccounts: Account[]
                     : 'Add your first client company to start building your CRM.'
                 }
                 action={
-                  !search && statusFilter === 'all' ? (
+                  !search && statusFilter === 'all' && canWrite ? (
                     <AccountEditSheet
                       trigger={
                         <Button className="gap-1.5 bg-[#F15A22] hover:bg-[#C9471A] text-white">

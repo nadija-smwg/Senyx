@@ -65,7 +65,7 @@ const MODULES: ModuleCard[] = [
     gradient: 'from-orange-500/10 via-amber-500/5 to-transparent',
     iconBg: 'bg-orange-50',
     accentColor: '#F15A22',
-    visibleTo: ['Admin', 'Sales Lead'],
+    visibleTo: ['Admin', 'Sales Lead', 'Employee'],
   },
   {
     title: 'Contacts',
@@ -75,7 +75,7 @@ const MODULES: ModuleCard[] = [
     gradient: 'from-orange-400/10 via-red-500/5 to-transparent',
     iconBg: 'bg-orange-50',
     accentColor: '#F15A22',
-    visibleTo: ['Admin', 'Sales Lead'],
+    visibleTo: ['Admin', 'Sales Lead', 'Employee'],
   },
   {
     title: 'Projects',

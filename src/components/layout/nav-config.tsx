@@ -73,7 +73,7 @@ export function getNavGroups(userRoles: string[]): NavGroup[] {
             color: '#F15A22',
             bg: '#FEF0EB',
             // Only Sales Lead and Admin can access CRM
-            visibleTo: ['Admin', 'Sales Lead'],
+            visibleTo: ['Admin', 'Sales Lead', 'Employee'],
             items: [
                 { href: '/crm/accounts', label: 'Accounts', icon: Building2 },
                 { href: '/crm/contacts', label: 'Contacts', icon: Contact2 },

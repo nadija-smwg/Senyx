@@ -53,10 +53,19 @@ export async function withAuth(request: NextRequest): Promise<AuthContext> {
     throw new UnauthorizedError('User is inactive');
   }
 
-  // Load roles and permissions
-  const userRolesData = await db
+  // Load role names independently — INNER JOINing through rolePermissions would
+  // silently drop any role that has zero permissions assigned (e.g. 'Employee').
+  const userRoleRows = await db
+    .select({ roleName: roles.name })
+    .from(userRoles)
+    .innerJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(eq(userRoles.userId, dbUser.id));
+
+  const roleNames = Array.from(new Set(userRoleRows.map((r) => r.roleName)));
+
+  // Load permissions separately so missing role_permissions rows don't affect role resolution
+  const permRows = await db
     .select({
-      roleName: roles.name,
       permissionModule: permissions.module,
       permissionAction: permissions.action,
       permissionScope: permissions.scope,
@@ -67,8 +76,7 @@ export async function withAuth(request: NextRequest): Promise<AuthContext> {
     .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
     .where(eq(userRoles.userId, dbUser.id));
 
-  const roleNames = Array.from(new Set(userRolesData.map((r) => r.roleName)));
-  const perms = userRolesData.map((r) => ({
+  const perms = permRows.map((r) => ({
     module: r.permissionModule,
     action: r.permissionAction,
     scope: r.permissionScope,

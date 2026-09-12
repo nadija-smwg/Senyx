@@ -25,6 +25,9 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { ContactForm } from '@/components/crm/contact-form';
+import { useAuth } from '@/hooks/use-auth';
+
+const CRM_WRITE_ROLES = ['Admin', 'Sales Lead', 'Project Owner', 'Finance'];
 
 type Contact = {
   id: string;
@@ -48,6 +51,8 @@ export default function ContactsPage() {
   const [accountFilter, setAccountFilter] = useState<'all' | string>('all');
   const [page, setPage] = useState(1);
   const pageSize = 10;
+  const { roles } = useAuth();
+  const canWrite = roles.some(r => CRM_WRITE_ROLES.includes(r));
 
   async function loadAll() {
     setLoading(true);
@@ -199,7 +204,7 @@ export default function ContactsPage() {
       header: <span className="sr-only">Actions</span>,
       align: 'right',
       width: 'w-[100px]',
-      cell: (c: Contact) => <ContactEditSheet contact={c} onSaved={loadAll} />,
+      cell: (c: Contact) => canWrite ? <ContactEditSheet contact={c} onSaved={loadAll} /> : null,
     },
   ];
 
@@ -209,15 +214,17 @@ export default function ContactsPage() {
       title="Contacts"
       description="People linked to your client accounts. Mark primary contacts and keep contact info current."
       actions={
-        <ContactEditSheet
-          trigger={
-            <Button className="gap-1.5 bg-[#F15A22] hover:bg-[#C9471A] text-white shadow-sm">
-              <Plus className="w-4 h-4" />
-              Add Contact
-            </Button>
-          }
-          onSaved={loadAll}
-        />
+        canWrite ? (
+          <ContactEditSheet
+            trigger={
+              <Button className="gap-1.5 bg-[#F15A22] hover:bg-[#C9471A] text-white shadow-sm">
+                <Plus className="w-4 h-4" />
+                Add Contact
+              </Button>
+            }
+            onSaved={loadAll}
+          />
+        ) : undefined
       }
       stats={
         <>
@@ -303,7 +310,7 @@ export default function ContactsPage() {
                     : 'Add a contact from any account to start building your CRM.'
                 }
                 action={
-                  !search && accountFilter === 'all' && accounts.length > 0 ? (
+                  !search && accountFilter === 'all' && accounts.length > 0 && canWrite ? (
                     <ContactEditSheet
                       trigger={
                         <Button className="gap-1.5 bg-[#F15A22] hover:bg-[#C9471A] text-white">
@@ -315,7 +322,7 @@ export default function ContactsPage() {
                     />
                   ) : (
                     !search && accountFilter === 'all' && (
-                      <p className="text-xs text-gray-400">Create an account first to add contacts.</p>
+                      <p className="text-xs text-gray-400">{canWrite ? 'Create an account first to add contacts.' : ''}</p>
                     )
                   )
                 }
